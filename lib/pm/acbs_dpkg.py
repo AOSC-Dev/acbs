@@ -2,10 +2,10 @@ import subprocess
 # import os
 # import sys
 
-from ..acbs_utils import *
+from ..acbs_utils import acbs_utils
 
 
-def dpkg_search_pkgs(search_pkgs):
+def dpkg_miss_pkgs(search_pkgs):
     miss_pkgs = []
     fnd_pkgs = []
     for i in search_pkgs:
@@ -15,15 +15,15 @@ def dpkg_search_pkgs(search_pkgs):
     return miss_pkgs
 
 
-def apt_query_pkgs(pkgs):
+def dpkg_online_pkgs(pkgs):
     ext_pkgs = []
     for pkg in pkgs:
-        if test_progs(['apt-cache', 'show', pkg]):
+        if acbs_utils.test_progs(['apt-cache', 'show', pkg]):
             ext_pkgs.append(pkg)
     return ext_pkgs
 
 
-def dpkg_req_dep_inst(pkgs):
+def dpkg_inst_pkgs(pkgs):
     try:
         apt_cmd = ['apt', 'install', '-y']
         for i in pkgs:
@@ -35,4 +35,4 @@ def dpkg_req_dep_inst(pkgs):
 
 
 def dpkg_query_pkgs(pkg):
-    return test_progs(['dpkg-query', '-s', pkg])
+    return acbs_utils.test_progs(['dpkg-query', '-s', pkg])

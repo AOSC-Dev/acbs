@@ -1,5 +1,5 @@
 from .pm.acbs_dpkg import *
-from lib.acbs_utils import *
+from lib.acbs_utils import acbs_utils
 
 
 def search_deps(search_pkgs):
@@ -27,7 +27,7 @@ def process_deps(build_deps, run_deps, pkg_slug):
     if pkgs_not_avail is None:
         pkgs_not_avail = []
     if len(pkgs_not_avail) > 0:
-        print('[I] Building in-tree dependencies: \033[36m{}\033[0m'.format(arr2str(pkgs_not_avail)))
+        print('[I] Building in-tree dependencies: \033[36m{}\033[0m'.format(acbs_utils.list2str(pkgs_not_avail)))
         return False, pkgs_not_avail
     if (pkgs_to_install is None) or len(pkgs_to_install) == 0:
         print('[I] All dependencies are met.')

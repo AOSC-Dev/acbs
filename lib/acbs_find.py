@@ -1,5 +1,6 @@
 #!/bin/env python
-import os,sys
+import os
+import logging
 
 '''
 ACBS Search
@@ -19,14 +20,14 @@ def acbs_pkg_match(target):
             cur_dir = i
             inner_dirlist = os.listdir(i)
             for j in inner_dirlist:
-                if os.path.isdir(i+'/'+j):
-                    if j == target and acbs_verify_pkg('{}/{}'.format(cur_dir,j)):
-                        return '{}/{}'.format(cur_dir,j)
+                if os.path.isdir(i + '/' + j):
+                    if j == target and acbs_verify_pkg('{}/{}'.format(cur_dir, j)):
+                        return '{}/{}'.format(cur_dir, j)
     return None
 
 def acbs_verify_pkg(path):
-    if os.path.exists(os.path.join(path,'spec')): #and os.path.exists(os.path.join(path,'autobuild/defines')):
+    if os.path.exists(os.path.join(path, 'spec')): #and os.path.exists(os.path.join(path,'autobuild/defines')):
         return True
     else:
-        print('[E] Candidate package\033[93m {} \033[0mdoesn\'t seem to be valid!'.format(path))
+        logging.error('Candidate package\033[93m {} \033[0mdoesn\'t seem to be valid!'.format(path))
         return False

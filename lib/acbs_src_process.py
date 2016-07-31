@@ -1,7 +1,7 @@
 import os
 # import sys
 import subprocess
-import re
+# import re
 import tempfile
 import shutil
 from lib.acbs_utils import test_progs, group_match

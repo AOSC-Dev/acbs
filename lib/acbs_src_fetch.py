@@ -1,5 +1,6 @@
 import subprocess
 import os
+from urllib import parse
 
 from lib.acbs_src_process import src_proc_dispatcher
 from lib.acbs_utils import test_progs, err_msg
@@ -30,28 +31,20 @@ def src_url_dispatcher(url, pkg_info):
     pkg_name = pkg_info['NAME']
     pkg_ver = pkg_info['VER']
     try:
-        proto = url.split('://')[0].lower()
+        proto, _, _, _, _, _ = parse.urlparse(url)
+        # Some of the varibles maybe used in the future
     except:
         print('[E] Illegal source URL!!!')
         return False
-    if proto == 'http' or proto == 'https' or proto == 'ftp' or proto == 'ftps' or proto == 'ftpes':
+    if proto in ['http', 'https', 'ftp', 'ftps', 'ftpes']:
         src_tbl_name = pkg_name + '-' + pkg_ver
         src_name = os.path.basename(url)
         if src_tbl_fetch(url, src_tbl_name):
             return src_proc_dispatcher(pkg_name, src_name, dump_loc)
-    elif proto == 'git':  # or proto == 'git+https'
+    elif proto in ['git', 'hg', 'svn', 'bzr', 'bk']:  # or proto == 'git+https'
         print('[W] In spec file: This source seems like a Git repository, while\
          you misplaced it.')
-        if src_git_fetch(url, pkg_info):
-            return src_proc_dispatcher(pkg_name, pkg_name, dump_loc)
-    elif proto == 'hg':
-        if src_hg_fetch(url, pkg_info):
-            return src_proc_dispatcher(pkg_name, pkg_name, dump_loc)
-    elif proto == 'svn':
-        if src_svn_fetch(url, pkg_info):
-            return src_proc_dispatcher(pkg_name, pkg_name, dump_loc)
-    elif proto == 'bzr':
-        if src_bzr_fetch(url, pkg_info):
+        if exec('src_%s_fetch(%r, %r)' % (proto, url, pkg_info)):
             return src_proc_dispatcher(pkg_name, pkg_name, dump_loc)
     else:
         print('[E] Unknown protocol {}'.format(proto))

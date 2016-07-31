@@ -8,13 +8,14 @@ import os
 import sys
 import shutil
 import argparse
+import logging
 # import time
 
 from lib.acbs_find import *
-from lib.acbs_parser import *
+from lib.acbs_parser import acbs_parser
 from lib.acbs_deps import *
-from lib.acbs_utils import *
-from lib.acbs_start_build import *
+from lib.acbs_utils import acbs_utils
+from lib.acbs_start_build import acbs_start_ab
 
 acbs_version = '0.0.1-alpha0'
 verbose = 0
@@ -27,7 +28,8 @@ def main():
                         help='Show the version and exit', action="store_true")
     parser.add_argument(
         '-d', '--debug', help='Increase verbosity to ease debugging process', action="store_true")
-    parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree', help='Specify which abbs-tree to use')
+    parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
+                        help='Specify which abbs-tree to use')
     parser.add_argument('packages', nargs='*', help='Packages to be built')
     args = parser.parse_args()
     if args.version:
@@ -43,16 +45,23 @@ def main():
 def init_env(tree=['default']):
     dump_loc = '/var/cache/acbs/tarballs/'
     tmp_loc = '/var/cache/acbs/build/'
+    conf_loc = '/etc/acbs/'
+    log_loc = '/var/logs/acbs/'
     print("----- Welcome to ACBS - %s -----" % (acbs_version))
     try:
-        if not os.path.isdir(dump_loc):
-            os.makedirs(dump_loc)
-        if not os.path.isdir(tmp_loc):
-            os.makedirs(tmp_loc)
+        for dir_loc in [dump_loc, tmp_loc, conf_loc, log_loc]:
+            if not os.path.isdir(dir_loc):
+                os.makedirs(dir_loc)
     except:
         raise IOError('\033[93mFailed to make work directory\033[0m!')
-    if os.path.exists('/etc/acbs_forest.conf'):
-        tree_loc = parse_acbs_conf(tree[0])
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    str_handler = logging.StreamHandler()
+    str_handler.setLevel(logging.INFO)
+    str_handler.setFormatter(acbs_utils.acbs_log_format())
+    logger.addHandler(str_handler)
+    if os.path.exists('/etc/acbs/forest.conf'):
+        tree_loc = acbs_parser.parse_acbs_conf(tree[0])
         if tree_loc is not None:
             os.chdir(tree_loc)
         else:
@@ -67,7 +76,7 @@ def build_pkgs(pkgs):
     for pkg in pkgs:
         matched_pkg = acbs_pkg_match(pkg)
         if matched_pkg is None:
-            err_msg(
+            acbs_utils.err_msg(
                 'No valid candidate package found for \033[36m{}\033[0m.'.format(pkg))
             # print('[E] No valid candidate package found for {}'.format(pkg))
             return -1
@@ -83,7 +92,7 @@ def build_ind_pkg(pkg):
     print('[I] Start building \033[36m{}\033[0m'.format(pkg))
     pkg_type_res = determine_pkg_type(pkg)
     if pkg_type_res is False:
-        err_msg()
+        acbs_utils.err_msg()
     elif pkg_type_res is True:
         pass
     else:
@@ -92,17 +101,17 @@ def build_ind_pkg(pkg):
         pkg_slug = os.path.basename(pkg)
     except:
         pkg_slug = pkg
-    abbs_spec = parse_abbs_spec(pkg, pkg_slug)
+    abbs_spec = acbs_parser.parse_abbs_spec(pkg, pkg_slug)
     repo_dir = os.path.abspath(pkg)
     if abbs_spec is False:
-        err_msg()
+        acbs_utils.err_msg()
         return -1
     # parser_pass_through(abbs_spec,pkg)
     abd_dict = parse_ab3_defines(os.path.join(pkg, 'autobuild/defines'))
     deps_result, try_build = process_deps(
         abd_dict['BUILDDEP'], abd_dict['PKGDEP'], pkg_slug)
     if (deps_result is False) and (try_build is None):
-        err_msg('Failed to process dependencies!')
+        acbs_utils.err_msg('Failed to process dependencies!')
         return -1
     if try_build is not None:
         if new_build_thread(try_build) != 0:
@@ -113,11 +122,11 @@ def build_ind_pkg(pkg):
     else:
         src_proc_result = src_dispatcher_return
     if src_proc_result is False:
-        err_msg('Failed to fetch and process source files!')
+        acbs_utils.err_msg('Failed to fetch and process source files!')
         return 1
     repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
     if not start_ab3(tmp_dir_loc, repo_ab_dir, abbs_spec):
-        err_msg('Autobuild process failure!')
+        acbs_utils.err_msg('Autobuild process failure!')
         return 1
     return 0
 
@@ -135,7 +144,7 @@ def new_build_thread(try_build):
             dumb_mutex.release()
             return 0
         except:
-            err_msg(
+            acbs_utils.err_msg(
                 'Sub-build process using thread {}, building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_thread.name, sub_pkg))
             return 128
 
@@ -159,8 +168,8 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     for i in pkg_tuple:
         pkg_names.append(i[0])
     print('[I] Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
-        len(pkg_tuple), arr2str(pkg_names)))
-    abbs_spec = parse_abbs_spec(pkg_base, os.path.basename(pkg_base))
+        len(pkg_tuple), acbs_utils.list2str(pkg_names)))
+    abbs_spec = acbs_parser.parse_abbs_spec(pkg_base, os.path.basename(pkg_base))
     pkg_def_loc = []
     sub_repo_dir = []
     for i in pkg_tuple:
@@ -175,24 +184,25 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     else:
         src_proc_result = src_dispatcher_return
     if src_proc_result is False:
-        err_msg('Failed to fetch and process source files!')
+        acbs_utils.err_msg('Failed to fetch and process source files!')
         return 1
     sub_count = 0
     for abd_sub_dict in onion_list:
         sub_count += 1
         print('[I] [\033[36m{}/{}\033[0m] Building sub package \033[36m{}\033[0m'.format(sub_count,
-                                                           len(onion_list), abd_sub_dict['PKGNAME']))
+                                                                                         len(onion_list), abd_sub_dict['PKGNAME']))
         pkg_slug = abd_sub_dict['PKGNAME']
         deps_result, try_build = process_deps(
             abd_sub_dict['BUILDDEP'], abd_sub_dict['PKGDEP'], pkg_slug)
         if (deps_result is False) and (try_build is None):
-            err_msg('Failed to process dependencies!')
+            acbs_utils.err_msg('Failed to process dependencies!')
             return -1
         if try_build is not None:
             if new_build_thread(try_build) != 0:
                 return 128
-        if not start_ab3(tmp_dir_loc, sub_repo_dir[sub_count - 1], abbs_spec, rm_abdir=True):
-            err_msg('Autobuild process failure on {}!'.format(abd_sub_dict['PKGNAME']))
+        if not acbs_start_ab.start_ab3(tmp_dir_loc, sub_repo_dir[sub_count - 1], abbs_spec, rm_abdir=True):
+            acbs_utils.err_msg('Autobuild process failure on {}!'.format(
+                abd_sub_dict['PKGNAME']))
             return 1
     return 0
 
