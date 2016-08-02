@@ -13,8 +13,10 @@ import logging
 
 from lib.acbs_find import *
 from lib.acbs_parser import acbs_parser
+from lib.acbs_src_fetch import *
 from lib.acbs_deps import *
 from lib.acbs_utils import acbs_utils
+from lib.acbs_utils import acbs_log_format
 from lib.acbs_start_build import acbs_start_ab
 
 acbs_version = '0.0.1-alpha0'
@@ -58,7 +60,7 @@ def init_env(tree=['default']):
     logger.setLevel(logging.INFO)
     str_handler = logging.StreamHandler()
     str_handler.setLevel(logging.INFO)
-    str_handler.setFormatter(acbs_utils.acbs_log_format())
+    str_handler.setFormatter(acbs_log_format())
     logger.addHandler(str_handler)
     if os.path.exists('/etc/acbs/forest.conf'):
         tree_loc = acbs_parser.parse_acbs_conf(tree[0])
@@ -67,7 +69,7 @@ def init_env(tree=['default']):
         else:
             sys.exit(1)
     else:
-        if not write_acbs_conf():
+        if not acbs_parser.write_acbs_conf():
             sys.exit(1)
     return
 
@@ -89,8 +91,8 @@ def build_pkgs(pkgs):
 
 
 def build_ind_pkg(pkg):
-    print('[I] Start building \033[36m{}\033[0m'.format(pkg))
-    pkg_type_res = determine_pkg_type(pkg)
+    logging.info('Start building \033[36m{}\033[0m'.format(pkg))
+    pkg_type_res = acbs_parser.determine_pkg_type(pkg)
     if pkg_type_res is False:
         acbs_utils.err_msg()
     elif pkg_type_res is True:
@@ -101,13 +103,17 @@ def build_ind_pkg(pkg):
         pkg_slug = os.path.basename(pkg)
     except:
         pkg_slug = pkg
-    abbs_spec = acbs_parser.parse_abbs_spec(pkg, pkg_slug)
+    ps_obj = acbs_parser()
+    ps_obj.pkg_name = pkg_slug
+    ps_obj.spec_file_loc = os.path.abspath(pkg)
+    abbs_spec = ps_obj.parse_abbs_spec()
     repo_dir = os.path.abspath(pkg)
     if abbs_spec is False:
         acbs_utils.err_msg()
         return -1
     # parser_pass_through(abbs_spec,pkg)
-    abd_dict = parse_ab3_defines(os.path.join(pkg, 'autobuild/defines'))
+    abd_dict = ps_obj.parse_ab3_defines(os.path.join(pkg, 'autobuild/defines'))
+    # print(abd_dict)
     deps_result, try_build = process_deps(
         abd_dict['BUILDDEP'], abd_dict['PKGDEP'], pkg_slug)
     if (deps_result is False) and (try_build is None):
@@ -125,7 +131,8 @@ def build_ind_pkg(pkg):
         acbs_utils.err_msg('Failed to fetch and process source files!')
         return 1
     repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
-    if not start_ab3(tmp_dir_loc, repo_ab_dir, abbs_spec):
+    ab3_obj = acbs_start_ab(tmp_dir_loc, repo_ab_dir, abbs_spec)
+    if not ab3_obj.start_ab3():
         acbs_utils.err_msg('Autobuild process failure!')
         return 1
     return 0
@@ -151,7 +158,7 @@ def new_build_thread(try_build):
 
 def slave_thread_build(pkg):
     import threading
-    print('[D] New build thread \033[36m{}\033[0m started for \033[36m{}\033[0m'.format(
+    logging.debug('New build thread \033[36m{}\033[0m started for \033[36m{}\033[0m'.format(
         threading.current_thread().getName(), pkg))
     build_pkgs([pkg])
 
@@ -167,7 +174,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     pkg_names = []
     for i in pkg_tuple:
         pkg_names.append(i[0])
-    print('[I] Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
+    logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
         len(pkg_tuple), acbs_utils.list2str(pkg_names)))
     abbs_spec = acbs_parser.parse_abbs_spec(pkg_base, os.path.basename(pkg_base))
     pkg_def_loc = []
@@ -175,7 +182,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     for i in pkg_tuple:
         pkg_def_loc.append(i[1] + '/defines')
         sub_repo_dir.append(i[1])
-    onion_list = bat_parse_ab3_defines(pkg_def_loc)
+    onion_list = acbs_parser.bat_parse_ab3_defines(pkg_def_loc)
     if onion_list is False:
         return 1
     src_dispatcher_return = src_dispatcher(abbs_spec)
@@ -189,7 +196,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     sub_count = 0
     for abd_sub_dict in onion_list:
         sub_count += 1
-        print('[I] [\033[36m{}/{}\033[0m] Building sub package \033[36m{}\033[0m'.format(sub_count,
+        logging.info('[\033[36m{}/{}\033[0m] Building sub package \033[36m{}\033[0m'.format(sub_count,
                                                                                          len(onion_list), abd_sub_dict['PKGNAME']))
         pkg_slug = abd_sub_dict['PKGNAME']
         deps_result, try_build = process_deps(
@@ -200,7 +207,8 @@ def build_sub_pkgs(pkg_base, pkgs_array):
         if try_build is not None:
             if new_build_thread(try_build) != 0:
                 return 128
-        if not acbs_start_ab.start_ab3(tmp_dir_loc, sub_repo_dir[sub_count - 1], abbs_spec, rm_abdir=True):
+        ab3_obj = acbs_start_ab(tmp_dir_loc, sub_repo_dir[sub_count - 1], abbs_spec, rm_abdir=True)
+        if not ab3_obj.start_ab3():
             acbs_utils.err_msg('Autobuild process failure on {}!'.format(
                 abd_sub_dict['PKGNAME']))
             return 1

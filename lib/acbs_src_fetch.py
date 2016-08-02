@@ -1,17 +1,18 @@
 import subprocess
 import os
 from urllib import parse
+import logging
 
 from lib.acbs_src_process import src_proc_dispatcher
-from lib.acbs_utils import test_progs, err_msg
+from lib.acbs_utils import acbs_utils
 
 dump_loc = '/var/cache/acbs/tarballs/'  # Currently hard-coded
 
 
 def src_dispatcher(pkg_info):
     if pkg_info['DUMMYSRC'] != '':
-        print('[I] Not fetching dummy source as required.')
-        return True
+        logging.info('Not fetching dummy source as required.')
+        return src_proc_dispatcher(pkg_info['NAME'], None, dump_loc)
     if pkg_info['SRCTBL'] != '':
         src_url = pkg_info['SRCTBL']
         return src_url_dispatcher(src_url, pkg_info)
@@ -32,9 +33,10 @@ def src_url_dispatcher(url, pkg_info):
     pkg_ver = pkg_info['VER']
     try:
         proto, _, _, _, _, _ = parse.urlparse(url)
-        # Some of the varibles maybe used in the future
+        # Some of the varibles maybe used in the future, now leave them
+        # as placeholder
     except:
-        print('[E] Illegal source URL!!!')
+        logging.exception('Illegal source URL!!!')
         return False
     if proto in ['http', 'https', 'ftp', 'ftps', 'ftpes']:
         src_tbl_name = pkg_name + '-' + pkg_ver
@@ -42,41 +44,44 @@ def src_url_dispatcher(url, pkg_info):
         if src_tbl_fetch(url, src_tbl_name):
             return src_proc_dispatcher(pkg_name, src_name, dump_loc)
     elif proto in ['git', 'hg', 'svn', 'bzr', 'bk']:  # or proto == 'git+https'
-        print('[W] In spec file: This source seems like a Git repository, while\
-         you misplaced it.')
+        logging.warning(
+            'In spec file: This source seems to refers to a VCS repository, but you misplaced it.')
         if exec('src_%s_fetch(%r, %r)' % (proto, url, pkg_info)):
             return src_proc_dispatcher(pkg_name, pkg_name, dump_loc)
     else:
-        print('[E] Unknown protocol {}'.format(proto))
+        logging.error('Unknown protocol {}'.format(proto))
         return False
     return False
 
 
 def src_git_fetch(url, pkg_info):
-    if not test_progs(['git', '--version']):
-        print('[E] Git is not installed!')
+    if not acbs_utils.test_progs(['git', '--version']):
+        logging.error('Git is not installed!')
         return False
     if pkg_info['GITSRC'] == '':
-        print('[E] Source URL is empty!')
+        logging.error('Source URL is empty!')
         return False
     if pkg_info['GITCO'] == '':
-        print('[W] Source revision not specified! Will use HEAD commit instead!')
-    print('[I] Cloning Git repository...')
+        logging.warning(
+            'Source revision not specified! Will use HEAD commit instead!')
+    logging.info('Cloning Git repository...')
     os.chdir(dump_loc)
     try:
-        if os.path.isdir(pkg_info['NAME']) and os.path.isdir(pkg_info['NAME']+'/.git'):
+        if os.path.isdir(pkg_info['NAME']) and os.path.isdir(pkg_info['NAME'] + '/.git'):
             os.chdir(pkg_info['NAME'])
-            print('[I] Updating existing repository...')
+            logging.info('Updating existing repository...')
             # subprocess.check_call(['git', 'pull', '-f'])
         else:
-            subprocess.check_call(['git', 'clone', pkg_info['GITSRC'], pkg_info['NAME']])
+            subprocess.check_call(
+                ['git', 'clone', pkg_info['GITSRC'], pkg_info['NAME']])
             os.chdir(pkg_info['NAME'])
         if pkg_info['GITBRCH'] != '':
-            subprocess.check_call(['git', 'checkout', '-f', pkg_info['GITBRCH']])
+            subprocess.check_call(
+                ['git', 'checkout', '-f', pkg_info['GITBRCH']])
         if pkg_info['GITCO'] != '':
             subprocess.check_call(['git', 'checkout', '-f', pkg_info['GITCO']])
     except:
-        print('[E] Failed to fetch source!')
+        logging.critical('Failed to fetch source!')
         return False
     return src_proc_dispatcher(pkg_info['NAME'], pkg_info['NAME'], dump_loc)
 
@@ -98,7 +103,7 @@ def src_tbl_fetch(url, pkg_slug):
             os.unlink(flag_file)
             break
         except KeyboardInterrupt:
-            err_msg('You aborted the download!')
+            acbs_utils.err_msg('You aborted the download!')
             return False
         except NameError:
             raise NameError('An Internal Error occurred!')
@@ -110,14 +115,15 @@ def src_tbl_fetch(url, pkg_slug):
 
 
 def src_svn_fetch(url, pkg_info):
-    if not test_progs(['svn', '-h']):
-        print('[E] Subverion is not installed!')
+    if not acbs_utils.test_progs(['svn', '-h']):
+        logging.error('Subverion is not installed!')
         return False
     if pkg_info['SVNSRC'] == '':
-        print('[E] Source URL is empty!')
+        logging.error('Source URL is empty!')
         return False
     if pkg_info['SVNCO'] == '':
-        print('[W] Source revision not specified! Will use latest revision instead!')
+        logging.warning(
+            'Source revision not specified! Will use latest revision instead!')
         pkg_info['SVNCO'] = 'HEAD'
     subprocess.check_call(['svn', 'co', '-r', pkg_info['SVNCO']])
     return True
@@ -145,13 +151,13 @@ External downloaders
 
 def test_downloaders():
     use_progs = []
-    if test_progs(['aria2c', '-h']):
+    if acbs_utils.test_progs(['aria2c', '-h']):
         use_progs.append('aria')
-    if test_progs(['wget', '-h']):
+    if acbs_utils.test_progs(['wget', '-h']):
         use_progs.append('wget')
-    if test_progs(['curl', '-h']):
+    if acbs_utils.test_progs(['curl', '-h']):
         use_progs.append('curl')
-    if test_progs(['axel', '-h']):
+    if acbs_utils.test_progs(['axel', '-h']):
         use_progs.append('axel')
     return use_progs
 
@@ -201,9 +207,10 @@ def wget_get(url, output):
 
 
 def aria_get(url, threads=3, output=None):
-    if os.path.exists(output) and not os.path.exists(output+'.aria2'):
+    if os.path.exists(output) and not os.path.exists(output + '.aria2'):
         return
-    aria_cmd = ['aria2c', '--max-connection-per-server={}'.format(threads), url, '--auto-file-renaming=false']  # ,'--check-certificate=false'
+    aria_cmd = ['aria2c', '--max-connection-per-server={}'.format(
+        threads), url, '--auto-file-renaming=false']  # ,'--check-certificate=false'
     if output is not None:
         aria_cmd.insert(2, '-d')
         aria_cmd.insert(3, dump_loc)

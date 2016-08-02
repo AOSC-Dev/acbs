@@ -2,7 +2,6 @@
 Some helper constants
 '''
 
-print('Stub! This is NOT executable!!!')
 
 class acbs_const(object):
     def __init__(self):
@@ -15,4 +14,6 @@ class acbs_const(object):
         self.ANSI_YELLOW = '\033[93m'
         self.ANSI_BLUE = '\033[34m'
         self.ANSI_BROWN = '\033[33m'
-        
+
+if __name__ == '__main__':
+    print('Stub! This is NOT executable!!!')

@@ -1,16 +1,19 @@
 import os
 import io
 import subprocess
+import logging
 from configparser import RawConfigParser
 
 from lib.acbs_utils import acbs_utils
 
 
 class acbs_parser(object):
+
     def __init__(self):
         self.abbs_spec = {}
         self.abd_config = {}
         self.spec_file_loc = ''
+        self.defines_file_loc = ''
         self.pkg_name = ''
         self.acbs_data = {}
 
@@ -19,16 +22,16 @@ class acbs_parser(object):
             with open(self.spec_file_loc + '/spec', 'rt') as spec_file:
                 spec_cont = spec_file.read()
         except:
-            print('[E] Failed to load spec file! Do you have read permission?')
+            logging.error('Failed to load spec file! Do you have read permission?')
             return False
         # Stupid but necessary laundry list of possible varibles
         script = spec_cont + acbs_utils.gen_laundry_list(['VER', 'REL', 'SUBDIR', 'SRCTBL', 'GITSRC',
-                                               'GITCO', 'GITBRCH', 'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC'])
+                                                          'GITCO', 'GITBRCH', 'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC'])
         try:
             # Better to be replaced by subprocess.Popen
             spec_out = subprocess.check_output(script, shell=True)
         except:
-            print('[E] Malformed spec file found! Couldn\'t continue!')
+            logging.exception('Malformed spec file found! Couldn\'t continue!')
             return False
         # Assume it's UTF-8 since we have no clue of the real world on how it
         # works ...
@@ -39,24 +42,27 @@ class acbs_parser(object):
         for i in config['wrap']:
             config_dict[i.upper()] = config['wrap'][i]
         config_dict['NAME'] = self.pkg_name
+        self.abd_config = config_dict
         res, err_msg = self.parser_validate(config_dict)
         if res is not True:
-            print('[E] {}'.format(err_msg))
+            logging.error('{}'.format(err_msg))
             return False
         return config_dict
 
     def parser_pass_through(self):  # config_dict, spec_file_loc):
-        write_ab = {'PKGVER': config_dict['VER'], 'PKGREL': config_dict['REL']}
-        return self.write_ab3_defines(self.spec_file_loc + '/autobuild/defines', write_ab)
+        write_ab = {'PKGVER': self.abbs_spec[
+            'VER'], 'PKGREL': self.abbs_spec['REL']}
+        return self.write_ab3_defines(self.defines_file_loc + '/autobuild/defines', write_ab)
         # return True# src_dispatcher(config_dict)
         # return True
 
-    def parse_ab3_defines(defines_file):  # , pkg_name):
+    def parse_ab3_defines(self, defines_file):  # , pkg_name):
         try:
             with open(defines_file, 'rt') as abd_file:
                 abd_cont = abd_file.read()
         except:
-            print('[E] Failed to load autobuild defines file! Do you have read permission?')
+            logging.exception(
+                'Failed to load autobuild defines file! Do you have read permission?')
             return False
         script = "ARCH={}\n".format(
             acbs_utils.get_arch_name()) + abd_cont + acbs_utils.gen_laundry_list(['PKGNAME', 'PKGDEP', 'BUILDDEP'])
@@ -64,7 +70,8 @@ class acbs_parser(object):
             # Better to be replaced by subprocess.Popen
             abd_out = subprocess.check_output(script, shell=True)
         except:
-            print('[E] Malformed Autobuild defines file found! Couldn\'t continue!')
+            logging.exception(
+                'Malformed Autobuild defines file found! Couldn\'t continue!')
             return False
         abd_fp = io.StringIO('[wrap]\n' + abd_out.decode('utf-8'))
         abd_config = RawConfigParser()
@@ -74,33 +81,34 @@ class acbs_parser(object):
             abd_config_dict[i.upper()] = abd_config['wrap'][i]
         return abd_config_dict
 
-    def bat_parse_ab3_defines(defines_files):
+    def bat_parse_ab3_defines(self, defines_files):
         onion_list = []
         for def_file in defines_files:
-            abd_config_dict = parse_ab3_defines(def_file)
+            abd_config_dict = self.parse_ab3_defines(def_file)
             if abd_config_dict is False:
                 return False
             else:
                 onion_list.append(abd_config_dict)
         return onion_list
 
-    def parser_validate(in_dict):
+    def parser_validate(self, in_dict):
         # just a simple naive validate for now
         if in_dict['NAME'] == '' or in_dict['VER'] == '':
             return False, 'Package name or version not valid!!!'
         if acbs_utils.check_empty(1, in_dict, ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']) is True:
-            return False, 'No source specified!'
+            if in_dict['DUMMYSRC'] not in ['true', '1']:
+                return False, 'No source specified!'
         return True, ''
 
-    def write_ab3_defines(def_file_loc, in_dict):
+    def write_ab3_defines(self, def_file_loc, in_dict):
         str_to_write = ''
         for i in in_dict:
-            str_to_write = str_to_write + i + '=' + '\"' + in_dict[i] + '\"\n'
+            str_to_write = '%s%s=\"%s\"\n' % (str_to_write, i, in_dict[i])
         try:
             fp = open(def_file_loc, 'at')
             fp.write(str_to_write)
         except:
-            print('[E] Failed to update information in \033[36m{}\033[0m'.format(
+            logging.exception('Failed to update information in \033[36m{}\033[0m'.format(
                 def_file_loc))
             return False
         return True
@@ -114,7 +122,8 @@ class acbs_parser(object):
                 try:
                     sub_dict[int(tmp_array[0])] = tmp_array[1]
                 except:
-                    print('[E] Expecting numeric value, got {}'.format(tmp_array[0]))
+                    logging.exception('Expecting numeric value, got {}'.format(
+                        tmp_array[0]))
                     return False
             return sub_dict
         else:
@@ -124,21 +133,23 @@ class acbs_parser(object):
         import configparser
         acbs_config = RawConfigParser()
         acbs_config._interpolation = configparser.ExtendedInterpolation()
-        with open('/etc/acbs/forest.conf', 'rt') as conf_file
+        with open('/etc/acbs/forest.conf', 'rt') as conf_file:
             try:
                 acbs_config.read_file(conf_file)
             except:
+                logging.exception('Failed to read configuration file!')
                 return None
         try:
             tree_loc_dict = acbs_config[tree_name]
         except:
-            print('[E] 404 - Tree not found: {}, defined trees: {}'.format(tree_name,
-                                                                           acbs_utils.list2str(acbs_config.sections())))
+            logging.error('404 - Tree not found: {}, defined trees: {}'.format(tree_name,
+                                                                               acbs_utils.list2str(acbs_config.sections())))
             return None
         try:
             tree_loc = tree_loc_dict['location']
         except KeyError:
-            print('[E] Malformed configuration file: missing `location` keyword')
+            logging.exception(
+                'Malformed configuration file: missing `location` keyword')
             return None
         return tree_loc
 
@@ -152,6 +163,6 @@ class acbs_parser(object):
             with open('/etc/acbs/forest.conf', 'w') as fp:
                 acbs_conf_writer.write(fp)
         except:
-            acbs_utils.err_msg('Unable to write initial configuration file!')
+            logging.exception('Unable to write initial configuration file!')
             return False
         return True

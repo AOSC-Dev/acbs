@@ -1,6 +1,6 @@
 import subprocess
 import logging
-from acbs_const import acbs_const
+from lib.acbs_const import acbs_const
 
 
 class acbs_utils(object):
@@ -28,7 +28,7 @@ class acbs_utils(object):
         # You know what, 'laundry list' can be a joke in somewhere...
         str_out = '\n\n'
         for i in items:
-            str_out = str_out + 'echo \"{}\"=\"$\{{}\}\"\n'.format(i, i)
+            str_out = str_out + 'echo \"%s\"=\"${%s}\"\n' % (i, i)
             # For example: `echo "VAR"="${VAR}"\n`
         return str_out
 

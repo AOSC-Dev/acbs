@@ -19,6 +19,8 @@ class acbs_start_ab(object):
         pkg_name = pkg_info['NAME']
 
     def copy_abd(self):
+        if self.pkg_info['DUMMYSRC'] in ['true', '1']:
+            self.pkg_info['SUBDIR'] = '.'
         if self.pkg_info['SUBDIR'] != '':
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
@@ -43,14 +45,17 @@ class acbs_start_ab(object):
             return False
         return True
 
-    @acbs_utils.time_this(desc_msg='Time for building {}'.format(pkg_name))
+    @acbs_utils.time_this(desc_msg='Building Time')
     def start_ab3(self):
         os.chdir(self.tmp_dir_loc)
-        if not self.copy_abd(self.tmp_dir_loc, self.repo_dir, self.pkg_info):
+        if not self.copy_abd():
             return False
         # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
         shadow_defines_loc = os.path.abspath(os.path.curdir)
-        if not acbs_parser.parser_pass_through(self.pkg_info, shadow_defines_loc):
+        parser_obj = acbs_parser()
+        parser_obj.abbs_spec = self.pkg_info
+        parser_obj.defines_file_loc = shadow_defines_loc
+        if not parser_obj.parser_pass_through():
             return False
         try:
             subprocess.check_call(['autobuild'])
@@ -60,3 +65,6 @@ class acbs_start_ab(object):
             shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
         # Will get better display later
         return True
+
+    def helper_gen_msg(self):
+        return 'Time for building {}'.format(self.pkg_name)
