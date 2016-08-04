@@ -70,7 +70,7 @@ def src_git_fetch(url, pkg_info):
         if os.path.isdir(pkg_info['NAME']) and os.path.isdir(pkg_info['NAME'] + '/.git'):
             os.chdir(pkg_info['NAME'])
             logging.info('Updating existing repository...')
-            # subprocess.check_call(['git', 'pull', '-f'])
+            subprocess.check_call(['git', 'pull', '-f'])
         else:
             subprocess.check_call(
                 ['git', 'clone', pkg_info['GITSRC'], pkg_info['NAME']])

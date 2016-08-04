@@ -18,8 +18,13 @@ def process_deps(build_deps, run_deps, pkg_slug):
     search_pkgs = []
     for i in search_pkgs_tmp:
         if i == pkg_slug:
-            acbs_utils.err_msg('The package can\'t depends on its self!')
-            return False, None
+            _, pkgs_not_avail = search_deps(i)
+            if len(pkgs_not_avail) > 0:
+                acbs_utils.err_msg('The package can\'t depends on its self!')
+                return False, None
+            else:
+                logging.warning(
+                    'The package depends on its self, however, it has been built at least once.')
         if i == '' or i == ' ':
             continue
         search_pkgs.append(i)
@@ -28,12 +33,14 @@ def process_deps(build_deps, run_deps, pkg_slug):
     if pkgs_not_avail is None:
         pkgs_not_avail = []
     if len(pkgs_not_avail) > 0:
-        logging.info('Building in-tree dependencies: \033[36m{}\033[0m'.format(acbs_utils.list2str(pkgs_not_avail)))
+        logging.info(
+            'Building in-tree dependencies: \033[36m{}\033[0m'.format(acbs_utils.list2str(pkgs_not_avail)))
         return False, pkgs_not_avail
     if (pkgs_to_install is None) or len(pkgs_to_install) == 0:
         logging.info('All dependencies are met.')
         return True, None
-    logging.info('Will install \033[36m{}\033[0m as required.'.format(acbs_utils.list2str(pkgs_to_install)))
+    logging.info('Will install \033[36m{}\033[0m as required.'.format(
+        acbs_utils.list2str(pkgs_to_install)))
     if not dpkg_inst_pkgs(pkgs_to_install):
         return False, None
     return True, None

@@ -7,6 +7,7 @@ import shutil
 
 from lib.acbs_utils import acbs_utils
 from lib.acbs_parser import acbs_parser
+from lib.acbs_const import acbs_const
 
 
 class acbs_start_ab(object):
@@ -45,26 +46,29 @@ class acbs_start_ab(object):
             return False
         return True
 
-    @acbs_utils.time_this(desc_msg='Building Time')
-    def start_ab3(self):
-        os.chdir(self.tmp_dir_loc)
-        if not self.copy_abd():
-            return False
-        # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
-        shadow_defines_loc = os.path.abspath(os.path.curdir)
-        parser_obj = acbs_parser()
-        parser_obj.abbs_spec = self.pkg_info
-        parser_obj.defines_file_loc = shadow_defines_loc
-        if not parser_obj.parser_pass_through():
-            return False
-        try:
-            subprocess.check_call(['autobuild'])
-        except:
-            return False
-        if self.rm_abdir is True:
-            shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
-        # Will get better display later
-        return True
+    def timed_start_ab3(self):
+        def helper_gen_msg():
+            acc = acbs_const()
+            return 'Time for building {}{}{}'.format(acc.ANSI_LT_CYAN, self.pkg_info['NAME'], acc.ANSI_RST)
 
-    def helper_gen_msg(self):
-        return 'Time for building {}'.format(self.pkg_name)
+        @acbs_utils.time_this(desc_msg=helper_gen_msg())
+        def start_ab3(self):
+            os.chdir(self.tmp_dir_loc)
+            if not self.copy_abd():
+                return False
+            # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
+            shadow_defines_loc = os.path.abspath(os.path.curdir)
+            parser_obj = acbs_parser()
+            parser_obj.abbs_spec = self.pkg_info
+            parser_obj.defines_file_loc = shadow_defines_loc
+            if not parser_obj.parser_pass_through():
+                return False
+            try:
+                subprocess.check_call(['autobuild'])
+            except:
+                return False
+            if self.rm_abdir is True:
+                shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
+            # Will get better display later
+            return True
+        return start_ab3(self)

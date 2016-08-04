@@ -159,10 +159,42 @@ class acbs_utils(object):
                 ret = func(*args, **kwargs)
                 time_span = time.time() - now_time
                 logging.info(
-                    '>>>>>>>>> %s : %s seconds' % (desc_msg, int(time_span)))
+                    '>>>>>>>>> %s : %s' % (desc_msg, acbs_utils.human_time(time_span)))
                 return ret
             return dec_main
         return time_this_func
+
+    def human_time(full_seconds):
+        acc = acbs_const()
+        import math
+        out_str = ''
+        msec, seconds = math.modf(full_seconds)
+        if seconds >= 86400:  # 86400 = 24 * 3600
+            days = int(seconds / 86400)
+            seconds = (seconds % 86400)
+            if days > 1:
+                pl = 's'
+            else:
+                pl = ''
+            out_str += '%s%s%s %sday%s%s, ' % (acc.ANSI_LT_CYAN,
+                                               days, acc.ANSI_RST, acc.ANSI_GREEN, pl, acc.ANSI_RST)
+        if seconds >= 3600:
+            hrs = int(seconds / 3600)
+            seconds = (seconds % 3600)
+            out_str += '%s%s%s %sh%s ' % (acc.ANSI_LT_CYAN,
+                                          hrs, acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
+        if seconds >= 60:
+            mins = int(seconds / 60)
+            seconds = (seconds % 60)
+            out_str += '%s%s%s %sm%s ' % (acc.ANSI_LT_CYAN,
+                                         mins, acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
+        if seconds > 0:
+            out_str += '%s%s%s %ss%s ' % (acc.ANSI_LT_CYAN,
+                                          int(seconds), acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
+        if msec > 0.0:
+            out_str += '%s%s%s %sms%s ' % (acc.ANSI_LT_CYAN,
+                                           int(msec * 1000), acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
+        return out_str
 
 
 class acbs_log_format(logging.Formatter):
