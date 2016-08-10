@@ -187,7 +187,7 @@ class acbs_utils(object):
             mins = int(seconds / 60)
             seconds = (seconds % 60)
             out_str += '%s%s%s %sm%s ' % (acc.ANSI_LT_CYAN,
-                                         mins, acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
+                                          mins, acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
         if seconds > 0:
             out_str += '%s%s%s %ss%s ' % (acc.ANSI_LT_CYAN,
                                           int(seconds), acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)

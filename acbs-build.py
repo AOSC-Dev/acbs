@@ -12,9 +12,9 @@ import logging
 import logging.handlers
 # import time
 
-from lib.acbs_find import *
+from lib.acbs_find import acbs_find
 from lib.acbs_parser import acbs_parser
-from lib.acbs_src_fetch import *
+from lib.acbs_src_fetch import acbs_src_fetch
 from lib.acbs_deps import *
 from lib.acbs_utils import acbs_utils
 from lib.acbs_utils import acbs_log_format
@@ -84,7 +84,7 @@ def init_env(tree=['default']):
 
 def build_pkgs(pkgs):
     for pkg in pkgs:
-        matched_pkg = acbs_pkg_match(pkg)
+        matched_pkg = acbs_find.acbs_pkg_match(pkg)
         if matched_pkg is None:
             acbs_utils.err_msg(
                 'No valid candidate package found for \033[36m{}\033[0m.'.format(pkg))
@@ -130,7 +130,7 @@ def build_ind_pkg(pkg):
     if try_build is not None:
         if new_build_thread(try_build) != 0:
             return 128
-    src_dispatcher_return = src_dispatcher(abbs_spec)
+    src_dispatcher_return = acbs_src_fetch.src_dispatcher(abbs_spec)
     if isinstance(src_dispatcher_return, tuple):
         src_proc_result, tmp_dir_loc = src_dispatcher_return
     else:
@@ -196,7 +196,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     onion_list = acbs_parser.bat_parse_ab3_defines(pkg_def_loc)
     if onion_list is False:
         return 1
-    src_dispatcher_return = src_dispatcher(abbs_spec)
+    src_dispatcher_return = acbs_src_fetch.src_dispatcher(abbs_spec)
     if isinstance(src_dispatcher_return, tuple):
         src_proc_result, tmp_dir_loc = src_dispatcher_return
     else:

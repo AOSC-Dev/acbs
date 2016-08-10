@@ -1,7 +1,5 @@
 import subprocess
 # import ptyprocess
-import pty
-import time
 import os
 import shutil
 
@@ -69,6 +67,5 @@ class acbs_start_ab(object):
                 return False
             if self.rm_abdir is True:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
-            # Will get better display later
             return True
         return start_ab3(self)
