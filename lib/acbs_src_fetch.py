@@ -18,12 +18,12 @@ class acbs_src_fetch(object):
             logging.info('Not fetching dummy source as required.')
             return src_proc_dispatcher(self.pkg_info['NAME'], None, self.dump_loc)
         if self.pkg_info['SRCTBL'] != '':
-            return self.src_url_dispatcher(self)
+            return self.src_url_dispatcher()
         for src in ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
             if len(self.pkg_info[src]) > 0:
-                code_obj = compile('ret=src_%s_fetch(%s,%s)' % (src, self.pkg_info), '<string>', 'exec')
-                exec(code_obj)
-                return ret
+                exec('ret=self.src_%s_fetch()' % (src.strip('SRC').lower()))
+                ret_code = locals()['ret']
+                return ret_code
         return False
 
     def src_url_dispatcher(self):
@@ -42,12 +42,12 @@ class acbs_src_fetch(object):
         if proto in ['http', 'https', 'ftp', 'ftps', 'ftpes']:
             src_tbl_name = pkg_name + '-' + pkg_ver
             src_name = os.path.basename(url)
-            if self.src_tbl_fetch(self, url, src_tbl_name):
+            if self.src_tbl_fetch(url, src_tbl_name):
                 return src_proc_dispatcher(pkg_name, src_name, self.dump_loc)
         elif proto in ['git', 'hg', 'svn', 'bzr', 'bk']:  # or proto == 'git+https'
             logging.warning(
                 'In spec file: This source seems to refers to a VCS repository, but you misplaced it.')
-            if exec('src_%s_fetch(%r, %r)' % (proto, url, pkg_info)):
+            if exec('self.src_%s_fetch()' % (proto)):
                 return src_proc_dispatcher(pkg_name, pkg_name, self.dump_loc)
         else:
             logging.error('Unknown protocol {}'.format(proto))
@@ -98,44 +98,46 @@ class acbs_src_fetch(object):
             flag.write('acbs flag: DO NOT DELETE!')
         for i in use_progs:
             try:
-                # print('{}_get({}, output={})'.format(i, url, full_path))
-                exec('%s_get(%r, output=%r)' % (i, url, full_path))
+                # print('self.%s_get(%r, output=%r)' % (i, url, full_path))
+                exec('self.%s_get(url=%r, output=%r)' % (i, url, full_path))
                 os.unlink(flag_file)
                 break
             except KeyboardInterrupt:
                 acbs_utils.err_msg('You aborted the download!')
                 return False
             except NameError:
-                raise NameError('An Internal Error occurred!')
+                logging.exception('An Internal Error occurred!')
+                raise NameError()
             except AssertionError:
                 continue
             except:
+                logging.exception('Something happend!')
                 return False
         return True
 
-    def src_svn_fetch(url, pkg_info):
+    def src_svn_fetch(self):
         if not acbs_utils.test_progs(['svn', '-h']):
             logging.error('Subverion is not installed!')
             return False
-        if pkg_info['SVNSRC'] == '':
+        if self.pkg_info['SVNSRC'] == '':
             logging.error('Source URL is empty!')
             return False
-        if pkg_info['SVNCO'] == '':
+        if self.pkg_info['SVNCO'] == '':
             logging.warning(
                 'Source revision not specified! Will use latest revision instead!')
-            pkg_info['SVNCO'] = 'HEAD'
-        subprocess.check_call(['svn', 'co', '-r', pkg_info['SVNCO']])
+            self.pkg_info['SVNCO'] = 'HEAD'
+        subprocess.check_call(['svn', 'co', '-r', self.pkg_info['SVNCO']])
         return True
 
-    def src_hg_fetch(url):
+    def src_hg_fetch(self):
         raise NotImplementedError()
         return True
 
-    def src_bzr_fetch(url):
+    def src_bzr_fetch(self):
         raise NotImplementedError()
         return True
 
-    def src_bk_fetch(url):
+    def src_bk_fetch(self):
         raise NotImplementedError()
         return True
 
@@ -143,7 +145,7 @@ class acbs_src_fetch(object):
     External downloaders
     '''
 
-    def test_downloaders():
+    def test_downloaders(self):
         use_progs = []
         if acbs_utils.test_progs(['aria2c', '-h']):
             use_progs.append('aria')
@@ -155,7 +157,7 @@ class acbs_src_fetch(object):
             use_progs.append('axel')
         return use_progs
 
-    def axel_get(url, threads=4, output=None):
+    def axel_get(self, url, threads=4, output=None):
         axel_cmd = ['axel', '-n', threads, '-a', url]
         if output is not None:
             axel_cmd.insert(4, '-o')
@@ -168,7 +170,7 @@ class acbs_src_fetch(object):
             raise AssertionError('Failed to fetch source with Axel!')
         return
 
-    def curl_get(url, output=None):
+    def curl_get(self, url, output=None):
         curl_cmd = ['curl', url]  # , '-k'
         if output is not None:
             curl_cmd.insert(2, '-o')
@@ -183,7 +185,7 @@ class acbs_src_fetch(object):
             raise AssertionError('Failed to fetch source with cURL!')
         return
 
-    def wget_get(url, output):
+    def wget_get(self, url, output):
         wget_cmd = ['wget', '-c', url]  # ,'--no-check-certificate'
         if output is not None:
             wget_cmd.insert(2, '-O')
@@ -196,7 +198,7 @@ class acbs_src_fetch(object):
             raise AssertionError('Failed to fetch source with Wget!')
         return
 
-    def aria_get(url, threads=3, output=None):
+    def aria_get(self, url, threads=3, output=None):
         if os.path.exists(output) and not os.path.exists(output + '.aria2'):
             return
         aria_cmd = ['aria2c', '--max-connection-per-server={}'.format(

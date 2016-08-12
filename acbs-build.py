@@ -47,6 +47,9 @@ def main():
 
 
 def init_env(tree=['default']):
+    if os.getuid() != 0:
+        print('Run me as ROOT!')
+        sys.exit(1)
     dump_loc = '/var/cache/acbs/tarballs/'
     tmp_loc = '/var/cache/acbs/build/'
     conf_loc = '/etc/acbs/'
@@ -66,7 +69,9 @@ def init_env(tree=['default']):
     logger.addHandler(str_handler)
     log_file_handler = logging.handlers.RotatingFileHandler(
         '/var/log/acbs/acbs-build.log', mode='a', maxBytes=5120, backupCount=10)
-    log_file_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
+    log_file_handler.setLevel(logging.DEBUG)
+    log_file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s:%(levelname)s:%(message)s'))
     logger.addHandler(log_file_handler)
     perf_obj = acbs_misc()
     perf_obj.dev_utilz_warn()
@@ -84,7 +89,13 @@ def init_env(tree=['default']):
 
 def build_pkgs(pkgs):
     for pkg in pkgs:
-        matched_pkg = acbs_find.acbs_pkg_match(pkg)
+        print(os.path.abspath(os.curdir))
+        finder = acbs_find(pkg)
+        matched_pkg = finder.acbs_pkg_match()
+        if isinstance(matched_pkg, list):
+            logging.info('Package build list found: \033[36m%s (%s)\033[0m' %
+                         (os.path.basename(pkg), len(matched_pkg)))
+            return build_pkgs(matched_pkg + pkgs)
         if matched_pkg is None:
             acbs_utils.err_msg(
                 'No valid candidate package found for \033[36m{}\033[0m.'.format(pkg))
@@ -130,7 +141,8 @@ def build_ind_pkg(pkg):
     if try_build is not None:
         if new_build_thread(try_build) != 0:
             return 128
-    src_dispatcher_return = acbs_src_fetch.src_dispatcher(abbs_spec)
+    src_fetcher = acbs_src_fetch(abbs_spec)
+    src_dispatcher_return = src_fetcher.src_dispatcher()
     if isinstance(src_dispatcher_return, tuple):
         src_proc_result, tmp_dir_loc = src_dispatcher_return
     else:
@@ -219,7 +231,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
             if new_build_thread(try_build) != 0:
                 return 128
         ab3_obj = acbs_start_ab(tmp_dir_loc, sub_repo_dir[
-                                sub_count - 1], abbs_spec, rm_abdir=True)
+            sub_count - 1], abbs_spec, rm_abdir=True)
         if not ab3_obj.timed_start_ab3():
             acbs_utils.err_msg('Autobuild process failure on {}!'.format(
                 abd_sub_dict['PKGNAME']))

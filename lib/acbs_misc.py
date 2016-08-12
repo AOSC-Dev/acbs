@@ -45,6 +45,7 @@ class acbs_misc(object):
             self.output_warn('CPU load', cpu_use)
         return
 
-    def output_warn(warn_item, value):
-        logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(acbs_const.ANSI_YELLOW, acbs_const.ANSI_RST, acbs_const.ANSI_LT_CYAN, warn_item, acbs_const.ANSI_RST, value, acbs_const.ANSI_YELLOW, acbs_const.ANSI_RST))
+    def output_warn(self, warn_item, value):
+        acc = acbs_const()
+        logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(acc.ANSI_YELLOW, acc.ANSI_RST, acc.ANSI_LT_CYAN, warn_item, acc.ANSI_RST, acc.ANSI_YELLOW, value, acc.ANSI_RST))
         return
