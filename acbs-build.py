@@ -6,7 +6,7 @@ from irregular bash failures
 '''
 import os
 import sys
-import shutil
+# import shutil
 import argparse
 import logging
 import logging.handlers
@@ -89,9 +89,8 @@ def init_env(tree=['default']):
 
 def build_pkgs(pkgs):
     for pkg in pkgs:
-        print(os.path.abspath(os.curdir))
-        finder = acbs_find(pkg)
-        matched_pkg = finder.acbs_pkg_match()
+        # print(os.path.abspath(os.curdir))
+        matched_pkg = acbs_find(pkg).acbs_pkg_match()
         if isinstance(matched_pkg, list):
             logging.info('Package build list found: \033[36m%s (%s)\033[0m' %
                          (os.path.basename(pkg), len(matched_pkg)))
@@ -205,10 +204,10 @@ def build_sub_pkgs(pkg_base, pkgs_array):
     for i in pkg_tuple:
         pkg_def_loc.append(i[1] + '/defines')
         sub_repo_dir.append(i[1])
-    onion_list = acbs_parser.bat_parse_ab3_defines(pkg_def_loc)
+    onion_list = acbs_parser().bat_parse_ab3_defines(pkg_def_loc)
     if onion_list is False:
         return 1
-    src_dispatcher_return = acbs_src_fetch.src_dispatcher(abbs_spec)
+    src_dispatcher_return = acbs_src_fetch(pkg_info=abbs_spec).src_dispatcher()
     if isinstance(src_dispatcher_return, tuple):
         src_proc_result, tmp_dir_loc = src_dispatcher_return
     else:

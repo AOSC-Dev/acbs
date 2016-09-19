@@ -11,7 +11,7 @@ class acbs_find(object):
 
     def __init__(self, target):
         self.target = target
-        self.path = '.'
+        self.path = os.path.abspath('.')
 
     def acbs_pkg_match(self):
         if self.target.split('/')[0] == 'groups' and os.path.isfile(self.target):
@@ -20,6 +20,8 @@ class acbs_find(object):
             pkg_list = pkg_list_str.split('\n')
             group_pkg = []
             for pkg in pkg_list:
+                if pkg in [None, '']:
+                    continue
                 match_res = self.acbs_pkg_match_core(target=pkg)
                 if match_res is not None:
                     group_pkg.append(match_res)
@@ -35,9 +37,8 @@ class acbs_find(object):
         target_slug = target.split('/')
         if len(target_slug) > 1:
             target = target_slug[1]
-        outer_dirlist = os.listdir('.')
+        outer_dirlist = os.listdir(self.path)
         inner_dirlist = []
-        global cur_dir
         cur_dir = ''
         for i in outer_dirlist:
             if os.path.isdir(i):
