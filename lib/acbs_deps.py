@@ -1,11 +1,12 @@
-from .pm.acbs_dpkg import *
+from .pm.acbs_pm import acbs_pm
 from lib.acbs_utils import acbs_utils
 import logging
+import sys
 
 
 def search_deps(search_pkgs):
-    pkgs_miss = dpkg_miss_pkgs(search_pkgs)
-    pkgs_to_install = dpkg_online_pkgs(pkgs_miss)
+    pkgs_miss = acbs_pm().query_current_miss_pkgs(search_pkgs)
+    pkgs_to_install = acbs_pm().query_online_pkgs(pkgs_miss)
     pkgs_not_avail = (set(pkgs_miss) - set(pkgs_to_install))
     if len(pkgs_not_avail) > 0:
         return None, pkgs_not_avail
@@ -41,6 +42,6 @@ def process_deps(build_deps, run_deps, pkg_slug):
         return True, None
     logging.info('Will install \033[36m{}\033[0m as required.'.format(
         acbs_utils.list2str(pkgs_to_install)))
-    if not dpkg_inst_pkgs(pkgs_to_install):
+    if not acbs_pm().install_pkgs(pkgs_to_install):
         return False, None
     return True, None

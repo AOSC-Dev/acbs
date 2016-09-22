@@ -1,0 +1,20 @@
+pm_getver(){
+	rpm -q $1 --qf '%{EPOCH}:%{VERSION}-${RELEASE}' 2>/dev/null
+}
+
+pm_exists(){
+	rpm -q "$@" &>/dev/null
+}
+
+pm_repoupdate(){ zypper ref -f; }
+
+pm_repoinstall(){
+	zypper -n install "$@"
+}
+
+pm_whoprov(){ rpm -q --whatprovides "$1" --qf '%{NAME}'; }
+# Just for testing of output.
+
+pm_repoquery(){
+  zypper search -x "$@"
+}

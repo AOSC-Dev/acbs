@@ -42,6 +42,7 @@ class acbs_utils(object):
         """
         try:
             if display is False:
+                # _ = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
                 proc = subprocess.Popen(
                     cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 _, _ = proc.communicate()  # Maybe one day we'll need its output...?
