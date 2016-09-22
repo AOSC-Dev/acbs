@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import sys
 from lib.acbs_const import acbs_const
 
 
@@ -151,6 +152,10 @@ class acbs_utils(object):
     def random_msg():
 
         return ''
+
+    def acbs_terminate(exit_code):
+        sys.exit(exit_code)
+        return
 
     def time_this(desc_msg):
         def time_this_func(func):

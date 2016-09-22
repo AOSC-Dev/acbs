@@ -1,7 +1,5 @@
-from ..acbs_utils import acbs_utils
 import logging
 import subprocess
-import io
 import os
 
 
@@ -46,7 +44,8 @@ class acbs_pm(object):
         return hybrid_res
 
     def install_pkgs(self, pkgs):
-        results = self.multi_backend_proc('pm_repoinstall', ' '.join(pkgs), True)
+        results = self.multi_backend_proc(
+            'pm_repoinstall', ' '.join(pkgs), True)
         for result in results:
             if results[result] is None:
                 return False
@@ -64,6 +63,6 @@ class acbs_pm(object):
                 output = subprocess.check_output(
                     excute_code, shell=True, stderr=subprocess.STDOUT)
             return output.decode('utf-8')
-        except Exception:
+        except:
             return None
         return None

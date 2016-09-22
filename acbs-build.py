@@ -9,13 +9,14 @@ import sys
 # import shutil
 import argparse
 import logging
+import signal
 import logging.handlers
 # import time
 
 from lib.acbs_find import acbs_find
 from lib.acbs_parser import acbs_parser
 from lib.acbs_src_fetch import acbs_src_fetch
-from lib.acbs_deps import *
+from lib.acbs_deps import acbs_deps
 from lib.acbs_utils import acbs_utils
 from lib.acbs_utils import acbs_log_format
 from lib.acbs_start_build import acbs_start_ab
@@ -73,8 +74,8 @@ def init_env(tree=['default']):
     log_file_handler.setFormatter(logging.Formatter(
         '%(asctime)s:%(levelname)s:%(message)s'))
     logger.addHandler(log_file_handler)
-    perf_obj = acbs_misc()
-    perf_obj.dev_utilz_warn()
+    signal.signal(signal.SIGUSR1, signal_handler)
+    acbs_misc().dev_utilz_warn()
     if os.path.exists('/etc/acbs/forest.conf'):
         tree_loc = acbs_parser.parse_acbs_conf(tree[0])
         if tree_loc is not None:
@@ -132,7 +133,7 @@ def build_ind_pkg(pkg):
     # parser_pass_through(abbs_spec,pkg)
     abd_dict = ps_obj.parse_ab3_defines(os.path.join(pkg, 'autobuild/defines'))
     # print(abd_dict)
-    deps_result, try_build = process_deps(
+    deps_result, try_build = acbs_deps().process_deps(
         abd_dict['BUILDDEP'], abd_dict['PKGDEP'], pkg_slug)
     if (deps_result is False) and (try_build is None):
         acbs_utils.err_msg('Failed to process dependencies!')
@@ -157,6 +158,10 @@ def build_ind_pkg(pkg):
     return 0
 
 
+def signal_handler(signal, frame):
+    raise ACBSTerminate()
+
+
 def new_build_thread(try_build):
     import threading
     for sub_pkg in list(try_build):
@@ -172,6 +177,7 @@ def new_build_thread(try_build):
         except:
             acbs_utils.err_msg(
                 'Sub-build process using thread {}, building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_thread.name, sub_pkg))
+            sys.exit()
             return 128
 
 
@@ -221,7 +227,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
         logging.info('[\033[36m{}/{}\033[0m] Building sub package \033[36m{}\033[0m'.format(sub_count,
                                                                                             len(onion_list), abd_sub_dict['PKGNAME']))
         pkg_slug = abd_sub_dict['PKGNAME']
-        deps_result, try_build = process_deps(
+        deps_result, try_build = acbs_deps().process_deps(
             abd_sub_dict['BUILDDEP'], abd_sub_dict['PKGDEP'], pkg_slug)
         if (deps_result is False) and (try_build is None):
             acbs_utils.err_msg('Failed to process dependencies!')
@@ -243,6 +249,9 @@ def help_msg():
 abbs to CI environment to prevent from irregular bash failures'.format(acbs_version)
     return help_msg
 
+
+class ACBSTerminate(Exception):
+    pass
 
 if __name__ == '__main__':
     main()

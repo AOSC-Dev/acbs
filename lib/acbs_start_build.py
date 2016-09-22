@@ -2,6 +2,7 @@ import subprocess
 # import ptyprocess
 import os
 import shutil
+import logging
 
 from lib.acbs_utils import acbs_utils
 from lib.acbs_parser import acbs_parser
@@ -11,6 +12,7 @@ from lib.acbs_const import acbs_const
 class acbs_start_ab(object):
     def __init__(self, tmp_dir_loc, repo_dir, pkg_info, rm_abdir=False):
         self.tmp_dir_loc = tmp_dir_loc
+        logging.debug('Temp dir location: {}'.format(tmp_dir_loc))
         self.repo_dir = repo_dir
         self.pkg_info = pkg_info
         self.rm_abdir = rm_abdir
