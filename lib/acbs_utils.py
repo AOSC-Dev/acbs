@@ -153,6 +153,32 @@ class acbs_utils(object):
 
         return ''
 
+    def sh_executor(self, file, function, args, display=False):
+        """
+        Execute specified functions in external shell scripts with given args
+
+        :param file: The full path to the script file
+        :param function: The function need to be excute_code
+        :param: args: The arguments that need to be passed to the function
+        :param display: Wether return script output or display on screen
+        :returns: Return if excution succeeded or return output per requested
+        :raise FileNotFoundError: If script file doesn't exist, raise this.
+        """
+        with open(file, 'rt') as f:
+            sh_code = f.read()
+        excute_code = '%s\n%s %s\n' % (sh_code, function, args)
+        try:
+            if display:
+                subprocess.check_call(excute_code, shell=True)
+                return True
+            else:
+                output = subprocess.check_output(
+                    excute_code, shell=True, stderr=subprocess.STDOUT)
+            return output.decode('utf-8')
+        except:
+            return None
+        return None
+
     def acbs_terminate(exit_code):
         sys.exit(exit_code)
         return
