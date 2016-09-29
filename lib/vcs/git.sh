@@ -6,37 +6,45 @@
 # - return plain URL
 #
 vcs_repofetch() {
-
+	if [[ ! -z $3 ]]; then
+		git clone --depth $3 $1 $2
+	else
+		git clone $1 $2
+	fi
 }
 
 # vcs_switchbranch: accepts 1 arg: 1. new branch
 vcs_switchbranch() {
-
+	git checkout $1
 }
 
 # vcs_switchcommit: accepts 1 arg: 1. commit hash
 vcs_switchcommit() {
-
+	git checkout $1
 }
 
 # vcs_repoupdate: accepts 1 arg: 1. new URL
 # - return nothing
 # - remark - you may want to check if conflicts exist
 vcs_repoupdate() {
-
+	git pull $1
 }
 
 # vcs_test: accepts no arg
 # To test vcs software existence
 # - exit with 0 if exist, on any error exit with other code
 vcs_test() {
-
+	if type -p git; then
+		exit 0
+	else
+		exit 127
+	fi
 }
 
 # vcs_repourl: accepts 1 arg: 1. folder
 # - return: primary pull url of the given repo
 # - remark - please try to redirect other possible output to `/dev/null`
 #
-vcs_repourl() {
-
-}
+#vcs_repourl() {
+#
+#}
