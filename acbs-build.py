@@ -11,7 +11,9 @@ import argparse
 import logging
 import signal
 import logging.handlers
+from multiprocessing import pool
 # import time
+from multiprocessing.pool import ThreadPool
 
 from lib.acbs_find import acbs_find
 from lib.acbs_parser import acbs_parser
@@ -163,29 +165,26 @@ def signal_handler(signal, frame):
 
 
 def new_build_thread(try_build):
-    import threading
     for sub_pkg in list(try_build):
-        dumb_mutex = threading.Lock()
+        dumb_mutex = pool.threading.Lock()
         dumb_mutex.acquire()
+        fake_pool = ThreadPool(processes=1)
         try:
-            sub_thread = threading.Thread(
-                target=slave_thread_build, args=[sub_pkg])
-            sub_thread.start()
-            sub_thread.join()
+            sub_thread = fake_pool.apply_async(func=slave_thread_build, args=(sub_pkg))
+            if not sub_thread.get():
+                raise ACBSTerminate()
             dumb_mutex.release()
             return 0
         except:
             acbs_utils.err_msg(
-                'Sub-build process using thread {}, building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_thread.name, sub_pkg))
+                'Sub-build process building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_pkg))
             sys.exit()
             return 128
 
 
 def slave_thread_build(pkg):
-    import threading
-    logging.debug('New build thread \033[36m{}\033[0m started for \033[36m{}\033[0m'.format(
-        threading.current_thread().getName(), pkg))
-    build_pkgs([pkg])
+    logging.debug('New build thread started for \033[36m{}\033[0m'.format(pkg))
+    return build_pkgs([pkg])
 
 
 def build_sub_pkgs(pkg_base, pkgs_array):

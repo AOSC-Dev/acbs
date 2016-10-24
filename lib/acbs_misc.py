@@ -1,27 +1,28 @@
-# Nothing to see here... at least... currently...
 import logging
 from lib.acbs_const import acbs_const
 
 
-class acbs_misc(object):
+class acbs_profiler(object):
 
     def __init__(self):
+        super(acbs_profiler, self).__init__()
         self.cpu_use = 0.0
         self.per_cpu_use = []
         self.mem_use = 0.0
         self.loadavg = []
-        self.psutil_avail = False
-        return
-
-    def __update_stats(self, log_warn=True, per_cpu=False):
+        self.psutil_avail = True
         try:
             import psutil
         except:
-            if log_warn is True:
-                logging.warning(
-                  'Unable to use psutil library, some functions are disabled.')
-            return
-        self.psutil_avail = True
+            self.psutil_avail = False
+        return
+
+    def __update_stats(self, log_warn=True, per_cpu=False):
+        if log_warn and self.psutil_avail:
+            logging.warning(
+              'Unable to use psutil library, some functions are disabled.')
+        return
+        import psutil
         self.mem_use = psutil.virtual_memory().percent
         self.cpu_use = psutil.cpu_percent(0.3)
         if per_cpu is True:
@@ -49,3 +50,9 @@ class acbs_misc(object):
         acc = acbs_const()
         logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(acc.ANSI_YELLOW, acc.ANSI_RST, acc.ANSI_LT_CYAN, warn_item, acc.ANSI_RST, acc.ANSI_YELLOW, value, acc.ANSI_RST))
         return
+
+
+class acbs_misc(acbs_profiler):
+
+    def __init__(self):
+        super(acbs_misc, self).__init__()

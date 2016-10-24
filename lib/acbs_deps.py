@@ -5,7 +5,7 @@ import logging
 
 class acbs_deps(object):
 
-    def __init__():
+    def __init__(self):
         return
 
     def search_deps(self, search_pkgs):

@@ -7,12 +7,12 @@ class acbs_pm(object):
 
     def __init__(self):
         pm_mod_dir = os.path.dirname(os.path.realpath(__file__))
-        mod_files = os.listdir(pm_mod_dir)
-        self.backends = []
-        for i in mod_files:
+        pm_mod_files = os.listdir(pm_mod_dir)
+        self.pm_backends = []
+        for i in pm_mod_files:
             if i.endswith('.sh'):
-                self.backends.append(os.path.join(pm_mod_dir, i))
-        logging.debug('Found backends: {}'.format(self.backends))
+                self.pm_backends.append(os.path.join(pm_mod_dir, i))
+        logging.debug('Found pm_backends: {}'.format(self.pm_backends))
         return
 
     def query_current_miss_pkgs(self, pkgs):
@@ -38,7 +38,7 @@ class acbs_pm(object):
 
     def multi_backend_proc(self, function, args, display=False):
         hybrid_res = {}
-        for bk in self.backends:
+        for bk in self.pm_backends:
             hybrid_res[os.path.basename(bk).split('.sh')[0]] = self.pm_invoker(
                 bk, function, args, display)
         return hybrid_res

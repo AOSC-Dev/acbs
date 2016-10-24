@@ -9,12 +9,12 @@ from lib.acbs_utils import acbs_utils
 
 class acbs_parser(object):
 
-    def __init__(self):
+    def __init__(self, pkg_name=None, spec_file_loc=None, defines_file_loc=None):
         self.abbs_spec = {}
         self.abd_config = {}
-        self.spec_file_loc = ''
-        self.defines_file_loc = ''
-        self.pkg_name = ''
+        self.spec_file_loc = spec_file_loc or ''
+        self.defines_file_loc = defines_file_loc or ''
+        self.pkg_name = pkg_name
         self.acbs_data = {}
 
     def parse_abbs_spec(self):
@@ -22,11 +22,17 @@ class acbs_parser(object):
             with open(self.spec_file_loc + '/spec', 'rt') as spec_file:
                 spec_cont = spec_file.read()
         except:
-            logging.error('Failed to load spec file! Do you have read permission?')
+            logging.error(
+                'Failed to load spec file! Do you have read permission?')
             return False
         # Stupid but necessary laundry list of possible varibles
-        script = spec_cont + acbs_utils.gen_laundry_list(['VER', 'REL', 'SUBDIR', 'SRCTBL', 'GITSRC',
-                                                          'GITCO', 'GITBRCH', 'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC'])
+        script = '{}{}'.format(
+            spec_cont, acbs_utils.gen_laundry_list(['VER', 'REL', 'SUBDIR',
+                                                    'SRCTBL', 'GITSRC',
+                                                    'GITCO', 'GITBRCH',
+                                                    'SVNSRC', 'SVNCO', 'HGSRC',
+                                                    'BZRSRC', 'BZRCO',
+                                                    'DUMMYSRC']))
         try:
             # Better to be replaced by subprocess.Popen
             spec_out = subprocess.check_output(script, shell=True)
@@ -64,8 +70,9 @@ class acbs_parser(object):
             logging.exception(
                 'Failed to load autobuild defines file! Do you have read permission?')
             return False
-        script = "ARCH={}\n".format(
-            acbs_utils.get_arch_name()) + abd_cont + acbs_utils.gen_laundry_list(['PKGNAME', 'PKGDEP', 'BUILDDEP'])
+        script = "ARCH={}\n{}{}".format(
+            acbs_utils.get_arch_name(), abd_cont,
+            acbs_utils.gen_laundry_list(['PKGNAME', 'PKGDEP', 'BUILDDEP']))
         try:
             # Better to be replaced by subprocess.Popen
             abd_out = subprocess.check_output(script, shell=True)
@@ -95,7 +102,7 @@ class acbs_parser(object):
         # just a simple naive validate for now
         if in_dict['NAME'] == '' or in_dict['VER'] == '':
             return False, 'Package name or version not valid!!!'
-        if acbs_utils.check_empty(1, in_dict, ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']) is True:
+        if acbs_utils.check_empty(acbs_utils.LOGIC_OR, in_dict, ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']) is True:
             if in_dict['DUMMYSRC'] not in ['true', '1']:
                 return False, 'No source specified!'
         return True, ''
@@ -121,7 +128,7 @@ class acbs_parser(object):
                 tmp_array = i.split('-', 1)
                 try:
                     sub_dict[int(tmp_array[0])] = tmp_array[1]
-                except:
+                except ValueError:
                     logging.exception('Expecting numeric value, got {}'.format(
                         tmp_array[0]))
                     return False

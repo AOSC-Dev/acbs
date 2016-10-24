@@ -41,6 +41,6 @@ vcs_test() {
 # - return: primary pull url of the given repo
 # - remark - please try to redirect other possible output to `/dev/null`
 #
-#vcs_repourl() {
-#
-#}
+vcs_repourl() {
+   echo "?"
+}

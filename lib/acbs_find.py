@@ -9,22 +9,24 @@ ACBS Search
 
 class acbs_find(object):
 
-    def __init__(self, target):
+    def __init__(self, target, search_path=None):
         self.target = target
-        self.path = os.path.abspath('.')
+        self.path = search_path or os.path.abspath('.')
 
     def acbs_pkg_match(self):
         if self.target.split('/')[0] == 'groups' and os.path.isfile(self.target):
             with open(self.target, 'rt') as cmd_list:
                 pkg_list_str = cmd_list.read()
-            pkg_list = pkg_list_str.split('\n')
+            pkg_list = pkg_list_str.splitlines()
             group_pkg = []
             for pkg in pkg_list:
-                if pkg in [None, '']:
+                if pkg.strip() in [None, '']:
                     continue
                 match_res = self.acbs_pkg_match_core(target=pkg)
                 if match_res is not None:
                     group_pkg.append(match_res)
+                else:
+                    logging.warning('Package %s not found!' % pkg)
             return group_pkg
         else:
             return self.acbs_pkg_match_core()
@@ -36,23 +38,22 @@ class acbs_find(object):
             return target
         target_slug = target.split('/')
         if len(target_slug) > 1:
-            target = target_slug[1]
-        outer_dirlist = os.listdir(self.path)
-        inner_dirlist = []
-        cur_dir = ''
-        for i in outer_dirlist:
-            if os.path.isdir(i):
-                cur_dir = i
-                inner_dirlist = os.listdir(i)
-                for j in inner_dirlist:
-                    if os.path.isdir(i + '/' + j):
-                        if j == target and self.acbs_verify_pkg('%s/%s' % (cur_dir, j)):
-                            return '{}/{}'.format(cur_dir, j)
-        return None
+            _, target = target_slug
+        categories = ('base-', 'extra-')
+        for path in os.listdir(self.path):
+            secpath = os.path.join(self.path, path)
+            if not (os.path.isdir(secpath) and any(path.startswith(x) for x in categories)):
+                continue
+            category, section = path.split('-')
+            for pkgpath in os.listdir(secpath):
+                if pkgpath == target and os.path.isdir(os.path.join(secpath, pkgpath)):
+                    return os.path.relpath(os.path.join(secpath, pkgpath), self.path)
+        return
 
-    def acbs_verify_pkg(self, path):
+    def acbs_verify_pkg(self, path, strict_mode=False):
         if os.path.exists(os.path.join(path, 'spec')):
-            # and os.path.exists(os.path.join(path,'autobuild/defines')):
+            if strict_mode and not os.path.exists(os.path.join(path, 'autobuild/defines')):
+                return False
             return True
         else:
             logging.error(

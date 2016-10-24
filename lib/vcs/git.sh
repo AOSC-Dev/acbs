@@ -45,6 +45,22 @@ vcs_test() {
 # - return: primary pull url of the given repo
 # - remark - please try to redirect other possible output to `/dev/null`
 #
-#vcs_repourl() {
-#
-#}
+vcs_repourl() {
+	pushd $1 > /dev/null
+	if branch=$(git symbolic-ref --short -q HEAD); then
+	  default_remote=$(git config branch.${branch}.remote)
+	else
+	  vcs_terminate
+	fi
+	if [ $? -eq 0 ]; then
+		git remote get-url ${default_remote}
+	else
+		vcs_terminate
+	fi
+	popd > /dev/null
+}
+
+vcs_terminate() {
+	popd > /dev/null
+	exit 1
+}

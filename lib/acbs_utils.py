@@ -5,6 +5,8 @@ from lib.acbs_const import acbs_const
 
 
 class acbs_utils(object):
+    LOGIC_OR = 1
+    LOGIC_AND = 2
 
     def list2str(list_in, sep=' '):
         """
@@ -149,11 +151,18 @@ class acbs_utils(object):
             raise ValueError('...')
             return False
 
+    def full_line_banner(msg):
+        import shutil
+        bars_count = int((shutil.get_terminal_size().columns - len(msg)) / 2)
+        for i in range(0, bars_count):
+            msg = '-{}-'.format(msg)
+        return msg
+
     def random_msg():
 
         return ''
 
-    def sh_executor(self, file, function, args, display=False):
+    def sh_executor(self, sh_file, function, args, display=False):
         """
         Execute specified functions in external shell scripts with given args
 
@@ -164,7 +173,7 @@ class acbs_utils(object):
         :returns: Return if excution succeeded or return output per requested
         :raise FileNotFoundError: If script file doesn't exist, raise this.
         """
-        with open(file, 'rt') as f:
+        with open(sh_file, 'rt') as f:
             sh_code = f.read()
         excute_code = '%s\n%s %s\n' % (sh_code, function, args)
         try:
@@ -198,34 +207,11 @@ class acbs_utils(object):
 
     def human_time(full_seconds):
         acc = acbs_const()
-        import math
-        out_str = ''
-        msec, seconds = math.modf(full_seconds)
-        if seconds >= 86400:  # 86400 = 24 * 3600
-            days = int(seconds / 86400)
-            seconds = (seconds % 86400)
-            if days > 1:
-                pl = 's'
-            else:
-                pl = ''
-            out_str += '%s%s%s %sday%s%s, ' % (acc.ANSI_LT_CYAN,
-                                               days, acc.ANSI_RST, acc.ANSI_GREEN, pl, acc.ANSI_RST)
-        if seconds >= 3600:
-            hrs = int(seconds / 3600)
-            seconds = (seconds % 3600)
-            out_str += '%s%s%s %sh%s ' % (acc.ANSI_LT_CYAN,
-                                          hrs, acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
-        if seconds >= 60:
-            mins = int(seconds / 60)
-            seconds = (seconds % 60)
-            out_str += '%s%s%s %sm%s ' % (acc.ANSI_LT_CYAN,
-                                          mins, acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
-        if seconds > 0:
-            out_str += '%s%s%s %ss%s ' % (acc.ANSI_LT_CYAN,
-                                          int(seconds), acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
-        if msec > 0.0:
-            out_str += '%s%s%s %sms%s ' % (acc.ANSI_LT_CYAN,
-                                           int(msec * 1000), acc.ANSI_RST, acc.ANSI_GREEN, acc.ANSI_RST)
+        import datetime
+        out_str_tmp = '{}'.format(
+            datetime.timedelta(seconds=full_seconds))
+        out_str = out_str_tmp.replace(
+            ':', ('{}:{}'.format(acc.ANSI_GREEN, acc.ANSI_RST)))
         return out_str
 
 
@@ -243,9 +229,18 @@ class acbs_log_format(logging.Formatter):
             'DEBUG': '{}DEBUG{}'.format(acc.ANSI_GREEN, acc.ANSI_RST),
             'ERROR': '{}ERROR{}'.format(acc.ANSI_RED, acc.ANSI_RST),
             'CRITICAL': '{}CRIT{}'.format(acc.ANSI_YELLOW, acc.ANSI_RST)
-            # 'FATAL': '{}{}WTF{}'.format(acc.ANSI_BLNK, acc.ANSI_RED, acc.ANSI_RST),
+            # 'FATAL': '{}{}WTF{}'.format(acc.ANSI_BLNK, acc.ANSI_RED,
+            # acc.ANSI_RST),
         }
-        if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL, logging.INFO,
-                              logging.DEBUG):
+        if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
+                              logging.INFO, logging.DEBUG):
             record.msg = '[%s] %s' % (lvl_map[record.levelname], record.msg)
         return super(acbs_log_format, self).format(record)
+
+
+class ACBSConfError(Exception):
+    pass
+
+
+class ACBSGeneralError(Exception):
+    pass
