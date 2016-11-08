@@ -1,5 +1,5 @@
 from .pm.acbs_pm import acbs_pm
-from lib.acbs_utils import acbs_utils
+from lib.acbs_utils import ACBSGeneralError
 import logging
 
 
@@ -18,32 +18,34 @@ class acbs_deps(object):
 
     def process_deps(self, build_deps, run_deps, pkg_slug):
         logging.info('Checking for dependencies, this may take a while...')
-        search_pkgs_tmp = (build_deps + ' ' + run_deps).split(' ')
+        search_pkgs_tmp = (build_deps + run_deps)
         search_pkgs = []
+        logging.debug('Searching dependencies: {}'.format(search_pkgs_tmp))
         for i in search_pkgs_tmp:
             if i == pkg_slug:
                 _, pkgs_not_avail = self.search_deps(i)
                 if len(pkgs_not_avail) > 0:
-                    acbs_utils.err_msg('The package can\'t depends on its self!')
-                    return False, None
+                    raise ACBSGeneralError(
+                        'The package can\'t depends on its self!')
                 else:
                     logging.warning(
                         'The package depends on its self, however, it has been built at least once.')
-            if i == '' or i == ' ':
+            if not i.strip():
                 continue
             search_pkgs.append(i)
         pkgs_to_install, pkgs_not_avail = self.search_deps(search_pkgs)
-        if pkgs_not_avail is None:
+        if not pkgs_not_avail:
             pkgs_not_avail = []
-        if len(pkgs_not_avail) > 0:
+        if len(pkgs_not_avail):
             logging.info(
-                'Building in-tree dependencies: \033[36m{}\033[0m'.format(acbs_utils.list2str(pkgs_not_avail)))
-            return False, pkgs_not_avail
-        if (pkgs_to_install is None) or len(pkgs_to_install) == 0:
+                'Building in-tree dependencies: \033[36m{}\033[0m'.format(' '.join(pkgs_not_avail)))
+            return pkgs_not_avail
+        if (not pkgs_to_install) or (not len(pkgs_to_install)):
             logging.info('All dependencies are met.')
-            return True, None
+            return
         logging.info('Will install \033[36m{}\033[0m as required.'.format(
-            acbs_utils.list2str(pkgs_to_install)))
+            ' '.join(pkgs_to_install)))
         if not acbs_pm().install_pkgs(pkgs_to_install):
-            return False, None
-        return True, None
+            raise ACBSGeneralError(
+                'Something went wrong when processing dependencies...')
+        return

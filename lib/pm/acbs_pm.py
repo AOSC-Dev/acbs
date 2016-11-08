@@ -21,7 +21,7 @@ class acbs_pm(object):
         for pkg in pkgs:
             mixed_res = self.multi_backend_proc('pm_exists', pkg)
             for i in mixed_res:
-                if mixed_res[i] is None:
+                if not mixed_res[i]:
                     miss_pkgs.append(pkg)
         miss_pkgs_set = set(miss_pkgs)
         return list(miss_pkgs_set)
@@ -31,7 +31,7 @@ class acbs_pm(object):
         for pkg in pkgs:
             mixed_res = self.multi_backend_proc('pm_repoquery', pkg)
             for i in mixed_res:
-                if mixed_res[i] is None:
+                if not mixed_res[i]:
                     not_online_pkgs.append(pkg)
         online_pkgs_set = set(pkgs) - set(not_online_pkgs)
         return list(online_pkgs_set)
@@ -47,7 +47,7 @@ class acbs_pm(object):
         results = self.multi_backend_proc(
             'pm_repoinstall', ' '.join(pkgs), True)
         for result in results:
-            if results[result] is None:
+            if not results[result]:
                 return False
         return True
 

@@ -14,13 +14,13 @@ class acbs_find(object):
         self.path = search_path or os.path.abspath('.')
 
     def acbs_pkg_match(self):
-        if self.target.split('/')[0] == 'groups' and os.path.isfile(self.target):
+        if self.target.startswith('groups') and os.path.isfile(self.target):
             with open(self.target, 'rt') as cmd_list:
                 pkg_list_str = cmd_list.read()
             pkg_list = pkg_list_str.splitlines()
             group_pkg = []
             for pkg in pkg_list:
-                if pkg.strip() in [None, '']:
+                if not pkg.strip():
                     continue
                 match_res = self.acbs_pkg_match_core(target=pkg)
                 if match_res is not None:
@@ -50,12 +50,25 @@ class acbs_find(object):
                     return os.path.relpath(os.path.join(secpath, pkgpath), self.path)
         return
 
+    def determine_pkg_type(pkg):
+        sub_pkgs = set(os.listdir(pkg)) - set(['spec'])
+        if len(sub_pkgs) > 1:
+            sub_dict = {}
+            for i in sub_pkgs:
+                tmp_array = i.split('-', 1)
+                try:
+                    sub_dict[int(tmp_array[0])] = tmp_array[1]
+                except ValueError as ex:
+                    raise ValueError('Expecting numeric value, got {}'.format(
+                        tmp_array[0])) from ex
+            return sub_dict
+
     def acbs_verify_pkg(self, path, strict_mode=False):
         if os.path.exists(os.path.join(path, 'spec')):
             if strict_mode and not os.path.exists(os.path.join(path, 'autobuild/defines')):
-                return False
-            return True
+                raise Exception('Can\'t find `defines` file!')
+            return
         else:
-            logging.error(
+            raise Exception(
                 'Candidate package\033[93m {} \033[0mdoesn\'t seem to be valid!'.format(path))
-            return False
+            return

@@ -113,9 +113,10 @@ def build_pkgs(pkgs):
 
 def build_ind_pkg(pkg):
     logging.info('Start building \033[36m{}\033[0m'.format(pkg))
-    pkg_type_res = acbs_parser.determine_pkg_type(pkg)
-    if pkg_type_res is False:
-        acbs_utils.err_msg()
+    pkg_type_res = acbs_find.determine_pkg_type(pkg)
+    if not pkg_type_res:
+        acbs_utils.err_msg('Malformed package group')
+        return -1
     elif pkg_type_res is True:
         pass
     else:
@@ -124,24 +125,20 @@ def build_ind_pkg(pkg):
         pkg_slug = os.path.basename(pkg)
     except:
         pkg_slug = pkg
-    ps_obj = acbs_parser()
-    ps_obj.pkg_name = pkg_slug
-    ps_obj.spec_file_loc = os.path.abspath(pkg)
+    ps_obj = acbs_parser(pkg_name=pkg_slug, spec_file_loc=os.path.abspath(pkg))
     abbs_spec = ps_obj.parse_abbs_spec()
     repo_dir = os.path.abspath(pkg)
-    if abbs_spec is False:
+    if not abbs_spec:
         acbs_utils.err_msg()
         return -1
-    # parser_pass_through(abbs_spec,pkg)
     abd_dict = ps_obj.parse_ab3_defines(os.path.join(pkg, 'autobuild/defines'))
-    # print(abd_dict)
     deps_result, try_build = acbs_deps().process_deps(
         abd_dict['BUILDDEP'], abd_dict['PKGDEP'], pkg_slug)
-    if (deps_result is False) and (try_build is None):
+    if (not deps_result) and (not try_build):
         acbs_utils.err_msg('Failed to process dependencies!')
         return -1
-    if try_build is not None:
-        if new_build_thread(try_build) != 0:
+    if try_build:
+        if not new_build_thread(try_build):
             return 128
     src_fetcher = acbs_src_fetch(abbs_spec)
     src_dispatcher_return = src_fetcher.src_dispatcher()
@@ -149,7 +146,7 @@ def build_ind_pkg(pkg):
         src_proc_result, tmp_dir_loc = src_dispatcher_return
     else:
         src_proc_result = src_dispatcher_return
-    if src_proc_result is False:
+    if not src_proc_result:
         acbs_utils.err_msg('Failed to fetch and process source files!')
         return 1
     repo_ab_dir = os.path.join(repo_dir, 'autobuild/')

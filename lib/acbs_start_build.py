@@ -12,39 +12,41 @@ from lib.acbs_const import acbs_const
 class acbs_start_ab(object):
     def __init__(self, tmp_dir_loc, repo_dir, pkg_info, rm_abdir=False):
         self.tmp_dir_loc = tmp_dir_loc
+        self.abdir = None
         logging.info('Build dir location: {}'.format(tmp_dir_loc))
         self.repo_dir = repo_dir
-        self.pkg_info = pkg_info
+        self.pkg_data = pkg_info
         self.rm_abdir = rm_abdir
         global pkg_name
-        pkg_name = pkg_info['NAME']
+        self.pkg_name = self.pkg_data.name
+        self.pkg_info = self.pkg_data.buffer['abbs_data']
 
     def copy_abd(self):
+        os.chdir(self.tmp_dir_loc)
         if self.pkg_info['DUMMYSRC'] in ['true', '1']:
             self.pkg_info['SUBDIR'] = '.'
         if self.pkg_info['SUBDIR'] != '':
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
-            except:
-                acbs_utils.err_msg('Failed to enter sub-directory!')
-                return False
+            except Exception as ex:
+                raise OSError('Failed to enter sub-directory!') from ex
         else:
             try:
                 os.chdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER'])
             except:
                 try:
                     os.chdir(self.pkg_info['NAME'])
-                except:
-                    acbs_utils.err_msg(
-                        'Failed to determine sub-directory, please specify manually.')
-                    return False
+                except Exception as ex:
+                    raise ValueError(
+                        'Failed to determine sub-directory, please specify manually.') from ex
+        self.abdir = os.path.abspath(os.path.curdir)
         try:
             shutil.copytree(self.repo_dir,
                             os.path.abspath(os.path.curdir) + '/autobuild/', symlinks=True)
-        except:
-            acbs_utils.err_msg('Error occurred when copying files from tree!')
-            return False
-        return True
+            self.abdir = os.path.abspath(os.path.curdir)
+        except Exception as ex:
+            raise Exception('Error occurred when copying files from tree!') from ex
+        return
 
     def timed_start_ab3(self):
         def helper_gen_msg():
@@ -53,21 +55,15 @@ class acbs_start_ab(object):
 
         @acbs_utils.time_this(desc_msg=helper_gen_msg())
         def start_ab3(self):
-            os.chdir(self.tmp_dir_loc)
-            if not self.copy_abd():
-                return False
+            os.chdir(self.abdir)
             # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
-            shadow_defines_loc = os.path.abspath(os.path.curdir)
+            shadow_defines_loc = self.abdir
             parser_obj = acbs_parser()
             parser_obj.abbs_spec = self.pkg_info
             parser_obj.defines_file_loc = shadow_defines_loc
-            if not parser_obj.parser_pass_through():
-                return False
-            try:
-                subprocess.check_call(['autobuild'])
-            except:
-                return False
-            if self.rm_abdir is True:
+            parser_obj.parser_pass_through()
+            subprocess.check_call(['autobuild'])
+            if self.rm_abdir:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
-            return True
+            return
         return start_ab3(self)
