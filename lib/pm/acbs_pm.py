@@ -48,8 +48,8 @@ class acbs_pm(object):
             'pm_repoinstall', ' '.join(pkgs), True)
         for result in results:
             if not results[result]:
-                return False
-        return True
+                raise subprocess.SubprocessError('Failed to install packages')
+        return
 
     def pm_invoker(self, mod_file, function, args, display=False):
         with open(mod_file, 'rt') as f:
@@ -64,5 +64,5 @@ class acbs_pm(object):
                     excute_code, shell=True, stderr=subprocess.STDOUT)
             return output.decode('utf-8')
         except:
-            return None
-        return None
+            return
+        return

@@ -8,7 +8,6 @@ import os
 import sys
 import shutil
 import argparse
-import logging
 from lib.acbs_mainflow import acbs_build_core
 
 
@@ -24,7 +23,8 @@ def main():
     parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
                         help='Specify which abbs-tree to use')
     parser.add_argument('packages', nargs='*', help='Packages to be built')
-    parser.add_argument('-c', '--clear', help='Clear build directory', action='store_true', dest='clear_dir')
+    parser.add_argument('-c', '--clear', help='Clear build directory',
+                        action='store_true', dest='clear_dir')
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
@@ -53,10 +53,11 @@ def clear_tmp(tmp_dir):
             while not complete_status:
                 for bar in ['-', '\\', '|', '/']:
                     print('\r[%s%%] Clearing cache...%s' %
-                          (int(sub_dirs_deleted / sub_dirs_count)*100, bar), end='')
+                          (int(sub_dirs_deleted / sub_dirs_count) * 100, bar), end='')
                     sys.stdout.flush()
                     sleep(0.2)
-            print('\r[100%%] Clearing cache...done! %s\n' % (show_cursor), end='')
+            print('\r[100%%] Clearing cache...done! %s\n' %
+                  (show_cursor), end='')
         except Exception as ex:
             print(show_cursor, end='')
             raise ex
@@ -81,8 +82,7 @@ def clear_tmp(tmp_dir):
 
 
 def help_msg(acbs_version):
-    help_msg = 'ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port \
-abbs to CI environment to prevent from irregular bash failures'.format(acbs_version)
+    help_msg = '''ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''.format(acbs_version)
     return help_msg
 
 if __name__ == '__main__':

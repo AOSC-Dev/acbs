@@ -18,6 +18,8 @@ from lib.acbs_deps import acbs_deps
 class acbs_build_core(object):
 
     def __init__(self, pkgs_name, debug_mode=False, tree='default', version='?', init=True):
+        '''
+        '''
         self.pkgs_name = pkgs_name
         self.isdebug = debug_mode
         self.tree = tree
@@ -71,7 +73,7 @@ class acbs_build_core(object):
         str_handler.setFormatter(acbs_log_format())
         logger.addHandler(str_handler)
         log_file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(self.log_loc, 'acbs-build.log'), mode='a', maxBytes=1e5, backupCount=10)
+            os.path.join(self.log_loc, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=10)
         log_file_handler.setLevel(file_verbosity)
         log_file_handler.setFormatter(logging.Formatter(
             '%(asctime)s:%(levelname)s:%(message)s'))
@@ -103,6 +105,11 @@ class acbs_build_core(object):
         self.pkg_data.slug = single_pkg
         pkg_type_res = acbs_find.determine_pkg_type(single_pkg)
         if isinstance(pkg_type_res, dict):
+            pkgs_array = pkg_type_res
+            pkg_tuple = [(lambda x, y, z: (y, '%s/0%s-%s' % (z, x, y)) if x < 10 else (y, '%s/%s-%s' %
+                                                                                       (z, str(x), y)))(i, pkgs_array[i], single_pkg) for i in pkgs_array]
+            logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
+                len(pkg_tuple), ' '.join([i[0] for i in pkg_tuple])))
             raise NotImplementedError('Sub packages building not implemented')
             # return build_sub_pkgs(single_pkg, pkg_type_res)  # FIXME
         try:
@@ -119,7 +126,8 @@ class acbs_build_core(object):
         try_build = acbs_deps().process_deps(
             self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
         if try_build:
-            if try_build in self.pending_pkgs:  # Suspect this is dependency loop
+            if try_build in self.pending_pkgs:
+                # Suspect this is dependency loop
                 raise ACBSGeneralError('Dependency loop: {}'.format(
                     '->'.join(list(self.pending_pkgs + try_build))))
             self.new_build_thread(try_build)
@@ -132,7 +140,6 @@ class acbs_build_core(object):
         ab3 = acbs_start_ab(tmp_dir_loc, repo_ab_dir, self.pkg_data)
         ab3.copy_abd()
         ab3.timed_start_ab3()
-        # acbs_utils.err_msg('Autobuild process failure!')
         self.pkgs_que.discard(single_pkg)
         return 0
 
@@ -140,7 +147,8 @@ class acbs_build_core(object):
         def slave_thread_build(pkg):
             logging.debug(
                 'New build thread started for \033[36m{}\033[0m'.format(pkg))
-            new_build_instance = acbs_build_core(**self.acbs_settings, pkgs_name=[pkg], init=False)
+            new_build_instance = acbs_build_core(
+                **self.acbs_settings, pkgs_name=[pkg], init=False)
             new_build_instance.tree_loc = self.tree_loc
             return new_build_instance.build()
         from multiprocessing import pool
@@ -152,10 +160,8 @@ class acbs_build_core(object):
             try:
                 sub_thread = fake_pool.apply_async(
                     func=slave_thread_build, args=([sub_pkg]))
-                if not sub_thread.get():
-                    raise Exception()
                 dumb_mutex.release()
-                return
+                return sub_thread.get()
             except Exception as ex:
                 raise ACBSGeneralError(
                     'Sub-build process building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_pkg)) from ex

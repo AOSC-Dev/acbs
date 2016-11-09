@@ -167,7 +167,8 @@ def new_build_thread(try_build):
         dumb_mutex.acquire()
         fake_pool = ThreadPool(processes=1)
         try:
-            sub_thread = fake_pool.apply_async(func=slave_thread_build, args=(sub_pkg))
+            sub_thread = fake_pool.apply_async(
+                func=slave_thread_build, args=(sub_pkg))
             if not sub_thread.get():
                 raise ACBSTerminate()
             dumb_mutex.release()
@@ -185,29 +186,19 @@ def slave_thread_build(pkg):
 
 
 def build_sub_pkgs(pkg_base, pkgs_array):
-    pkg_tuple = []
-    for i in pkgs_array:
-        if i < 10:
-            str_i = '0' + str(i)
-        repo_dir = os.path.abspath(
-            pkg_base + '/' + str_i + '-' + pkgs_array[i])
-        pkg_tuple.append((pkgs_array[i], repo_dir))
-    pkg_names = []
-    for i in pkg_tuple:
-        pkg_names.append(i[0])
+    pkg_tuple = [(lambda x, y, z: (y, '%s/0%s-%s' % (z, x, y)) if x < 10 else (y, '%s/%s-%s' %
+                                                                               (z, str(x), y)))(i, pkgs_array[i], pkg_base) for i in pkgs_array]
+    pkg_names = [i[1] for i in pkgs_array]
     logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
-        len(pkg_tuple), acbs_utils.list2str(pkg_names)))
+        len(pkg_tuple), ' '.join(pkg_names)))
     ps_obj = acbs_parser()
     ps_obj.pkg_name = os.path.basename(pkg_base)
     ps_obj.spec_file_loc = os.path.abspath(pkg_base)
     abbs_spec = ps_obj.parse_abbs_spec()
-    pkg_def_loc = []
-    sub_repo_dir = []
-    for i in pkg_tuple:
-        pkg_def_loc.append(i[1] + '/defines')
-        sub_repo_dir.append(i[1])
+    pkg_def_loc = [i[1] + '/defines' for i in pkg_tuple]
+    sub_repo_dir = [i[1] for i in pkg_tuple]
     onion_list = acbs_parser().bat_parse_ab3_defines(pkg_def_loc)
-    if onion_list is False:
+    if not onion_list:
         return 1
     src_dispatcher_return = acbs_src_fetch(pkg_info=abbs_spec).src_dispatcher()
     if isinstance(src_dispatcher_return, tuple):
@@ -225,10 +216,10 @@ def build_sub_pkgs(pkg_base, pkgs_array):
         pkg_slug = abd_sub_dict['PKGNAME']
         deps_result, try_build = acbs_deps().process_deps(
             abd_sub_dict['BUILDDEP'], abd_sub_dict['PKGDEP'], pkg_slug)
-        if (deps_result is False) and (try_build is None):
+        if (not deps_result) and (try_build is None):
             acbs_utils.err_msg('Failed to process dependencies!')
             return -1
-        if try_build is not None:
+        if try_build:
             if new_build_thread(try_build) != 0:
                 return 128
         ab3_obj = acbs_start_ab(tmp_dir_loc, sub_repo_dir[

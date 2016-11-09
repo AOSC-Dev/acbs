@@ -4,6 +4,7 @@ Some helper constants
 
 
 class acbs_const(object):
+
     def __init__(self):
         self.ANSI_RST = '\033[0m'
         self.ANSI_RED = '\033[91m'

@@ -24,7 +24,7 @@ class acbs_deps(object):
         for i in search_pkgs_tmp:
             if i == pkg_slug:
                 _, pkgs_not_avail = self.search_deps(i)
-                if len(pkgs_not_avail) > 0:
+                if pkgs_not_avail:
                     raise ACBSGeneralError(
                         'The package can\'t depends on its self!')
                 else:
@@ -41,11 +41,13 @@ class acbs_deps(object):
                 'Building in-tree dependencies: \033[36m{}\033[0m'.format(' '.join(pkgs_not_avail)))
             return pkgs_not_avail
         if (not pkgs_to_install) or (not len(pkgs_to_install)):
-            logging.info('All dependencies are met.')
+            logging.info('All dependencies are met. Continue.')
             return
         logging.info('Will install \033[36m{}\033[0m as required.'.format(
             ' '.join(pkgs_to_install)))
-        if not acbs_pm().install_pkgs(pkgs_to_install):
+        try:
+            acbs_pm().install_pkgs(pkgs_to_install)
+        except Exception as ex:
             raise ACBSGeneralError(
-                'Something went wrong when processing dependencies...')
+                'Something went wrong when processing dependencies...') from ex
         return
