@@ -32,7 +32,7 @@ def main():
         acbs_core_args = {'pkgs_name': args.packages,
                           'debug_mode': args.debug, 'version': acbs_version}
         if args.acbs_tree:
-            acbs_core_args['tree'] = args.acbs_tree
+            acbs_core_args['tree'] = args.acbs_tree[0]
             acbs_instance = acbs_build_core(**acbs_core_args)
         else:
             acbs_instance = acbs_build_core(**acbs_core_args)
@@ -53,7 +53,7 @@ def clear_tmp(tmp_dir):
             while not complete_status:
                 for bar in ['-', '\\', '|', '/']:
                     print('\r[%s%%] Clearing cache...%s' %
-                          (int(sub_dirs_deleted / sub_dirs_count) * 100, bar), end='')
+                          (int((sub_dirs_deleted / sub_dirs_count) * 100), bar), end='')
                     sys.stdout.flush()
                     sleep(0.2)
             print('\r[100%%] Clearing cache...done! %s\n' %

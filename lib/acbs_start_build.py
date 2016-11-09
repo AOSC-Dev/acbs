@@ -28,8 +28,8 @@ class acbs_start_ab(object):
         if self.pkg_info['SUBDIR'] != '':
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
-            except Exception as ex:
-                raise OSError('Failed to enter sub-directory!') from ex
+            except FileNotFoundError as ex:
+                raise OSError('Failed to enter sub-directory `{}\'!'.format(self.pkg_info['SUBDIR'])) from ex
         else:
             try:
                 os.chdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER'])
@@ -62,7 +62,10 @@ class acbs_start_ab(object):
             parser_obj.abbs_spec = self.pkg_info
             parser_obj.defines_file_loc = shadow_defines_loc
             parser_obj.parser_pass_through()
-            subprocess.check_call(['autobuild'])
+            try:
+                subprocess.check_call(['autobuild'])
+            except subprocess.CalledProcessError as ex:
+                raise Exception('Autobuild 3 reported a building failure!') from ex
             if self.rm_abdir:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
             return

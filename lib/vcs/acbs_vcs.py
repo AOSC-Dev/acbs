@@ -25,16 +25,19 @@ class acbs_vcs(object):
         return self.vcs_executor(action='vcs_repoupdate', url=self.target_url, param=self.target_url)
 
     def vcs_chk_proto(self, url, proto=None):
-        if self.proto is not None:
+        if self.proto:
             proto = self.proto
-        elif (url is not None) and (url.index('://') > 2):
-            proto = url.split('://')[0]
+        import re
+        if re.match(pattern=r'(\w+)\://', string=url):
+            proto = re.search(pattern=r'(\w+)\://', string=url).group(1)
+        elif re.match(pattern=r'lp:(.*?)', string=url):
+            proto = 'bzr'
+        elif re.match(pattern=r'(\w+)::', string=url):
+            proto = re.search(pattern=r'(\w+)::(.*)', string=url).group(1)
         else:
-            acbs_utils().err_msg('Invaild URL: %r' % url)
-            return None
-        if proto not in self.vcs_backends:
-            acbs_utils.err_msg('Unsupported VCS system: %s' % proto)
-            return None
+            raise ValueError('Invaild URL: %r' % url)
+        if proto.lower() not in self.vcs_backends:
+            raise NotImplementedError('Unsupported VCS system: %s' % proto)
         return proto
 
     def vcs_repo_url(self):
@@ -50,7 +53,7 @@ class acbs_vcs(object):
         repo_url = self.vcs_executor(
             'vcs_repourl', param=self.repo_dir, proto=self.proto, need_ret=True)
         if (not repo_url) or (self.repo_dir == '?'):
-            return None
+            return
         return
 
     def vcs_executor(self, action, url=None, param=None, proto=None, need_ret=False):
@@ -61,27 +64,36 @@ class acbs_vcs(object):
         :param param: Parameters to be passed
         :param url_proto: `URL or protocol`
         """
-        if proto is None:
+        if not proto:
             proto = self.vcs_chk_proto(url)
-            if proto is None:
-                return False
+            if not proto:
+                raise ValueError('VCS protocol unspecified')
         sh_output = acbs_utils().sh_executor(
             os.path.join(self.vcs_mod_dir, '{}.sh'.format(proto)), action, param, not need_ret)
-        if sh_output is None or sh_output is False:
-            return False
+        if (not sh_output) or (not sh_output):
+            raise Exception('Error occurred when executing VCS commands')
 
     def vcs_fetch_src(self, proto=None):
-        if (proto or self.proto) is None:
+        logging.debug('Received VCS module name: {}'.format(proto or self.proto))
+        logging.debug('Fetching {}'.format(self.target_url))
+        if not (proto or self.proto):
             proto = self.vcs_chk_proto(self.target_url)
-            if proto is None:
-                return False
-        if os.listdir(self.repo_dir):
-            repo_url = self.vcs_repo_url(self.repo_dir)
-            if repo_url not in ['?', None, ''] and repo_url != self.url:
-                logging.debug(
-                    'Current VCS URL: {}, requested URL: {}'.format(repo_url, self.target_url))
-                logging.warning('Target URL and existing VCS URL mismatch!')
-                logging.warning('Will remove the the existing directory!')
-            else:
-                return self.vcs_repo_update()
-        return self.vcs_executor('vcs_repofetch', param=' '.join([self.url, self.repo_dir]), url=self.url, proto=proto)
+            if not proto:
+                raise ValueError('Unknow VCS protocol!')
+        try:
+            os.listdir(self.repo_dir)
+        except FileNotFoundError:
+            self.vcs_executor('vcs_repofetch', param=' '.join([self.target_url, self.repo_dir]), url=self.target_url, proto=proto)
+            return
+        repo_url = self.vcs_repo_url()
+        if repo_url not in ['?', None, ''] and repo_url != self.url:
+            logging.debug(
+                'Current VCS URL: {}, requested URL: {}'.format(repo_url, self.target_url))
+            logging.warning('Target URL and existing VCS URL mismatch!')
+            logging.warning('Will remove the the existing directory!')
+            import shutil
+            shutil.rmtree(self.repo_dir)
+        else:
+            os.chdir(self.repo_dir)
+            return self.vcs_repo_update()
+        return self.vcs_executor('vcs_repofetch', param=' '.join([self.target_url, self.repo_dir]), url=self.target_url, proto=proto)

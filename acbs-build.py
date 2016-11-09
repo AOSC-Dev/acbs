@@ -205,7 +205,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
         src_proc_result, tmp_dir_loc = src_dispatcher_return
     else:
         src_proc_result = src_dispatcher_return
-    if src_proc_result is False:
+    if not src_proc_result:
         acbs_utils.err_msg('Failed to fetch and process source files!')
         return 1
     sub_count = 0
@@ -216,7 +216,7 @@ def build_sub_pkgs(pkg_base, pkgs_array):
         pkg_slug = abd_sub_dict['PKGNAME']
         deps_result, try_build = acbs_deps().process_deps(
             abd_sub_dict['BUILDDEP'], abd_sub_dict['PKGDEP'], pkg_slug)
-        if (not deps_result) and (try_build is None):
+        if (not deps_result) and (not try_build):
             acbs_utils.err_msg('Failed to process dependencies!')
             return -1
         if try_build:

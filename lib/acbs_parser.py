@@ -23,6 +23,7 @@ class acbs_parser(object):
             self.conf_loc = '/etc/acbs/'
         else:
             self.conf_loc = main_data.conf_loc
+        self.forest_file = os.path.join(self.conf_loc, 'forest.conf')
 
     def parse_abbs_spec(self):
         try:
@@ -133,7 +134,7 @@ class acbs_parser(object):
                 raise Exception('Failed to read configuration file!') from ex
         try:
             tree_loc_dict = acbs_config[tree_name]
-        except ValueError as ex:
+        except KeyError as ex:
             err_message = '404 - Tree not found: {}, defined trees: {}'.format(tree_name,
                                                                                acbs_utils.list2str(acbs_config.sections()))
             raise ValueError(err_message) from ex

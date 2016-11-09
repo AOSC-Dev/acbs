@@ -60,8 +60,7 @@ class acbs_build_core(object):
             if not self.tree_loc:
                 raise ACBSConfError('Tree not found!')
         else:
-            if not acbs_parser.write_acbs_conf():
-                raise ACBSConfError('Failed to write configuration')
+            acbs_parser(main_data=self).write_acbs_conf()
         return
 
     def __install_logger(self, str_verbosity=logging.INFO,
@@ -99,6 +98,10 @@ class acbs_build_core(object):
                 self.build_single_pkg(matched_pkg)
         return 0
 
+    def build_pkg_group(self):
+        pass
+        return
+
     def build_single_pkg(self, single_pkg):
         logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))
         os.chdir(self.tree_loc)
@@ -110,6 +113,7 @@ class acbs_build_core(object):
                                                                                        (z, str(x), y)))(i, pkgs_array[i], single_pkg) for i in pkgs_array]
             logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
                 len(pkg_tuple), ' '.join([i[0] for i in pkg_tuple])))
+            logging.debug('Package group building order: {}'.format(pkgs_array))
             raise NotImplementedError('Sub packages building not implemented')
             # return build_sub_pkgs(single_pkg, pkg_type_res)  # FIXME
         try:

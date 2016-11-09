@@ -28,7 +28,8 @@ class acbs_src_fetch(object):
                 if src == 'SRCTBL':
                     return self.src_tbl_fetch()
                 if src in ['GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
-                    return self.vcs_dispatcher(src)
+                    self.vcs_dispatcher(self.pkg_info[src], src_type=src[:-3].lower())
+                    return self.pkg_name
         raise Exception('No source URL specified?!')
 
     def src_url_dispatcher(self):
@@ -50,11 +51,8 @@ class acbs_src_fetch(object):
         else:  # or proto == 'git+https'
             logging.warning(
                 'In spec file: This source seems to refers to a VCS repository, but you misplaced it.')
-            if (acbs_vcs().vcs_fetch_src(url)):
-                return pkg_name
-            else:
-                raise Exception('Unable to use VCS to fetch files!')
-        return
+            self.vcs_dispatcher(url)
+            return pkg_name
 
     def src_tbl_fetch(self, url, pkg_slug):
         use_progs = self.test_downloaders()
@@ -82,7 +80,9 @@ class acbs_src_fetch(object):
         return
 
     def vcs_dispatcher(self, url, src_type=None):
-        return acbs_vcs(url=url, repo_dir=os.path.join(self.dump_loc, self.pkg_name), proto=src_type)
+        logging.debug('Sending to VCS module:{} URL:{}'.format(src_type, url))
+        acbs_vcs(url=url, repo_dir=os.path.join(self.dump_loc, self.pkg_name), proto=src_type).vcs_fetch_src()
+        return
 
     '''
     External downloaders
@@ -134,7 +134,6 @@ class acbs_src_fetch(object):
             wget_cmd.insert(2, '-O')
             wget_cmd.insert(3, output)
         try:
-            print(wget_cmd)
             subprocess.check_call(wget_cmd)
         except KeyboardInterrupt:
             raise KeyboardInterrupt()
