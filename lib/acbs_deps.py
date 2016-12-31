@@ -6,11 +6,12 @@ import logging
 class acbs_deps(object):
 
     def __init__(self):
+        self.acbs_pm = acbs_pm()
         return
 
     def search_deps(self, search_pkgs):
-        pkgs_miss = acbs_pm().query_current_miss_pkgs(search_pkgs)
-        pkgs_to_install = acbs_pm().query_online_pkgs(pkgs_miss)
+        pkgs_miss = self.acbs_pm.query_current_miss_pkgs(search_pkgs)
+        pkgs_to_install = self.acbs_pm.query_online_pkgs(pkgs_miss)
         pkgs_not_avail = (set(pkgs_miss) - set(pkgs_to_install))
         if len(pkgs_not_avail) > 0:
             return None, pkgs_not_avail
@@ -46,7 +47,7 @@ class acbs_deps(object):
         logging.info('Will install \033[36m{}\033[0m as required.'.format(
             ' '.join(pkgs_to_install)))
         try:
-            acbs_pm().install_pkgs(pkgs_to_install)
+            self.acbs_pm.install_pkgs(pkgs_to_install)
         except Exception as ex:
             raise ACBSGeneralError(
                 'Something went wrong when processing dependencies...') from ex

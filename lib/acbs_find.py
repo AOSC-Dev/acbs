@@ -14,8 +14,9 @@ class acbs_find(object):
         self.path = search_path or os.path.abspath('.')
 
     def acbs_pkg_match(self):
-        if self.target.startswith('groups') and os.path.isfile(self.target):
-            with open(self.target, 'rt') as cmd_list:
+        logging.debug('Search Path: %s' % self.path)
+        if self.target.startswith('groups') and os.path.isfile(os.path.join(self.path, self.target)):
+            with open(os.path.join(self.path, self.target), 'rt') as cmd_list:
                 pkg_list_str = cmd_list.read()
             pkg_list = pkg_list_str.splitlines()
             group_pkg = []
@@ -27,6 +28,7 @@ class acbs_find(object):
                     group_pkg.append(match_res)
                 else:
                     logging.warning('Package %s not found!' % pkg)
+            logging.debug('Packages to be built: %s' % ', '.join(group_pkg))
             return group_pkg
         else:
             return self.acbs_pkg_match_core()

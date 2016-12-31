@@ -6,6 +6,13 @@ import tempfile
 import logging
 import shutil
 from lib.acbs_utils import acbs_utils, ACBSGeneralError
+try:
+    import Crypto.Hash
+    from Crypto.Hash import *
+    pycrypto = True
+    # This is a very strange library
+except ImportError:
+    pycrypto = False
 
 
 class acbs_src_process(object):
@@ -15,19 +22,24 @@ class acbs_src_process(object):
         self.pkg_name = union_data.name
         self.src_loc = acbs_config.dump_loc
         self.src_name = union_data.src_name
+        self.chksum_val = union_data.chksums
         self.src_full_loc = None
+        self.pycrypto = pycrypto
         self.shadow_ark_loc = None
 
     def process(self):
         if self.src_name:
             self.src_full_loc = os.path.join(self.src_loc, self.src_name)
             self.shadow_ark_loc = os.path.join(self.tobj, self.src_name)
+            if not os.path.isdir(self.src_full_loc):
+                self.chksum()
         else:
             return self.tobj
         if os.path.isdir(self.src_full_loc):
             logging.info('Making a copy of the source directory...')
             try:
-                logging.debug('Copy {} to {}'.format(self.src_full_loc, self.shadow_ark_loc))
+                logging.debug('Copy {} to {}'.format(
+                    self.src_full_loc, self.shadow_ark_loc))
                 shutil.copytree(src=self.src_full_loc, dst=self.shadow_ark_loc)
             except Exception as ex:
                 print('Failed!')
@@ -101,6 +113,60 @@ class acbs_src_process(object):
         except Exception as ex:
             raise ACBSGeneralError(
                 'Unable to decompress file! File corrupted?! Or Permission denied?!') from ex
+        return
+
+    def chksum_pycrypto(self, chksum_tuple, target_file):
+        hash_type, hash_value = chksum_tuple
+        if hash_type.upper() not in (Crypto.Hash.__all__ + ['SHA1']):
+            raise Exception('Unsupported hash type %s! Currently supported: %s' % (
+                hash_type, ' '.join(Crypto.Hash.__all__)))
+        with open(target_file, 'rb') as f:
+            content = f.read()
+        sub_hash_type = hash_type
+        if hash_type.upper() == 'RIPEMD':
+            sub_hash_type = 'RIPEMD160'
+        elif hash_type.upper() in ['SHA', 'SHA1']:
+            sub_hash_type = 'SHA1'
+            hash_type = 'SHA'
+        try:
+            exec('target_hash=Crypto.Hash.%s.%sHash(content).hexdigest()' %
+                 (hash_type, sub_hash_type))
+        except AttributeError:
+            raise Exception(
+                'Algorithm %s does not support file hashing!' % hash_type)
+        if hash_value != locals()['target_hash']:
+            raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
+                hash_type, target_file, hash_value, target_hash))
+        return
+
+    def chksum_coreutils(self, chksum_tuple, target_file):
+        hash_type, hash_value = chksum_tuple
+        predefined = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'md5']
+        if hash_type.lower() not in predefined:
+            raise Exception('Unsupported hash type %s! Currently supported: %s' % (
+                hash_type, ' '.join(predefined)))
+        if not os.path.exists(target_file):
+            raise OSError('Target file not found!')
+        hash_output = subprocess.check_output(['%ssum' % hash_type.lower(), target_file]).decode('utf-8')
+        target_hash = hash_output.split(' ')[0]
+        if hash_value != target_hash:
+            raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
+                hash_type, target_file, hash_value, target_hash))
+        return
+
+    def chksum(self):
+        chksums = self.chksum_val
+        logging.debug('Checksums: %s' % chksums)
+        if not chksums:
+            logging.warning('No checksum is found! This is discouraged!')
+            return
+        if not pycrypto:
+            logging.warn('PyCrypto is not installed! Fall back to coreutils!')
+            for sum_ in chksums:
+                self.chksum_coreutils(sum_, self.src_full_loc)
+        else:
+            for sum_ in chksums:
+                self.chksum_pycrypto(sum_, self.src_full_loc)
         return
 
     def decomp_lib(self):

@@ -21,11 +21,25 @@ class acbs_start_ab(object):
         self.pkg_name = self.pkg_data.name
         self.pkg_info = self.pkg_data.buffer['abbs_data']
 
+    def determine_subdir(self):
+        if os.path.isdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER']):
+            return self.pkg_info['NAME'] + '-' + self.pkg_info['VER']
+        elif os.path.isdir(self.pkg_info['NAME']):
+            return self.pkg_info['NAME']
+        for dirs, subdirs, files in os.walk(self.tmp_dir_loc):
+            if len(subdirs) == 1:
+                return os.path.join(self.tmp_dir_loc, subdirs[0])
+            elif len(subdirs) == 0:
+                return '.'
+            else:
+                return
+
     def copy_abd(self):
         os.chdir(self.tmp_dir_loc)
-        if self.pkg_info['DUMMYSRC'] in ['true', '1']:
+        if self.pkg_info['DUMMYSRC'] in ['true', '1', 'y']:
             self.pkg_info['SUBDIR'] = '.'
-        if self.pkg_info['SUBDIR'] != '':
+        self.determine_subdir()
+        if self.pkg_info['SUBDIR']:
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
             except FileNotFoundError as ex:
@@ -35,7 +49,7 @@ class acbs_start_ab(object):
                 os.chdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER'])
             except:
                 try:
-                    os.chdir(self.pkg_info['NAME'])
+                    os.chdir(self.determine_subdir())
                 except Exception as ex:
                     raise ValueError(
                         'Failed to determine sub-directory, please specify manually.') from ex

@@ -45,7 +45,6 @@ class acbs_build_core(object):
             str_verbosity = logging.DEBUG
         else:
             str_verbosity = logging.INFO
-        self.__install_logger(str_verbosity)
         try:
             for dir_loc in [self.dump_loc, self.tmp_loc, self.conf_loc,
                             self.log_loc]:
@@ -53,6 +52,7 @@ class acbs_build_core(object):
                     os.makedirs(dir_loc)
         except:
             raise IOError('\033[93mFailed to make work directory\033[0m!')
+        self.__install_logger(str_verbosity)
         acbs_misc().dev_utilz_warn()
         if os.path.exists(os.path.join(self.conf_loc, 'forest.conf')):
             self.tree_loc = acbs_parser(

@@ -58,6 +58,8 @@ class acbs_parser(object):
         self.abd_config = config_dict
         self.parser_validate(config_dict)
         self.shared_data.version = [config_dict['VER'], config_dict['REL']]
+        if config_dict['CHKSUM']:
+            self.shared_data.chksums = [tuple(i.split('::')) for i in config_dict['CHKSUM'].split(' ')]
         self.shared_data.buffer['abbs_data'] = config_dict
         return self.shared_data
 
@@ -173,6 +175,7 @@ class ACBSPackgeInfo(object):
         self.run_deps = []
         self.build_deps = []
         self.opt_deps = []
+        self.chksums = []  # format: [tuples]=>Just don't want to import od :-)
         self.buffer = {}
         # Used to store un-processed data to pass to next function
 
@@ -188,6 +191,7 @@ class ACBSPackgeInfo(object):
         self.opt_deps = uniq(self.opt_deps + other.opt_deps)
         self.build_deps = uniq(self.build_deps + other.build_deps)
         self.run_deps = uniq(self.run_deps + other.run_deps)
+        self.chksums = uniq(self.chksums + other.chksums)
         self.buffer = other.buffer or self.buffer
 
     def clear(self):

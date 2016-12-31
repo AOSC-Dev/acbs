@@ -21,7 +21,7 @@ class acbs_pm(object):
         for pkg in pkgs:
             mixed_res = self.multi_backend_proc('pm_exists', pkg)
             for i in mixed_res:
-                if not mixed_res[i]:
+                if mixed_res[i] is False:
                     miss_pkgs.append(pkg)
         miss_pkgs_set = set(miss_pkgs)
         return list(miss_pkgs_set)
@@ -31,7 +31,7 @@ class acbs_pm(object):
         for pkg in pkgs:
             mixed_res = self.multi_backend_proc('pm_repoquery', pkg)
             for i in mixed_res:
-                if not mixed_res[i]:
+                if mixed_res[i] is False:
                     not_online_pkgs.append(pkg)
         online_pkgs_set = set(pkgs) - set(not_online_pkgs)
         return list(online_pkgs_set)
@@ -39,8 +39,11 @@ class acbs_pm(object):
     def multi_backend_proc(self, function, args, display=False):
         hybrid_res = {}
         for bk in self.pm_backends:
-            hybrid_res[os.path.basename(bk).split('.sh')[0]] = self.pm_invoker(
-                bk, function, args, display)
+            bk_name = os.path.basename(bk).split('.sh')[0]
+            bk_res = self.pm_invoker(bk, function, args, display)
+            hybrid_res[bk_name] = bk_res
+            logging.debug('PM Backend: %s CMD: %s(%r) Res: %s' %
+                          (bk_name, function, args, bk_res))
         return hybrid_res
 
     def install_pkgs(self, pkgs):
@@ -57,11 +60,17 @@ class acbs_pm(object):
         excute_code = '%s\n%s %s\n' % (sh_code, function, args)
         try:
             if display:
-                subprocess.check_call(excute_code, shell=True)
+                try:
+                    subprocess.check_call(excute_code, shell=True)
+                except subprocess.CalledProcessError:
+                    return False
                 return True
             else:
-                output = subprocess.check_output(
-                    excute_code, shell=True, stderr=subprocess.STDOUT)
+                try:
+                    output = subprocess.check_output(
+                        excute_code, shell=True, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError:
+                    return False
             return output.decode('utf-8')
         except:
             return

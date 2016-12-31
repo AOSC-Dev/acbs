@@ -177,17 +177,16 @@ class acbs_utils(object):
         with open(sh_file, 'rt') as f:
             sh_code = f.read()
         excute_code = '%s\n%s %s\n' % (sh_code, function, args)
-        try:
-            if display:
+        if display:
+            try:
                 subprocess.check_call(excute_code, shell=True)
-                return True
-            else:
-                output = subprocess.check_output(
-                    excute_code, shell=True, stderr=subprocess.STDOUT)
-            return output.decode('utf-8')
-        except:
-            return None
-        return None
+            except subprocess.CalledProcessError:
+                return False
+            return True
+        else:
+            output = subprocess.check_output(
+                excute_code, shell=True, stderr=subprocess.STDOUT)
+        return output.decode('utf-8')
 
     def acbs_terminate(exit_code):
         sys.exit(exit_code)

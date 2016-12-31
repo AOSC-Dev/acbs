@@ -20,7 +20,7 @@ class acbs_src_fetch(object):
     def fetch_src(self):
         if self.pkg_info['DUMMYSRC']:
             logging.info('Not fetching dummy source as required.')
-            return  # src_proc_dispatcher(self.pkg_info['NAME'], None, self.dump_loc)
+            return
         if self.pkg_info['SRCTBL']:
             return self.src_url_dispatcher()
         for src in ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
@@ -65,7 +65,6 @@ class acbs_src_fetch(object):
             flag.write('acbs flag: DO NOT DELETE!')
         for i in use_progs:
             try:
-                # print('self.%s_get(%r, output=%r)' % (i, url, full_path))
                 exec('self.%s_get(url=%r, output=%r)' % (i, url, full_path))
                 os.unlink(flag_file)
                 break

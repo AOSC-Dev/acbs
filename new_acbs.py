@@ -55,7 +55,7 @@ def clear_tmp(tmp_dir):
                     print('\r[%s%%] Clearing cache...%s' %
                           (int((sub_dirs_deleted / sub_dirs_count) * 100), bar), end='')
                     sys.stdout.flush()
-                    sleep(0.2)
+                    sleep(0.1)
             print('\r[100%%] Clearing cache...done! %s\n' %
                   (show_cursor), end='')
         except Exception as ex:

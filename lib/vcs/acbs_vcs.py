@@ -54,7 +54,7 @@ class acbs_vcs(object):
             'vcs_repourl', param=self.repo_dir, proto=self.proto, need_ret=True)
         if (not repo_url) or (self.repo_dir == '?'):
             return
-        return
+        return repo_url.strip()
 
     def vcs_executor(self, action, url=None, param=None, proto=None, need_ret=False):
         """
@@ -64,14 +64,17 @@ class acbs_vcs(object):
         :param param: Parameters to be passed
         :param url_proto: `URL or protocol`
         """
+        proto = proto or self.proto
         if not proto:
             proto = self.vcs_chk_proto(url)
             if not proto:
                 raise ValueError('VCS protocol unspecified')
-        sh_output = acbs_utils().sh_executor(
+        logging.debug('VCS: %s: %s(%s)' % (proto, action, param))
+        sh_ret = acbs_utils().sh_executor(
             os.path.join(self.vcs_mod_dir, '{}.sh'.format(proto)), action, param, not need_ret)
-        if (not sh_output) or (not sh_output):
+        if (not sh_ret):
             raise Exception('Error occurred when executing VCS commands')
+        return sh_ret
 
     def vcs_fetch_src(self, proto=None):
         logging.debug('Received VCS module name: {}'.format(proto or self.proto))
@@ -86,13 +89,19 @@ class acbs_vcs(object):
             self.vcs_executor('vcs_repofetch', param=' '.join([self.target_url, self.repo_dir]), url=self.target_url, proto=proto)
             return
         repo_url = self.vcs_repo_url()
-        if repo_url not in ['?', None, ''] and repo_url != self.url:
+        if repo_url not in ['?', None, ''] and repo_url != self.target_url:
             logging.debug(
                 'Current VCS URL: {}, requested URL: {}'.format(repo_url, self.target_url))
-            logging.warning('Target URL and existing VCS URL mismatch!')
-            logging.warning('Will remove the the existing directory!')
+            logging.error('Target URL and existing VCS URL mismatch!')
+            logging.error('Target: %s VS Existing %s' % (repo_url, self.target_url))
+            logging.warning('You have the following choices:')
+            logging.warning('\t1. Remove the existing directory')
+            logging.warning('\t2. Correct the URL in either `spec` file or stash')
+            raise Exception('See above...')
+            '''
             import shutil
             shutil.rmtree(self.repo_dir)
+            '''
         else:
             os.chdir(self.repo_dir)
             return self.vcs_repo_update()
