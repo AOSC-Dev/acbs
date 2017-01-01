@@ -4,9 +4,9 @@ import os
 import shutil
 import logging
 
-from acbs.utils import acbs_utils
+from acbs import utils
+from acbs import const
 from acbs.parser import acbs_parser
-from acbs.const import acbs_const
 
 
 class acbs_start_ab(object):
@@ -66,10 +66,9 @@ class acbs_start_ab(object):
 
     def timed_start_ab3(self, *args, **kwargs):
         def helper_gen_msg():
-            acc = acbs_const()
-            return 'Time for building {}{}{}'.format(acc.ANSI_LT_CYAN, self.pkg_info['NAME'], acc.ANSI_RST)
+            return 'Time for building {}{}{}'.format(const.ANSI_LT_CYAN, self.pkg_info['NAME'], const.ANSI_RST)
 
-        @acbs_utils.time_this(desc_msg=helper_gen_msg())
+        @utils.time_this(desc_msg=helper_gen_msg())
         def start_ab3(self, *args, **kwargs):
             os.chdir(self.abdir)
             # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])

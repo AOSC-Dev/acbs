@@ -1,5 +1,5 @@
 import logging
-from acbs.const import acbs_const
+from acbs import const
 
 
 class acbs_profiler(object):
@@ -47,8 +47,7 @@ class acbs_profiler(object):
         return
 
     def output_warn(self, warn_item, value):
-        acc = acbs_const()
-        logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(acc.ANSI_YELLOW, acc.ANSI_RST, acc.ANSI_LT_CYAN, warn_item, acc.ANSI_RST, acc.ANSI_YELLOW, value, acc.ANSI_RST))
+        logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(const.ANSI_YELLOW, const.ANSI_RST, const.ANSI_LT_CYAN, warn_item, const.ANSI_RST, const.ANSI_YELLOW, value, const.ANSI_RST))
         return
 
 

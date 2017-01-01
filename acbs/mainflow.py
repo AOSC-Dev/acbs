@@ -5,12 +5,13 @@ import sys
 import traceback
 
 from acbs.find import acbs_find
-from acbs.utils import acbs_utils, ACBSGeneralError, acbs_log_format, ACBSConfError
+from acbs import utils
+from acbs.utils import ACBSGeneralError, acbs_log_format, ACBSConfError
 from acbs.parser import acbs_parser, ACBSPackgeInfo
 from acbs.src_fetch import acbs_src_fetch
 from acbs.misc import acbs_misc
 from acbs.src_process import acbs_src_process
-# from acbs_const import acbs_const
+# from acbs import const
 from acbs.start_build import acbs_start_ab
 from acbs.deps import acbs_deps
 
@@ -41,7 +42,7 @@ class acbs_build_core(object):
 
     def init(self):
         sys.excepthook = self.acbs_except_hdr
-        print(acbs_utils.full_line_banner(
+        print(utils.full_line_banner(
             'Welcome to ACBS - {}'.format(self.acbs_version)))
         if self.isdebug:
             str_verbosity = logging.DEBUG
@@ -117,7 +118,7 @@ class acbs_build_core(object):
         tmp_dir_loc = []
         self.build_main(single_pkg, tmp_dir_loc, skipbuild=True)
         for pkg_name, pkg_dir in pkg_tuple:
-            print(acbs_utils.full_line_banner(''))
+            print(utils.full_line_banner(''))
             logging.info('Start building \033[36m%s::%s\033[0m' % (
                 single_pkg, pkg_name))
             self.pkg_data.clear()

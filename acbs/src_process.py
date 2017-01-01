@@ -5,7 +5,8 @@ import subprocess
 import tempfile
 import logging
 import shutil
-from acbs.utils import acbs_utils, ACBSGeneralError
+from acbs import utils
+from acbs.utils import ACBSGeneralError
 try:
     import Crypto.Hash
     from Crypto.Hash import *
@@ -94,7 +95,7 @@ class acbs_src_process(object):
         file_type_name = self.file_type()
         ext_list = ['x-tar*', 'zip*', 'x-zip*',
                     'x-cpio*', 'x-gzip*', 'x-bzip*', 'x-xz*']
-        if (len(file_type_name[0].split('application')) > 1) and acbs_utils.group_match(ext_list, file_type_name[1], 1):
+        if (len(file_type_name[0].split('application')) > 1) and utils.group_match(ext_list, file_type_name[1], 1):
             # x-tar*|zip*|x-*zip*|x-cpio*|x-gzip*|x-bzip*|x-xz*
             pass
         else:
@@ -104,7 +105,7 @@ class acbs_src_process(object):
         return self.decomp_lib()
 
     def decomp_ext(self):
-        if not acbs_utils.test_progs(['bsdtar', '-h']):
+        if not utils.test_progs(['bsdtar', '-h']):
             raise AssertionError(
                 'Unable to use bsdtar. Can\'t decompress files... :-(')
         try:

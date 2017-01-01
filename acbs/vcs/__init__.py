@@ -1,7 +1,7 @@
 import os
 import logging
 
-from ..utils import acbs_utils
+from .. import utils
 
 
 class acbs_vcs(object):
@@ -70,7 +70,7 @@ class acbs_vcs(object):
             if not proto:
                 raise ValueError('VCS protocol unspecified')
         logging.debug('VCS: %s: %s(%s)' % (proto, action, param))
-        sh_ret = acbs_utils().sh_executor(
+        sh_ret = utils.sh_executor(
             os.path.join(self.vcs_mod_dir, '{}.sh'.format(proto)), action, param, not need_ret)
         if (not sh_ret):
             raise Exception('Error occurred when executing VCS commands')

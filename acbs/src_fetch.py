@@ -4,7 +4,7 @@ from urllib import parse
 import logging
 
 from acbs.src_process import acbs_src_process
-from acbs.utils import acbs_utils
+from acbs import utils
 from acbs.vcs import acbs_vcs
 
 
@@ -89,13 +89,13 @@ class acbs_src_fetch(object):
 
     def test_downloaders(self):
         use_progs = []
-        if acbs_utils.test_progs(['aria2c', '-h']):
+        if utils.test_progs(['aria2c', '-h']):
             use_progs.append('aria')
-        if acbs_utils.test_progs(['wget', '-h']):
+        if utils.test_progs(['wget', '-h']):
             use_progs.append('wget')
-        if acbs_utils.test_progs(['curl', '-h']):
+        if utils.test_progs(['curl', '-h']):
             use_progs.append('curl')
-        if acbs_utils.test_progs(['axel', '-h']):
+        if utils.test_progs(['axel', '-h']):
             use_progs.append('axel')
         return use_progs
 

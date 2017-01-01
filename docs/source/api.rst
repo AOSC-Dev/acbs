@@ -3,18 +3,16 @@
 ACBS API Reference
 ==================
 
-.. module:: lib.acbs_utils
+.. module:: acbs.utils
 
-.. autoclass:: acbs_utils
+ACBS utils contains some helper functions to perform some tasks easier.
 
-    ACBS utils contains some helper functions to perform some tasks easier.
+.. autofunction:: gen_laundry_list
 
-    .. automethod:: gen_laundry_list
+.. autofunction:: group_match
 
-    .. automethod:: group_match
+.. autofunction:: check_empty
 
-    .. automethod:: check_empty
+.. autofunction:: test_progs
 
-    .. automethod:: test_progs
-
-    .. automethod:: get_arch_name
+.. autofunction:: get_arch_name

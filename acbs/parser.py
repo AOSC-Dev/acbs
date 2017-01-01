@@ -4,7 +4,7 @@ import subprocess
 # import logging
 from configparser import RawConfigParser
 
-from acbs.utils import acbs_utils
+from acbs import utils
 
 
 class acbs_parser(object):
@@ -33,13 +33,10 @@ class acbs_parser(object):
             raise OSError(
                 'Failed to load spec file! Do you have read permission?') from e
         # Stupid but necessary laundry list of possible varibles
-        script = '{}{}'.format(
-            spec_cont, acbs_utils.gen_laundry_list(['VER', 'REL', 'SUBDIR',
-                                                    'SRCTBL', 'GITSRC',
-                                                    'GITCO', 'GITBRCH',
-                                                    'SVNSRC', 'SVNCO', 'HGSRC',
-                                                    'BZRSRC', 'BZRCO',
-                                                    'DUMMYSRC', 'CHKSUM']))
+        script = '{}{}'.format(spec_cont, utils.gen_laundry_list([
+                'VER', 'REL', 'SUBDIR', 'SRCTBL', 'GITSRC', 'GITCO', 'GITBRCH',
+                'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC', 'CHKSUM'
+            ]))
         try:
             # Better to be replaced by subprocess.Popen
             spec_out = subprocess.check_output(script, shell=True)
@@ -76,8 +73,8 @@ class acbs_parser(object):
             raise OSError(
                 'Failed to load autobuild defines file! Do you have read permission?') from ex
         script = "ARCH={}\n{}{}".format(
-            acbs_utils.get_arch_name(), abd_cont,
-            acbs_utils.gen_laundry_list(['PKGNAME', 'PKGDEP', 'BUILDDEP']))
+            utils.get_arch_name(), abd_cont,
+            utils.gen_laundry_list(['PKGNAME', 'PKGDEP', 'BUILDDEP']))
         try:
             # Better to be replaced by subprocess.Popen
             abd_out = subprocess.check_output(script, shell=True)
@@ -107,7 +104,7 @@ class acbs_parser(object):
         # just a simple naive validate for now
         if in_dict['NAME'] == '' or in_dict['VER'] == '':
             raise ValueError('Package name or version not valid!!!')
-        if acbs_utils.check_empty(acbs_utils.LOGIC_OR, in_dict, ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']) is True:
+        if utils.check_empty(utils.LOGIC_OR, in_dict, ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']) is True:
             if in_dict['DUMMYSRC'] not in ['true', '1']:
                 raise ValueError('No source specified!')
         return
@@ -138,7 +135,7 @@ class acbs_parser(object):
             tree_loc_dict = acbs_config[tree_name]
         except KeyError as ex:
             err_message = '404 - Tree not found: {}, defined trees: {}'.format(tree_name,
-                                                                               acbs_utils.list2str(acbs_config.sections()))
+                                                                               utils.list2str(acbs_config.sections()))
             raise ValueError(err_message) from ex
         try:
             tree_loc = tree_loc_dict['location']
