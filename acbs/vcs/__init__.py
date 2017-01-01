@@ -4,7 +4,7 @@ import logging
 from .. import utils
 
 
-class acbs_vcs(object):
+class VCS(object):
 
     def __init__(self, url, repo_dir, proto=None):
         self.vcs_mod_dir = os.path.dirname(os.path.realpath(__file__))

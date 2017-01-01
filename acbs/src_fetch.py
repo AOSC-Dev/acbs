@@ -5,7 +5,7 @@ import logging
 
 from acbs.src_process import SourceProcessor
 from acbs import utils
-from acbs.vcs import acbs_vcs
+from acbs.vcs import VCS
 
 
 class SourceFetcher(object):
@@ -80,7 +80,7 @@ class SourceFetcher(object):
 
     def vcs_dispatcher(self, url, src_type=None):
         logging.debug('Sending to VCS module:{} URL:{}'.format(src_type, url))
-        acbs_vcs(url=url, repo_dir=os.path.join(self.dump_loc, self.pkg_name), proto=src_type).vcs_fetch_src()
+        VCS(url=url, repo_dir=os.path.join(self.dump_loc, self.pkg_name), proto=src_type).vcs_fetch_src()
         return
 
     '''

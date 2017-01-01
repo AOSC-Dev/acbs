@@ -3,7 +3,7 @@ import subprocess
 import os
 
 
-class acbs_pm(object):
+class PackageManager(object):
 
     def __init__(self):
         pm_mod_dir = os.path.dirname(os.path.realpath(__file__))

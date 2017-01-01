@@ -1,4 +1,4 @@
-from .pm import acbs_pm
+from .pm import PackageManager
 from acbs.utils import ACBSGeneralError
 import logging
 
@@ -6,7 +6,7 @@ import logging
 class Dependencies(object):
 
     def __init__(self):
-        self.acbs_pm = acbs_pm()
+        self.acbs_pm = PackageManager()
         return
 
     def search_deps(self, search_pkgs):
