@@ -4,15 +4,15 @@ import os
 import sys
 import traceback
 
-from lib.acbs_find import acbs_find
-from lib.acbs_utils import acbs_utils, ACBSGeneralError, acbs_log_format, ACBSConfError
-from lib.acbs_parser import acbs_parser, ACBSPackgeInfo
-from lib.acbs_src_fetch import acbs_src_fetch
-from lib.acbs_misc import acbs_misc
-from lib.acbs_src_process import acbs_src_process
+from acbs.find import acbs_find
+from acbs.utils import acbs_utils, ACBSGeneralError, acbs_log_format, ACBSConfError
+from acbs.parser import acbs_parser, ACBSPackgeInfo
+from acbs.src_fetch import acbs_src_fetch
+from acbs.misc import acbs_misc
+from acbs.src_process import acbs_src_process
 # from acbs_const import acbs_const
-from lib.acbs_start_build import acbs_start_ab
-from lib.acbs_deps import acbs_deps
+from acbs.start_build import acbs_start_ab
+from acbs.deps import acbs_deps
 
 
 class acbs_build_core(object):

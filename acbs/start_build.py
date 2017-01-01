@@ -4,9 +4,9 @@ import os
 import shutil
 import logging
 
-from lib.acbs_utils import acbs_utils
-from lib.acbs_parser import acbs_parser
-from lib.acbs_const import acbs_const
+from acbs.utils import acbs_utils
+from acbs.parser import acbs_parser
+from acbs.const import acbs_const
 
 
 class acbs_start_ab(object):

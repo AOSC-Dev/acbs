@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import logging
 import shutil
-from lib.acbs_utils import acbs_utils, ACBSGeneralError
+from acbs.utils import acbs_utils, ACBSGeneralError
 try:
     import Crypto.Hash
     from Crypto.Hash import *

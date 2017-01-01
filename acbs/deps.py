@@ -1,5 +1,5 @@
-from .pm.acbs_pm import acbs_pm
-from lib.acbs_utils import ACBSGeneralError
+from .pm import acbs_pm
+from acbs.utils import ACBSGeneralError
 import logging
 
 

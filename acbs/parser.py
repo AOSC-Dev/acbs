@@ -4,7 +4,7 @@ import subprocess
 # import logging
 from configparser import RawConfigParser
 
-from lib.acbs_utils import acbs_utils
+from acbs.utils import acbs_utils
 
 
 class acbs_parser(object):

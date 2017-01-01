@@ -8,7 +8,7 @@ import os
 import sys
 import shutil
 import argparse
-from lib.acbs_mainflow import acbs_build_core
+from acbs.mainflow import acbs_build_core
 
 
 def main():

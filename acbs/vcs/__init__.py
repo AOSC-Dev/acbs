@@ -1,7 +1,7 @@
 import os
 import logging
 
-from ..acbs_utils import acbs_utils
+from ..utils import acbs_utils
 
 
 class acbs_vcs(object):

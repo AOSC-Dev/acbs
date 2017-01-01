@@ -3,9 +3,9 @@ import os
 from urllib import parse
 import logging
 
-from lib.acbs_src_process import acbs_src_process
-from lib.acbs_utils import acbs_utils
-from lib.vcs.acbs_vcs import acbs_vcs
+from acbs.src_process import acbs_src_process
+from acbs.utils import acbs_utils
+from acbs.vcs import acbs_vcs
 
 
 class acbs_src_fetch(object):

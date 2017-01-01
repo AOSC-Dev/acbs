@@ -1,5 +1,5 @@
 import logging
-from lib.acbs_const import acbs_const
+from acbs.const import acbs_const
 
 
 class acbs_profiler(object):
