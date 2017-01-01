@@ -25,12 +25,15 @@ def main():
     parser.add_argument('packages', nargs='*', help='Packages to be built')
     parser.add_argument('-c', '--clear', help='Clear build directory',
                         action='store_true', dest='clear_dir')
+    parser.add_argument('-s', '--system-log', help='Pass logs to system log collector', action='store_true', dest='syslog')
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
     if len(args.packages) > 0:
         acbs_core_args = {'pkgs_name': args.packages,
                           'debug_mode': args.debug, 'version': acbs_version}
+        if args.syslog:
+            acbs_core_args['syslog'] = True
         if args.acbs_tree:
             acbs_core_args['tree'] = args.acbs_tree[0]
             acbs_instance = acbs_build_core(**acbs_core_args)

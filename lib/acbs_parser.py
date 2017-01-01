@@ -47,7 +47,7 @@ class acbs_parser(object):
             raise ValueError(
                 'Malformed spec file found! Couldn\'t continue!') from ex
         # Assume it's UTF-8 since we have no clue of the real world on how it
-        # works ...
+        # works ... (just don't want to use chardet)
         spec_fp = io.StringIO('[wrap]\n' + spec_out.decode('utf-8'))
         config = RawConfigParser()
         config.read_file(spec_fp)
@@ -92,7 +92,7 @@ class acbs_parser(object):
             abd_config_dict[i.upper()] = abd_config['wrap'][i]
         self.shared_data.build_deps = abd_config_dict['BUILDDEP'].split()
         self.shared_data.run_deps = abd_config_dict['PKGDEP'].split()
-        self.shared_data.opt_deps = []  # abd_config_dict['PKGREC']
+        self.shared_data.opt_deps = []  # abd_config_dict['PKGREC'] <RfF>
         self.shared_data.buffer['ab3_def'] = abd_config_dict
         return self.shared_data
 

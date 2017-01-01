@@ -62,13 +62,13 @@ class acbs_start_ab(object):
             raise Exception('Error occurred when copying files from tree!') from ex
         return
 
-    def timed_start_ab3(self):
+    def timed_start_ab3(self, *args, **kwargs):
         def helper_gen_msg():
             acc = acbs_const()
             return 'Time for building {}{}{}'.format(acc.ANSI_LT_CYAN, self.pkg_info['NAME'], acc.ANSI_RST)
 
         @acbs_utils.time_this(desc_msg=helper_gen_msg())
-        def start_ab3(self):
+        def start_ab3(self, *args, **kwargs):
             os.chdir(self.abdir)
             # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
             shadow_defines_loc = self.abdir
@@ -82,5 +82,4 @@ class acbs_start_ab(object):
                 raise Exception('Autobuild 3 reported a building failure!') from ex
             if self.rm_abdir:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
-            return
         return start_ab3(self)

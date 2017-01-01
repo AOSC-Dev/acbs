@@ -17,7 +17,7 @@ from lib.acbs_deps import acbs_deps
 
 class acbs_build_core(object):
 
-    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='?', init=True):
+    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='?', init=True, syslog=False):
         '''
         '''
         self.pkgs_name = pkgs_name
@@ -30,8 +30,10 @@ class acbs_build_core(object):
         self.conf_loc = '/etc/acbs/'
         self.log_loc = '/var/log/acbs/'
         self.pkg_data = ACBSPackgeInfo()
+        self.isgroup = False
         self.acbs_version = version
         self.tree_loc = None
+        self.log_to_system = syslog
         self.acbs_settings = {'debug_mode': self.isdebug, 'tree': self.tree,
                               'version': self.acbs_version}
         if init:
@@ -71,8 +73,12 @@ class acbs_build_core(object):
         str_handler.setLevel(str_verbosity)
         str_handler.setFormatter(acbs_log_format())
         logger.addHandler(str_handler)
-        log_file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(self.log_loc, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=10)
+        if self.log_to_system:
+            import socket
+            log_file_handler = logging.handlers.SysLogHandler(address='/dev/log')
+        else:
+            log_file_handler = logging.handlers.RotatingFileHandler(
+                os.path.join(self.log_loc, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=10)
         log_file_handler.setLevel(file_verbosity)
         log_file_handler.setFormatter(logging.Formatter(
             '%(asctime)s:%(levelname)s:%(message)s'))
@@ -98,8 +104,62 @@ class acbs_build_core(object):
                 self.build_single_pkg(matched_pkg)
         return 0
 
-    def build_pkg_group(self):
-        pass
+    def build_pkg_group(self, pkgs_array, single_pkg):
+        self.isgroup = True
+        self.pkgs_que.discard(single_pkg)
+        import collections
+        pkgs_array = collections.OrderedDict(
+            sorted(pkgs_array.items(), key=lambda x: x[0]))
+        pkg_tuple = [(lambda x, y, z: (y, '%s/0%s-%s' % (z, x, y)) if x < 10 else (y, '%s/%s-%s' %
+                                                                                   (z, str(x), y)))(i, pkgs_array[i], single_pkg) for i in pkgs_array]
+        logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
+            len(pkg_tuple), ' '.join([i[0] for i in pkg_tuple])))
+        logging.debug('Package group building order: {}'.format(pkgs_array))
+        tmp_dir_loc = []
+        self.build_main(single_pkg, tmp_dir_loc, skipbuild=True)
+        for pkg_name, pkg_dir in pkg_tuple:
+            print(acbs_utils.full_line_banner(''))
+            logging.info('Start building \033[36m%s::%s\033[0m' % (
+                single_pkg, pkg_name))
+            self.pkg_data.clear()
+            self.build_main(pkg_dir, tmp_dir_loc)
+        return
+
+    def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
+        try:
+            pkg_slug = os.path.basename(target)
+        except:
+            pkg_slug = target
+            self.pkg_data.name = pkg_slug
+        parser = acbs_parser(
+            pkg_name=pkg_slug, spec_file_loc=os.path.abspath(target))
+        if not tmp_dir_loc:
+            self.pkg_data.update(parser.parse_abbs_spec())
+        repo_dir = os.path.abspath(target)
+        if not skipbuild:
+            defines_loc = 'defines' if self.isgroup else 'autobuild/defines'
+            self.pkg_data.update(parser.parse_ab3_defines(
+                os.path.join(target, defines_loc)))
+            try_build = acbs_deps().process_deps(
+                self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
+            if try_build:
+                if try_build in self.pending_pkgs:
+                    # Suspect this is dependency loop
+                    raise ACBSGeneralError('Dependency loop: {}'.format(
+                        '->'.join(list(self.pending_pkgs + try_build))))
+                self.new_build_thread(try_build)
+        src_fetcher = acbs_src_fetch(
+            self.pkg_data.buffer['abbs_data'], self.dump_loc)
+        self.pkg_data.src_name = src_fetcher.fetch_src()
+        self.pkg_data.src_path = self.dump_loc
+        if not tmp_dir_loc:
+            tmp_dir_loc.append(acbs_src_process(self.pkg_data, self).process())
+        repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
+        if not skipbuild:
+            ab3 = acbs_start_ab(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
+            ab3.copy_abd()
+            ab3.timed_start_ab3(rm_abdir=self.isgroup)
+        self.pkgs_que.discard(target)
         return
 
     def build_single_pkg(self, single_pkg):
@@ -108,43 +168,8 @@ class acbs_build_core(object):
         self.pkg_data.slug = single_pkg
         pkg_type_res = acbs_find.determine_pkg_type(single_pkg)
         if isinstance(pkg_type_res, dict):
-            pkgs_array = pkg_type_res
-            pkg_tuple = [(lambda x, y, z: (y, '%s/0%s-%s' % (z, x, y)) if x < 10 else (y, '%s/%s-%s' %
-                                                                                       (z, str(x), y)))(i, pkgs_array[i], single_pkg) for i in pkgs_array]
-            logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
-                len(pkg_tuple), ' '.join([i[0] for i in pkg_tuple])))
-            logging.debug('Package group building order: {}'.format(pkgs_array))
-            raise NotImplementedError('Sub packages building not implemented')
-            # return build_sub_pkgs(single_pkg, pkg_type_res)  # FIXME
-        try:
-            pkg_slug = os.path.basename(single_pkg)
-        except:
-            pkg_slug = single_pkg
-            self.pkg_data.name = pkg_slug
-        parser = acbs_parser(
-            pkg_name=pkg_slug, spec_file_loc=os.path.abspath(single_pkg))
-        self.pkg_data.update(parser.parse_abbs_spec())
-        repo_dir = os.path.abspath(single_pkg)
-        self.pkg_data.update(parser.parse_ab3_defines(
-            os.path.join(single_pkg, 'autobuild/defines')))
-        try_build = acbs_deps().process_deps(
-            self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
-        if try_build:
-            if try_build in self.pending_pkgs:
-                # Suspect this is dependency loop
-                raise ACBSGeneralError('Dependency loop: {}'.format(
-                    '->'.join(list(self.pending_pkgs + try_build))))
-            self.new_build_thread(try_build)
-        src_fetcher = acbs_src_fetch(
-            self.pkg_data.buffer['abbs_data'], self.dump_loc)
-        self.pkg_data.src_name = src_fetcher.fetch_src()
-        self.pkg_data.src_path = self.dump_loc
-        tmp_dir_loc = acbs_src_process(self.pkg_data, self).process()
-        repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
-        ab3 = acbs_start_ab(tmp_dir_loc, repo_ab_dir, self.pkg_data)
-        ab3.copy_abd()
-        ab3.timed_start_ab3()
-        self.pkgs_que.discard(single_pkg)
+            return self.build_pkg_group(pkg_type_res, single_pkg)  # FIXME
+        self.build_main(single_pkg)
         return 0
 
     def new_build_thread(self, try_build):
