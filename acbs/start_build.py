@@ -49,7 +49,7 @@ class Autobuild(object):
         else:
             try:
                 os.chdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER'])
-            except:
+            except Exception:
                 try:
                     os.chdir(self.determine_subdir())
                 except Exception as ex:

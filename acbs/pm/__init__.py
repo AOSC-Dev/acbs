@@ -72,6 +72,6 @@ class PackageManager(object):
                 except subprocess.CalledProcessError:
                     return False
             return output.decode('utf-8')
-        except:
+        except Exception:
             return
         return

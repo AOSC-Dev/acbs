@@ -58,7 +58,7 @@ class SourceProcessor(object):
     def file_type(self, file_loc=None, res_type=1):
         try:
             import magic
-        except:
+        except ImportError:
             logging.warning(
                 'ACBS cannot find libmagic bindings, will use bundled one instead.')
             import lib.magic as magic
@@ -83,7 +83,7 @@ class SourceProcessor(object):
                     tp_res = tp.decode('utf-8').strip('b\'\'').split('/')
                 else:
                     tp_res = tp.decode('utf-8').strip('b\'\'')
-        except:
+        except Exception:
             logging.error('Unable to determine the file type!')
             if res_type == 1:
                 return ['unknown', 'unknown']
@@ -175,7 +175,7 @@ class SourceProcessor(object):
         try:
             import libarchive
             import os
-        except:
+        except ImportError:
             logging.warning(
                 'Failed to load libarchive library! Fall back to bsdtar!')
             return self.decomp_ext()

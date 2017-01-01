@@ -26,7 +26,7 @@ class SourceFetcher(object):
         for src in ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
             if len(self.pkg_info[src]) > 0:
                 if src == 'SRCTBL':
-                    return self.src_tbl_fetch()
+                    return self.src_tbl_fetch(self.pkg_info[src])
                 if src in ['GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
                     self.vcs_dispatcher(self.pkg_info[src], src_type=src[:-3].lower())
                     return self.pkg_name
@@ -54,7 +54,7 @@ class SourceFetcher(object):
             self.vcs_dispatcher(url)
             return pkg_name
 
-    def src_tbl_fetch(self, url, pkg_slug):
+    def src_tbl_fetch(self, url, pkg_slug=None):
         use_progs = self.test_downloaders()
         src_name = os.path.basename(url)
         full_path = os.path.join(self.dump_loc, src_name)
@@ -106,9 +106,7 @@ class SourceFetcher(object):
             axel_cmd.insert(5, output)
         try:
             subprocess.check_call(axel_cmd)
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt()
-        except:
+        except Exception:
             raise AssertionError('Failed to fetch source with Axel!')
         return
 
@@ -121,9 +119,7 @@ class SourceFetcher(object):
             curl_cmd.insert(2, '-O')
         try:
             subprocess.check_call(curl_cmd)
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt()
-        except:
+        except Exception:
             raise AssertionError('Failed to fetch source with cURL!')
         return
 
@@ -134,9 +130,7 @@ class SourceFetcher(object):
             wget_cmd.insert(3, output)
         try:
             subprocess.check_call(wget_cmd)
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt()
-        except:
+        except Exception:
             raise AssertionError('Failed to fetch source with Wget!')
         return
 
@@ -153,8 +147,6 @@ class SourceFetcher(object):
             aria_cmd.insert(5, os.path.basename(output))
         try:
             subprocess.check_call(aria_cmd)
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt()
-        except:
+        except Exception:
             raise AssertionError('Failed to fetch source with Aria2!')
         return

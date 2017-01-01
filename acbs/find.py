@@ -52,6 +52,7 @@ class Finder(object):
                     return os.path.relpath(os.path.join(secpath, pkgpath), self.path)
         return
 
+    @staticmethod
     def determine_pkg_type(pkg):
         sub_pkgs = set(os.listdir(pkg)) - set(['spec'])
         if len(sub_pkgs) > 1:

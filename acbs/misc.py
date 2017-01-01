@@ -13,7 +13,7 @@ class Profiler(object):
         self.psutil_avail = True
         try:
             import psutil
-        except:
+        except ImportError:
             self.psutil_avail = False
         return
 
@@ -30,7 +30,7 @@ class Profiler(object):
         try:
             with open('/proc/loadavg', 'rt') as loadavg_f:
                 self.loadavg = loadavg_f.read().split(' ')
-        except:
+        except Exception:
             if log_warn is True:
                 logging.exception('Failed to read loadavg information!')
 

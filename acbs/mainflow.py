@@ -53,7 +53,7 @@ class BuildCore(object):
                             self.log_loc]:
                 if not os.path.isdir(dir_loc):
                     os.makedirs(dir_loc)
-        except:
+        except Exception:
             raise IOError('\033[93mFailed to make work directory\033[0m!')
         self.__install_logger(str_verbosity)
         Misc().dev_utilz_warn()
@@ -128,7 +128,7 @@ class BuildCore(object):
     def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
         try:
             pkg_slug = os.path.basename(target)
-        except:
+        except Exception:
             pkg_slug = target
             self.pkg_data.name = pkg_slug
         parser = Parser(

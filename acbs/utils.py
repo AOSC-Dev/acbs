@@ -17,7 +17,7 @@ def list2str(list_in, sep=' '):
     :returns: A formatted string
     :raises TypeError: `list_in` must be of `list` type
     """
-    return sep.join(list_in)
+    return sep.join(map(str, list_in))
 
 def gen_laundry_list(items):
     """
@@ -30,7 +30,7 @@ def gen_laundry_list(items):
     # You know what, 'laundry list' can be a joke in somewhere...
     str_out = '\n\n'
     for i in items:
-        str_out = str_out + 'echo \"%s\"=\"${%s}\"\n' % (i, i)
+        str_out += 'echo \"%s\"=\"${%s}\"\n' % (i, i)
         # For example: `echo "VAR"="${VAR}"\n`
     return str_out
 
@@ -50,7 +50,7 @@ def test_progs(cmd, display=False):
             _, _ = proc.communicate()  # Maybe one day we'll need its output...?
         else:
             subprocess.check_call(cmd)
-    except:
+    except Exception:
         return False
 
     return True
@@ -103,12 +103,7 @@ def str_split_to_list(str_in, sep=' '):
     :param sep: Seperator
     :returns: A list
     """
-    str_list_a = str_in.split(sep)
-    str_list_b = []
-    for i in str_list_a:
-        if i.rstrip() != '':
-            str_list_b.append(i)
-    return str_list_b
+    return list(filter(None, str_in.split(sep)))
 
 def err_msg(desc=None):
     # print('\rTerminated!',sep='')
