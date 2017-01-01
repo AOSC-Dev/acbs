@@ -32,6 +32,8 @@ class acbs_start_ab(object):
             elif len(subdirs) == 0:
                 return '.'
             else:
+                raise ValueError(
+                    'Failed to determine sub-directory, please specify manually.')
                 return
 
     def copy_abd(self):
