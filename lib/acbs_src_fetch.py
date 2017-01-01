@@ -146,7 +146,7 @@ class acbs_src_fetch(object):
         aria_cmd = ['aria2c', '--max-connection-per-server={}'.format(
             threads), url, '--auto-file-renaming=false']
         # ,'--check-certificate=false'
-        if not output:
+        if output:
             aria_cmd.insert(2, '-d')
             aria_cmd.insert(3, '/'.join(output.split('/')[:-1]))  # Temporary
             aria_cmd.insert(4, '-o')

@@ -74,7 +74,6 @@ class acbs_build_core(object):
         str_handler.setFormatter(acbs_log_format())
         logger.addHandler(str_handler)
         if self.log_to_system:
-            import socket
             log_file_handler = logging.handlers.SysLogHandler(address='/dev/log')
         else:
             log_file_handler = logging.handlers.RotatingFileHandler(
