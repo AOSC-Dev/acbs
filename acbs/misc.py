@@ -15,12 +15,12 @@ class Profiler(object):
             import psutil
         except ImportError:
             self.psutil_avail = False
-        return
 
     def __update_stats(self, log_warn=True, per_cpu=False):
         if log_warn and self.psutil_avail:
             logging.warning(
                 'Unable to use psutil library, some functions are disabled.')
+        # XXX: explanation needed
         return
         import psutil
         self.mem_use = psutil.virtual_memory().percent
@@ -44,12 +44,10 @@ class Profiler(object):
             self.output_warn('RAM usage', mem_use)
         if cpu_use > 65.0:
             self.output_warn('CPU load', cpu_use)
-        return
 
     def output_warn(self, warn_item, value):
         logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(const.ANSI_YELLOW,
                                                                                          const.ANSI_RST, const.ANSI_LT_CYAN, warn_item, const.ANSI_RST, const.ANSI_YELLOW, value, const.ANSI_RST))
-        return
 
 
 class Misc(Profiler):

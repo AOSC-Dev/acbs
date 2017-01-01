@@ -114,7 +114,6 @@ class SourceProcessor(object):
         except Exception as ex:
             raise ACBSGeneralError(
                 'Unable to decompress file! File corrupted?! Or Permission denied?!') from ex
-        return
 
     def chksum_pycrypto(self, chksum_tuple, target_file):
         hash_type, hash_value = chksum_tuple
@@ -139,7 +138,6 @@ class SourceProcessor(object):
         if hash_value != target_hash:
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
                 hash_type, target_file, hash_value, target_hash))
-        return
 
     def chksum_coreutils(self, chksum_tuple, target_file):
         hash_type, hash_value = chksum_tuple
@@ -155,7 +153,6 @@ class SourceProcessor(object):
         if hash_value != target_hash:
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
                 hash_type, target_file, hash_value, target_hash))
-        return
 
     def chksum(self):
         chksums = self.chksum_val
@@ -170,7 +167,6 @@ class SourceProcessor(object):
         else:
             for sum_ in chksums:
                 self.chksum_pycrypto(sum_, self.src_full_loc)
-        return
 
     def decomp_lib(self):
         try:
@@ -186,4 +182,3 @@ class SourceProcessor(object):
             libarchive.extract.extract_file(self.shadow_ark_loc)
         except Exception as ex:
             raise Exception('Extraction failure!') from ex
-        return

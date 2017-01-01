@@ -8,6 +8,12 @@ LOGIC_OR = 1
 LOGIC_AND = 2
 
 
+def uniq(seq):  # Dave Kirby
+    # Order preserving
+    seen = set()
+    return [x for x in seq if x not in seen and not seen.add(x)]
+
+
 def list2str(list_in, sep=' '):
     """
     A simple conversion function to format `list` to `string` with given \
@@ -100,7 +106,6 @@ def get_arch_name():
         return None
     return None
 
-
 def str_split_to_list(str_in, sep=' '):
     """
     A simple stupid function to split strings
@@ -122,7 +127,6 @@ def err_msg(desc=None):
         print('\n')
         logging.error(
             'Error occurred:\033[93m {} \033[0mBuild terminated.'.format(desc))
-    return
 
 
 def group_match(pattern_list, string, logic_method):
@@ -196,7 +200,6 @@ def sh_executor(sh_file, function, args, display=False):
 
 def acbs_terminate(exit_code):
     sys.exit(exit_code)
-    return
 
 
 def time_this(desc_msg):

@@ -7,7 +7,6 @@ class Dependencies(object):
 
     def __init__(self):
         self.acbs_pm = PackageManager()
-        return
 
     def search_deps(self, search_pkgs):
         pkgs_miss = self.acbs_pm.query_current_miss_pkgs(search_pkgs)
@@ -51,4 +50,3 @@ class Dependencies(object):
         except Exception as ex:
             raise ACBSGeneralError(
                 'Something went wrong when processing dependencies...') from ex
-        return

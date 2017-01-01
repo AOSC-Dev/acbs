@@ -64,7 +64,6 @@ class BuildCore(object):
                 raise ACBSConfError('Tree not found!')
         else:
             Parser(main_data=self).write_acbs_conf()
-        return
 
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
@@ -84,7 +83,6 @@ class BuildCore(object):
         log_file_handler.setFormatter(logging.Formatter(
             '%(asctime)s:%(levelname)s:%(message)s'))
         logger.addHandler(log_file_handler)
-        return
 
     def build(self, pkgs=None):
         pkgs_to_build = pkgs or self.pkgs_name
@@ -124,7 +122,6 @@ class BuildCore(object):
                 single_pkg, pkg_name))
             self.pkg_data.clear()
             self.build_main(pkg_dir, tmp_dir_loc)
-        return
 
     def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
         try:
@@ -161,7 +158,6 @@ class BuildCore(object):
             ab3.copy_abd()
             ab3.timed_start_ab3(rm_abdir=self.isgroup)
         self.pkgs_que.discard(target)
-        return
 
     def build_single_pkg(self, single_pkg):
         logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))

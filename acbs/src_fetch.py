@@ -76,13 +76,11 @@ class SourceFetcher(object):
                 continue
             except Exception as ex:
                 raise Exception('Something happend!') from ex
-        return
 
     def vcs_dispatcher(self, url, src_type=None):
         logging.debug('Sending to VCS module:{} URL:{}'.format(src_type, url))
         VCS(url=url, repo_dir=os.path.join(self.dump_loc,
                                            self.pkg_name), proto=src_type).vcs_fetch_src()
-        return
 
     '''
     External downloaders
@@ -109,7 +107,6 @@ class SourceFetcher(object):
             subprocess.check_call(axel_cmd)
         except Exception:
             raise AssertionError('Failed to fetch source with Axel!')
-        return
 
     def curl_get(self, url, output=None):
         curl_cmd = ['curl', url]  # , '-k'
@@ -122,7 +119,6 @@ class SourceFetcher(object):
             subprocess.check_call(curl_cmd)
         except Exception:
             raise AssertionError('Failed to fetch source with cURL!')
-        return
 
     def wget_get(self, url, output):
         wget_cmd = ['wget', '-c', url]  # ,'--no-check-certificate'
@@ -133,7 +129,6 @@ class SourceFetcher(object):
             subprocess.check_call(wget_cmd)
         except Exception:
             raise AssertionError('Failed to fetch source with Wget!')
-        return
 
     def aria_get(self, url, threads=3, output=None):
         if os.path.exists(output) and not os.path.exists(output + '.aria2'):
@@ -150,4 +145,3 @@ class SourceFetcher(object):
             subprocess.check_call(aria_cmd)
         except Exception:
             raise AssertionError('Failed to fetch source with Aria2!')
-        return

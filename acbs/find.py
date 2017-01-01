@@ -50,7 +50,6 @@ class Finder(object):
             for pkgpath in os.listdir(secpath):
                 if pkgpath == target and os.path.isdir(os.path.join(secpath, pkgpath)):
                     return os.path.relpath(os.path.join(secpath, pkgpath), self.path)
-        return
 
     @staticmethod
     def determine_pkg_type(pkg):
@@ -70,8 +69,6 @@ class Finder(object):
         if os.path.exists(os.path.join(path, 'spec')):
             if strict_mode and not os.path.exists(os.path.join(path, 'autobuild/defines')):
                 raise Exception('Can\'t find `defines` file!')
-            return
         else:
             raise Exception(
                 'Candidate package\033[93m {} \033[0mdoesn\'t seem to be valid!'.format(path))
-            return

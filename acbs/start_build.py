@@ -35,7 +35,6 @@ class Autobuild(object):
             else:
                 raise ValueError(
                     'Failed to determine sub-directory, please specify manually.')
-                return
 
     def copy_abd(self):
         os.chdir(self.tmp_dir_loc)
@@ -65,7 +64,6 @@ class Autobuild(object):
         except Exception as ex:
             raise Exception(
                 'Error occurred when copying files from tree!') from ex
-        return
 
     def timed_start_ab3(self, *args, **kwargs):
         def helper_gen_msg():

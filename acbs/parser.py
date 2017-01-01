@@ -2,7 +2,7 @@ import os
 import io
 import subprocess
 # import logging
-from configparser import RawConfigParser
+import configparser
 
 from acbs import utils
 
@@ -46,7 +46,7 @@ class Parser(object):
         # Assume it's UTF-8 since we have no clue of the real world on how it
         # works ... (just don't want to use chardet)
         spec_fp = io.StringIO('[wrap]\n' + spec_out.decode('utf-8'))
-        config = RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read_file(spec_fp)
         config_dict = {}
         for i in config['wrap']:
@@ -83,7 +83,7 @@ class Parser(object):
             raise Exception(
                 'Malformed Autobuild defines file found! Couldn\'t continue!') from ex
         abd_fp = io.StringIO('[wrap]\n' + abd_out.decode('utf-8'))
-        abd_config = RawConfigParser()
+        abd_config = configparser.RawConfigParser()
         abd_config.read_file(abd_fp)
         abd_config_dict = {}
         for i in abd_config['wrap']:
@@ -108,7 +108,6 @@ class Parser(object):
         if utils.check_empty(utils.LOGIC_OR, in_dict, ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']) is True:
             if in_dict['DUMMYSRC'] not in ['true', '1']:
                 raise ValueError('No source specified!')
-        return
 
     def write_ab3_defines(self, def_file_loc, in_dict):
         str_to_write = ''
@@ -120,12 +119,10 @@ class Parser(object):
         except IOError as ex:
             raise Exception('Failed to update information in \033[36m{}\033[0m'.format(
                 def_file_loc)) from ex
-        return
 
     def parse_acbs_conf(self, tree_name):
-        import configparser
         self.forest_file = os.path.join(self.conf_loc, 'forest.conf')
-        acbs_config = RawConfigParser()
+        acbs_config = configparser.RawConfigParser()
         acbs_config._interpolation = configparser.ExtendedInterpolation()
         with open(self.forest_file, 'rt') as conf_file:
             try:
@@ -146,7 +143,7 @@ class Parser(object):
         return tree_loc
 
     def write_acbs_conf(self):
-        acbs_conf_writer = RawConfigParser()
+        acbs_conf_writer = configparser.RawConfigParser()
         acbs_conf_writer.add_section('default')
         acbs_conf_writer.set('default', 'location', '/var/lib/acbs/repo/')
         acbs_conf_writer.add_section('acbs')
@@ -178,18 +175,14 @@ class ACBSPackgeInfo(object):
         # Used to store un-processed data to pass to next function
 
     def update(self, other):
-        def uniq(seq):  # Dave Kirby
-            # Order preserving
-            seen = set()
-            return [x for x in seq if x not in seen and not seen.add(x)]
         self.src_name = other.src_name.strip() or self.src_name
         self.src_url = other.src_url or self.src_url
         self.src_path = other.src_path or self.src_path
         self.version = other.version or self.version
-        self.opt_deps = uniq(self.opt_deps + other.opt_deps)
-        self.build_deps = uniq(self.build_deps + other.build_deps)
-        self.run_deps = uniq(self.run_deps + other.run_deps)
-        self.chksums = uniq(self.chksums + other.chksums)
+        self.opt_deps = utils.uniq(self.opt_deps + other.opt_deps)
+        self.build_deps = utils.uniq(self.build_deps + other.build_deps)
+        self.run_deps = utils.uniq(self.run_deps + other.run_deps)
+        self.chksums = utils.uniq(self.chksums + other.chksums)
         self.buffer = other.buffer or self.buffer
 
     def clear(self):
