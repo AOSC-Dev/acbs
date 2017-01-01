@@ -10,6 +10,7 @@ from acbs.parser import Parser
 
 
 class Autobuild(object):
+
     def __init__(self, tmp_dir_loc, repo_dir, pkg_info, rm_abdir=False):
         self.tmp_dir_loc = tmp_dir_loc
         self.abdir = None
@@ -45,7 +46,8 @@ class Autobuild(object):
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
             except FileNotFoundError as ex:
-                raise OSError('Failed to enter sub-directory `{}\'!'.format(self.pkg_info['SUBDIR'])) from ex
+                raise OSError(
+                    'Failed to enter sub-directory `{}\'!'.format(self.pkg_info['SUBDIR'])) from ex
         else:
             try:
                 os.chdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER'])
@@ -61,7 +63,8 @@ class Autobuild(object):
                             os.path.abspath(os.path.curdir) + '/autobuild/', symlinks=True)
             self.abdir = os.path.abspath(os.path.curdir)
         except Exception as ex:
-            raise Exception('Error occurred when copying files from tree!') from ex
+            raise Exception(
+                'Error occurred when copying files from tree!') from ex
         return
 
     def timed_start_ab3(self, *args, **kwargs):
@@ -71,7 +74,8 @@ class Autobuild(object):
         @utils.time_this(desc_msg=helper_gen_msg())
         def start_ab3(self, *args, **kwargs):
             os.chdir(self.abdir)
-            # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
+            # For logging support:
+            # ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
             shadow_defines_loc = self.abdir
             parser_obj = Parser()
             parser_obj.abbs_spec = self.pkg_info
@@ -80,7 +84,8 @@ class Autobuild(object):
             try:
                 subprocess.check_call(['autobuild'])
             except subprocess.CalledProcessError as ex:
-                raise Exception('Autobuild 3 reported a building failure!') from ex
+                raise Exception(
+                    'Autobuild 3 reported a building failure!') from ex
             if self.rm_abdir:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
         return start_ab3(self)

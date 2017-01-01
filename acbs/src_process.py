@@ -61,7 +61,7 @@ class SourceProcessor(object):
         except ImportError:
             logging.warning(
                 'ACBS cannot find libmagic bindings, will use bundled one instead.')
-            import lib.magic as magic
+            import acbs.magic as magic
         file_loc = self.src_full_loc or file_loc
         if res_type == 1:
             mco = magic.open(magic.MIME_TYPE | magic.MAGIC_SYMLINK)
@@ -149,7 +149,8 @@ class SourceProcessor(object):
                 hash_type, ' '.join(predefined)))
         if not os.path.exists(target_file):
             raise OSError('Target file not found!')
-        hash_output = subprocess.check_output(['%ssum' % hash_type.lower(), target_file]).decode('utf-8')
+        hash_output = subprocess.check_output(
+            ['%ssum' % hash_type.lower(), target_file]).decode('utf-8')
         target_hash = hash_output.split(' ')[0]
         if hash_value != target_hash:
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (

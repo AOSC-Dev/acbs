@@ -7,6 +7,7 @@ from acbs import const
 LOGIC_OR = 1
 LOGIC_AND = 2
 
+
 def list2str(list_in, sep=' '):
     """
     A simple conversion function to format `list` to `string` with given \
@@ -18,6 +19,7 @@ def list2str(list_in, sep=' '):
     :raises TypeError: `list_in` must be of `list` type
     """
     return sep.join(map(str, list_in))
+
 
 def gen_laundry_list(items):
     """
@@ -33,6 +35,7 @@ def gen_laundry_list(items):
         str_out += 'echo \"%s\"=\"${%s}\"\n' % (i, i)
         # For example: `echo "VAR"="${VAR}"\n`
     return str_out
+
 
 def test_progs(cmd, display=False):
     """
@@ -54,6 +57,7 @@ def test_progs(cmd, display=False):
         return False
 
     return True
+
 
 def check_empty(logic_method, in_dict, in_array):
     '''
@@ -77,6 +81,7 @@ def check_empty(logic_method, in_dict, in_array):
         raise ValueError('Value of logic_method is illegal!')
     return False
 
+
 def get_arch_name():
     """
     Detect architecture of the host machine
@@ -95,6 +100,7 @@ def get_arch_name():
         return None
     return None
 
+
 def str_split_to_list(str_in, sep=' '):
     """
     A simple stupid function to split strings
@@ -104,6 +110,7 @@ def str_split_to_list(str_in, sep=' '):
     :returns: A list
     """
     return list(filter(None, str_in.split(sep)))
+
 
 def err_msg(desc=None):
     # print('\rTerminated!',sep='')
@@ -116,6 +123,7 @@ def err_msg(desc=None):
         logging.error(
             'Error occurred:\033[93m {} \033[0mBuild terminated.'.format(desc))
     return
+
 
 def group_match(pattern_list, string, logic_method):
     """
@@ -145,6 +153,7 @@ def group_match(pattern_list, string, logic_method):
         raise ValueError('...')
         return False
 
+
 def full_line_banner(msg):
     import shutil
     bars_count = int((shutil.get_terminal_size().columns - len(msg)) / 2)
@@ -152,11 +161,13 @@ def full_line_banner(msg):
         msg = '-{}-'.format(msg)
     return msg
 
+
 def random_msg():
 
     return ''
 
-def sh_executor(self, sh_file, function, args, display=False):
+
+def sh_executor(sh_file, function, args, display=False):
     """
     Execute specified functions in external shell scripts with given args
 
@@ -177,13 +188,16 @@ def sh_executor(self, sh_file, function, args, display=False):
             return False
         return True
     else:
-        output = subprocess.check_output(
-            excute_code, shell=True, stderr=subprocess.STDOUT)
-    return output.decode('utf-8')
+        outs, errs = subprocess.Popen(
+            ('bash',), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).communicate(excute_code.encode('utf-8'))
+    return outs.decode('utf-8')
+
 
 def acbs_terminate(exit_code):
     sys.exit(exit_code)
     return
+
 
 def time_this(desc_msg):
     def time_this_func(func):
@@ -197,6 +211,7 @@ def time_this(desc_msg):
             return ret
         return dec_main
     return time_this_func
+
 
 def human_time(full_seconds):
     import datetime

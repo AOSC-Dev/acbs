@@ -34,9 +34,9 @@ class Parser(object):
                 'Failed to load spec file! Do you have read permission?') from e
         # Stupid but necessary laundry list of possible varibles
         script = '{}{}'.format(spec_cont, utils.gen_laundry_list([
-                'VER', 'REL', 'SUBDIR', 'SRCTBL', 'GITSRC', 'GITCO', 'GITBRCH',
-                'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC', 'CHKSUM'
-            ]))
+            'VER', 'REL', 'SUBDIR', 'SRCTBL', 'GITSRC', 'GITCO', 'GITBRCH',
+            'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC', 'CHKSUM'
+        ]))
         try:
             # Better to be replaced by subprocess.Popen
             spec_out = subprocess.check_output(script, shell=True)
@@ -56,7 +56,8 @@ class Parser(object):
         self.parser_validate(config_dict)
         self.shared_data.version = [config_dict['VER'], config_dict['REL']]
         if config_dict['CHKSUM']:
-            self.shared_data.chksums = [tuple(i.split('::')) for i in config_dict['CHKSUM'].split(' ')]
+            self.shared_data.chksums = [tuple(i.split('::')) for i in config_dict[
+                'CHKSUM'].split(' ')]
         self.shared_data.buffer['abbs_data'] = config_dict
         return self.shared_data
 

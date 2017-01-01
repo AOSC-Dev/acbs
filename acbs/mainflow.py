@@ -75,7 +75,8 @@ class BuildCore(object):
         str_handler.setFormatter(ACBSLogFormatter())
         logger.addHandler(str_handler)
         if self.log_to_system:
-            log_file_handler = logging.handlers.SysLogHandler(address='/dev/log')
+            log_file_handler = logging.handlers.SysLogHandler(
+                address='/dev/log')
         else:
             log_file_handler = logging.handlers.RotatingFileHandler(
                 os.path.join(self.log_loc, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=10)

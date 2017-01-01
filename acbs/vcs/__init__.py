@@ -16,7 +16,7 @@ class VCS(object):
         self.repo_dir = repo_dir
         for i in self.vcs_mod_files:
             if i.endswith('.sh'):
-                self.vcs_backends.append(os.path.basename(i).split('.sh')[0])
+                self.vcs_backends.append(os.path.basename(i).rstrip('.sh'))
                 self.backend_files.append(os.path.join(self.vcs_mod_dir, i))
         logging.debug('Found vcs_backends: {}'.format(self.vcs_backends))
         return

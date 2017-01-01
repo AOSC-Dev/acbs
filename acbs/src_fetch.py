@@ -3,7 +3,6 @@ import os
 from urllib import parse
 import logging
 
-from acbs.src_process import SourceProcessor
 from acbs import utils
 from acbs.vcs import VCS
 
@@ -28,7 +27,8 @@ class SourceFetcher(object):
                 if src == 'SRCTBL':
                     return self.src_tbl_fetch(self.pkg_info[src])
                 if src in ['GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
-                    self.vcs_dispatcher(self.pkg_info[src], src_type=src[:-3].lower())
+                    self.vcs_dispatcher(
+                        self.pkg_info[src], src_type=src[:-3].lower())
                     return self.pkg_name
         raise Exception('No source URL specified?!')
 
@@ -80,7 +80,8 @@ class SourceFetcher(object):
 
     def vcs_dispatcher(self, url, src_type=None):
         logging.debug('Sending to VCS module:{} URL:{}'.format(src_type, url))
-        VCS(url=url, repo_dir=os.path.join(self.dump_loc, self.pkg_name), proto=src_type).vcs_fetch_src()
+        VCS(url=url, repo_dir=os.path.join(self.dump_loc,
+                                           self.pkg_name), proto=src_type).vcs_fetch_src()
         return
 
     '''
