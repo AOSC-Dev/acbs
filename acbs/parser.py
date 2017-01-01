@@ -7,7 +7,7 @@ from configparser import RawConfigParser
 from acbs import utils
 
 
-class acbs_parser(object):
+class Parser(object):
 
     def __init__(self, main_data=None, pkg_name=None, spec_file_loc=None, defines_file_loc=None):
         self.shared_data = ACBSPackgeInfo()

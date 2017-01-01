@@ -16,7 +16,7 @@ except ImportError:
     pycrypto = False
 
 
-class acbs_src_process(object):
+class SourceProcessor(object):
 
     def __init__(self, union_data, acbs_config):
         self.tobj = tempfile.mkdtemp(dir=acbs_config.tmp_loc, prefix='acbs.')

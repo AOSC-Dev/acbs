@@ -212,7 +212,7 @@ def human_time(full_seconds):
     return out_str
 
 
-class acbs_log_format(logging.Formatter):
+class ACBSLogFormatter(logging.Formatter):
     """
     ABBS-like format logger formatter class
     """
@@ -231,7 +231,7 @@ class acbs_log_format(logging.Formatter):
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
             record.msg = '[%s] %s' % (lvl_map[record.levelname], record.msg)
-        return super(acbs_log_format, self).format(record)
+        return super(ACBSLogFormatter, self).format(record)
 
 
 class ACBSConfError(Exception):

@@ -3,12 +3,12 @@ import os
 from urllib import parse
 import logging
 
-from acbs.src_process import acbs_src_process
+from acbs.src_process import SourceProcessor
 from acbs import utils
 from acbs.vcs import acbs_vcs
 
 
-class acbs_src_fetch(object):
+class SourceFetcher(object):
 
     def __init__(self, pkg_info, dump_loc='/var/cache/acbs/tarballs/'):
         self.pkg_info = pkg_info

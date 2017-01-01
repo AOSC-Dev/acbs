@@ -4,19 +4,19 @@ import os
 import sys
 import traceback
 
-from acbs.find import acbs_find
+from acbs.find import Finder
 from acbs import utils
-from acbs.utils import ACBSGeneralError, acbs_log_format, ACBSConfError
-from acbs.parser import acbs_parser, ACBSPackgeInfo
-from acbs.src_fetch import acbs_src_fetch
-from acbs.misc import acbs_misc
-from acbs.src_process import acbs_src_process
+from acbs.utils import ACBSGeneralError, ACBSLogFormatter, ACBSConfError
+from acbs.parser import Parser, ACBSPackgeInfo
+from acbs.src_fetch import SourceFetcher
+from acbs.misc import Misc
+from acbs.src_process import SourceProcessor
 # from acbs import const
-from acbs.start_build import acbs_start_ab
-from acbs.deps import acbs_deps
+from acbs.start_build import Autobuild
+from acbs.deps import Dependencies
 
 
-class acbs_build_core(object):
+class BuildCore(object):
 
     def __init__(self, pkgs_name, debug_mode=False, tree='default', version='?', init=True, syslog=False):
         '''
@@ -56,14 +56,14 @@ class acbs_build_core(object):
         except:
             raise IOError('\033[93mFailed to make work directory\033[0m!')
         self.__install_logger(str_verbosity)
-        acbs_misc().dev_utilz_warn()
+        Misc().dev_utilz_warn()
         if os.path.exists(os.path.join(self.conf_loc, 'forest.conf')):
-            self.tree_loc = acbs_parser(
+            self.tree_loc = Parser(
                 main_data=self).parse_acbs_conf(self.tree)
             if not self.tree_loc:
                 raise ACBSConfError('Tree not found!')
         else:
-            acbs_parser(main_data=self).write_acbs_conf()
+            Parser(main_data=self).write_acbs_conf()
         return
 
     def __install_logger(self, str_verbosity=logging.INFO,
@@ -72,7 +72,7 @@ class acbs_build_core(object):
         logger.setLevel(str_verbosity)
         str_handler = logging.StreamHandler()
         str_handler.setLevel(str_verbosity)
-        str_handler.setFormatter(acbs_log_format())
+        str_handler.setFormatter(ACBSLogFormatter())
         logger.addHandler(str_handler)
         if self.log_to_system:
             log_file_handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -88,7 +88,7 @@ class acbs_build_core(object):
     def build(self, pkgs=None):
         pkgs_to_build = pkgs or self.pkgs_name
         for pkg in pkgs_to_build:
-            matched_pkg = acbs_find(
+            matched_pkg = Finder(
                 pkg, search_path=self.tree_loc).acbs_pkg_match()
             if isinstance(matched_pkg, list):
                 logging.info('Package build list found: \033[36m%s (%s)\033[0m' %
@@ -131,7 +131,7 @@ class acbs_build_core(object):
         except:
             pkg_slug = target
             self.pkg_data.name = pkg_slug
-        parser = acbs_parser(
+        parser = Parser(
             pkg_name=pkg_slug, spec_file_loc=os.path.abspath(target))
         if not tmp_dir_loc:
             self.pkg_data.update(parser.parse_abbs_spec())
@@ -140,7 +140,7 @@ class acbs_build_core(object):
             defines_loc = 'defines' if self.isgroup else 'autobuild/defines'
             self.pkg_data.update(parser.parse_ab3_defines(
                 os.path.join(target, defines_loc)))
-            try_build = acbs_deps().process_deps(
+            try_build = Dependencies().process_deps(
                 self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
             if try_build:
                 if try_build in self.pending_pkgs:
@@ -148,15 +148,15 @@ class acbs_build_core(object):
                     raise ACBSGeneralError('Dependency loop: {}'.format(
                         '->'.join(list(self.pending_pkgs + try_build))))
                 self.new_build_thread(try_build)
-        src_fetcher = acbs_src_fetch(
+        src_fetcher = SourceFetcher(
             self.pkg_data.buffer['abbs_data'], self.dump_loc)
         self.pkg_data.src_name = src_fetcher.fetch_src()
         self.pkg_data.src_path = self.dump_loc
         if not tmp_dir_loc:
-            tmp_dir_loc.append(acbs_src_process(self.pkg_data, self).process())
+            tmp_dir_loc.append(SourceProcessor(self.pkg_data, self).process())
         repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
         if not skipbuild:
-            ab3 = acbs_start_ab(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
+            ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()
             ab3.timed_start_ab3(rm_abdir=self.isgroup)
         self.pkgs_que.discard(target)
@@ -166,7 +166,7 @@ class acbs_build_core(object):
         logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))
         os.chdir(self.tree_loc)
         self.pkg_data.slug = single_pkg
-        pkg_type_res = acbs_find.determine_pkg_type(single_pkg)
+        pkg_type_res = Finder.determine_pkg_type(single_pkg)
         if isinstance(pkg_type_res, dict):
             return self.build_pkg_group(pkg_type_res, single_pkg)  # FIXME
         self.build_main(single_pkg)
@@ -176,7 +176,7 @@ class acbs_build_core(object):
         def slave_thread_build(pkg):
             logging.debug(
                 'New build thread started for \033[36m{}\033[0m'.format(pkg))
-            new_build_instance = acbs_build_core(
+            new_build_instance = BuildCore(
                 **self.acbs_settings, pkgs_name=[pkg], init=False)
             new_build_instance.tree_loc = self.tree_loc
             return new_build_instance.build()

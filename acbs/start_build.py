@@ -6,10 +6,10 @@ import logging
 
 from acbs import utils
 from acbs import const
-from acbs.parser import acbs_parser
+from acbs.parser import Parser
 
 
-class acbs_start_ab(object):
+class Autobuild(object):
     def __init__(self, tmp_dir_loc, repo_dir, pkg_info, rm_abdir=False):
         self.tmp_dir_loc = tmp_dir_loc
         self.abdir = None
@@ -73,7 +73,7 @@ class acbs_start_ab(object):
             os.chdir(self.abdir)
             # For logging support: ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
             shadow_defines_loc = self.abdir
-            parser_obj = acbs_parser()
+            parser_obj = Parser()
             parser_obj.abbs_spec = self.pkg_info
             parser_obj.defines_file_loc = shadow_defines_loc
             parser_obj.parser_pass_through()

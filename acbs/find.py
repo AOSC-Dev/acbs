@@ -7,7 +7,7 @@ ACBS Search
 '''
 
 
-class acbs_find(object):
+class Finder(object):
 
     def __init__(self, target, search_path=None):
         self.target = target

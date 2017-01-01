@@ -8,7 +8,7 @@ import os
 import sys
 import shutil
 import argparse
-from acbs.mainflow import acbs_build_core
+from acbs.mainflow import BuildCore
 
 
 def main():
@@ -36,9 +36,9 @@ def main():
             acbs_core_args['syslog'] = True
         if args.acbs_tree:
             acbs_core_args['tree'] = args.acbs_tree[0]
-            acbs_instance = acbs_build_core(**acbs_core_args)
+            acbs_instance = BuildCore(**acbs_core_args)
         else:
-            acbs_instance = acbs_build_core(**acbs_core_args)
+            acbs_instance = BuildCore(**acbs_core_args)
         acbs_instance.build()
     # HACK: Workaround a bug in ArgumentParser
     if len(sys.argv) < 2:

@@ -3,7 +3,7 @@ from acbs.utils import ACBSGeneralError
 import logging
 
 
-class acbs_deps(object):
+class Dependencies(object):
 
     def __init__(self):
         self.acbs_pm = acbs_pm()

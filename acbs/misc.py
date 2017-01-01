@@ -2,10 +2,10 @@ import logging
 from acbs import const
 
 
-class acbs_profiler(object):
+class Profiler(object):
 
     def __init__(self):
-        super(acbs_profiler, self).__init__()
+        super(Profiler, self).__init__()
         self.cpu_use = 0.0
         self.per_cpu_use = []
         self.mem_use = 0.0
@@ -51,7 +51,7 @@ class acbs_profiler(object):
         return
 
 
-class acbs_misc(acbs_profiler):
+class Misc(Profiler):
 
     def __init__(self):
-        super(acbs_misc, self).__init__()
+        super(Misc, self).__init__()
