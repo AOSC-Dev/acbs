@@ -130,12 +130,13 @@ class SourceProcessor(object):
             sub_hash_type = 'SHA1'
             hash_type = 'SHA'
         try:
-            exec('target_hash=Crypto.Hash.%s.%sHash(content).hexdigest()' %
-                 (hash_type, sub_hash_type))
+            target_hash = getattr(
+                getattr(Crypto.Hash, hash_type),
+                sub_hash_type + 'Hash')(content).hexdigest()
         except AttributeError:
             raise Exception(
                 'Algorithm %s does not support file hashing!' % hash_type)
-        if hash_value != locals()['target_hash']:
+        if hash_value != target_hash:
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
                 hash_type, target_file, hash_value, target_hash))
         return

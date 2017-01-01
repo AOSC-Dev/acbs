@@ -65,7 +65,7 @@ class SourceFetcher(object):
             flag.write('acbs flag: DO NOT DELETE!')
         for i in use_progs:
             try:
-                exec('self.%s_get(url=%r, output=%r)' % (i, url, full_path))
+                getattr(self, i + '_get')(url=url, output=full_path)
                 os.unlink(flag_file)
                 break
             except KeyboardInterrupt as ex:
