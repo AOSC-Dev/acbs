@@ -43,7 +43,7 @@ Deployment
 ----------
 
 ACBS could be deployed in any appropriate directories, and is invoked by calling
-`acbs_build.py` (you may create a symlink for your convenience). You would need
+`acbs-build.py` (you may create a symlink for your convenience). You would need
 to create a configuration file before using ACBS.
 
 ACBS uses an INI-like configuration controlling trees to be used, the
