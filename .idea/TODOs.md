@@ -1,9 +1,16 @@
-### Multiple source format?
+### Documents
+- WIP, check back soon!
 
-- Arch `PKGBUILD` like spec:
+### General Code Logic
+- Code cleanup
+- Find a better way to handle shell script execution
+
+### Multiple source format? [Resolved]
+
+- [X] Arch `PKGBUILD` like spec:
 
   This is Bash compatible
-  
+
   Breaks compatiblity with `abbs`
   ```bash
   SRCTBL=('url1', 'url2')
@@ -46,7 +53,7 @@
   # Example:
   MD5SUM(file)='d41d8cd98f00b204e9800998ecf8427e'
   ```
-- Mixed:
+- [X] Mixed:
 
   This seems to be Bash compatible
   ```bash
