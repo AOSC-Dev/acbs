@@ -2,6 +2,7 @@ import subprocess
 import os
 from urllib import parse
 import logging
+import shutil
 
 from acbs import utils
 from acbs.loader import LoaderHelper
@@ -96,11 +97,11 @@ class SourceFetcher(object):
 
     def test_downloaders(self):
         use_progs = []
-        if utils.test_progs(['aria2c', '-h']):
+        if shutil.which('aria2c'):
             use_progs.append('aria')
-        if utils.test_progs(['wget', '-h']):
+        if shutil.which('wget'):
             use_progs.append('wget')
-        if utils.test_progs(['axel', '-h']):
+        if shutil.which('axel'):
             use_progs.append('axel')
         return use_progs
 

@@ -105,7 +105,7 @@ class SourceProcessor(object):
         return self.decomp_lib()
 
     def decomp_ext(self):
-        if not utils.test_progs(['bsdtar', '-h']):
+        if not shutil.which('bsdtar'):
             raise AssertionError(
                 'Unable to use bsdtar. Can\'t decompress files... :-(')
         try:
