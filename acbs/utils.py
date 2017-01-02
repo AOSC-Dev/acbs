@@ -243,7 +243,7 @@ class ACBSLogFormatter(logging.Formatter):
         }
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
-            record.msg = '[%s] %s' % (lvl_map[record.levelname], record.msg)
+            record.msg = '[%s]: %s' % (lvl_map[record.levelname], record.msg)
         return super(ACBSLogFormatter, self).format(record)
 
 

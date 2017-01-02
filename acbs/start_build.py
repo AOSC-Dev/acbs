@@ -71,6 +71,29 @@ class Autobuild(object):
 
         @utils.time_this(desc_msg=helper_gen_msg())
         def start_ab3(self, *args, **kwargs):
+            def start_logged():
+                import tempfile
+                import time
+                with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=os.path.curdir, delete=False) as f:
+                    logging.info('Build log: %s' % f.name)
+                    header = '!!ACBS Build Log\n!!Build start: %s\n' % time.ctime()
+                    f.write(header.encode())
+                    ab_proc = pexpect.spawn('autobuild', logfile=f)
+                    term_size = shutil.get_terminal_size()
+                    ab_proc.setwinsize(rows=term_size.lines, cols=term_size.columns)
+                    ab_proc.interact()
+                    while (not ab_proc.isalive()) and (not ab_proc.terminated):
+                        ab_proc.terminate()
+                    exit_status = ab_proc.exitstatus
+                    footer = '\n!!Build exited with %s' % exit_status
+                    f.write(footer.encode())
+                    if exit_status:
+                        raise subprocess.CalledProcessError(
+                            ab_proc.status, 'autobuild')
+
+            def start_nolog():
+                subprocess.check_call(['autobuild'])
+
             os.chdir(self.abdir)
             # For logging support:
             # ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
@@ -79,8 +102,17 @@ class Autobuild(object):
             parser_obj.abbs_spec = self.pkg_info
             parser_obj.defines_file_loc = shadow_defines_loc
             parser_obj.parser_pass_through()
+            build_logging = True
             try:
-                subprocess.check_call(['autobuild'])
+                import pexpect
+            except ImportError:
+                logging.warning('Build log turned off due to lack dependency')
+                build_logging = False
+            try:
+                if build_logging:
+                    start_logged()
+                else:
+                    start_nolog()
             except subprocess.CalledProcessError as ex:
                 raise Exception(
                     'Autobuild 3 reported a building failure!') from ex
