@@ -11,7 +11,8 @@ What happend to ABBS, its ancestor?
 -----------------------------------
 ACBS was first created with an intent to extend upon ABBS and improve its sorry reliability and agility.
 ACBS supports multi-tree layouts and proper environment handling, providing a more reliable and efficient experience.
-Comparing to its ancestor, it improved reliability and added a few more features like multi-tree support.
+Comparing to its ancestor, it improved reliability and added a few more features like an automatic dependency
+resolver, and device health monitor.
 
 How to install or deploy it?
 ----------------------------
