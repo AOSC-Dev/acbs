@@ -10,6 +10,12 @@ LOGIC_AND = 2
 
 def uniq(seq):  # Dave Kirby
     # Order preserving
+    """
+    An order preserving de-duplicator by Dave Kirby
+
+    :param seq: The list you want to de-duplicate
+    :returns: De-duplicated list
+    """
     seen = set()
     return [x for x in seq if x not in seen and not seen.add(x)]
 
@@ -118,8 +124,11 @@ def str_split_to_list(str_in, sep=' '):
 
 
 def err_msg(desc=None):
-    # print('\rTerminated!',sep='')
-    # sys.stdout.flush()
+    """
+    Print error message
+
+    :param desc: description of the error message
+    """
     if desc is None:
         print('\n')
         logging.error('Error occurred! Build terminated.')
@@ -159,6 +168,11 @@ def group_match(pattern_list, string, logic_method):
 
 
 def full_line_banner(msg):
+    """
+    Print a full line banner with customizable texts
+
+    :param msg: message you want to be printed
+    """
     import shutil
     bars_count = int((shutil.get_terminal_size().columns - len(msg)) / 2)
     for i in range(0, bars_count):
@@ -210,13 +224,18 @@ def time_this(desc_msg):
             ret = func(*args, **kwargs)
             time_span = time.time() - now_time
             logging.info(
-                '>>>>>>>>> %s : %s' % (desc_msg, human_time(time_span)))
+                '>>>>>>>>> %s: %s' % (desc_msg, human_time(time_span)))
             return ret
         return dec_main
     return time_this_func
 
 
 def human_time(full_seconds):
+    """
+    Convert time span (in seconds) to more friendly format
+
+    :param seconds: Time span in seconds (decimal is acceptable)
+    """
     import datetime
     out_str_tmp = '{}'.format(
         datetime.timedelta(seconds=full_seconds))

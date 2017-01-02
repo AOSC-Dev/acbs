@@ -53,8 +53,17 @@ class Finder(object):
 
     @staticmethod
     def determine_pkg_type(pkg):
-        sub_pkgs = set(os.listdir(pkg)) - set(['spec'])
-        if len(sub_pkgs) > 1:
+        sub_pkgs = []
+        for _, subdirs, _ in os.walk(pkg):
+            sub_dirs = subdirs
+            break
+        if len(sub_dirs) > 1:
+            import re
+            for d in sub_dirs:
+                if re.search(pattern=r'\d+-(.*)', string=d):
+                    sub_pkgs.append(d)
+                else:
+                    logging.warning('Unknown folder: %s in tree' % (d))
             sub_dict = {}
             for i in sub_pkgs:
                 tmp_array = i.split('-', 1)
