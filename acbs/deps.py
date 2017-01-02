@@ -12,7 +12,7 @@ class Dependencies(object):
         pkgs_miss = self.acbs_pm.query_current_miss_pkgs(search_pkgs)
         pkgs_to_install = self.acbs_pm.query_online_pkgs(pkgs_miss)
         pkgs_not_avail = (set(pkgs_miss) - set(pkgs_to_install))
-        if len(pkgs_not_avail) > 0:
+        if pkgs_not_avail:
             return None, pkgs_not_avail
         return pkgs_to_install, None
 
@@ -36,11 +36,11 @@ class Dependencies(object):
         pkgs_to_install, pkgs_not_avail = self.search_deps(search_pkgs)
         if not pkgs_not_avail:
             pkgs_not_avail = []
-        if len(pkgs_not_avail):
+        if pkgs_not_avail:
             logging.info(
                 'Building in-tree dependencies: \033[36m{}\033[0m'.format(' '.join(pkgs_not_avail)))
             return pkgs_not_avail
-        if (not pkgs_to_install) or (not len(pkgs_to_install)):
+        if not pkgs_to_install:
             logging.info('All dependencies are met. Continue.')
             return
         logging.info('Will install \033[36m{}\033[0m as required.'.format(

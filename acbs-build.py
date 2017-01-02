@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 '''
 ACBS - AOSC CI Build System
 A small alternative system to port abbs to CI environment to prevent
@@ -29,7 +29,7 @@ def main():
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
-    if len(args.packages) > 0:
+    if args.packages:
         acbs_core_args = {'pkgs_name': args.packages,
                           'debug_mode': args.debug, 'version': acbs_version}
         if args.syslog:
@@ -42,8 +42,7 @@ def main():
         acbs_instance.build()
     # HACK: Workaround a bug in ArgumentParser
     if len(sys.argv) < 2:
-        sys.argv.insert(1, '-h')
-        main()
+        parser.print_help()
     sys.exit(0)
 
 

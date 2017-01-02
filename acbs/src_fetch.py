@@ -23,7 +23,7 @@ class SourceFetcher(object):
         if self.pkg_info['SRCTBL']:
             return self.src_url_dispatcher()
         for src in ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
-            if len(self.pkg_info[src]) > 0:
+            if self.pkg_info[src]:
                 if src == 'SRCTBL':
                     return self.src_tbl_fetch(self.pkg_info[src])
                 if src in ['GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:

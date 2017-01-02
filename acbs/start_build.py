@@ -30,7 +30,7 @@ class Autobuild(object):
         for dirs, subdirs, files in os.walk(self.tmp_dir_loc):
             if len(subdirs) == 1:
                 return os.path.join(self.tmp_dir_loc, subdirs[0])
-            elif len(subdirs) == 0:
+            elif not subdirs:
                 return '.'
             else:
                 raise ValueError(
