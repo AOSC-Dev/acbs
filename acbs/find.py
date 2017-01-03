@@ -54,6 +54,7 @@ class Finder(object):
     @staticmethod
     def determine_pkg_type(pkg):
         sub_pkgs = []
+        sub_dirs = []
         for _, subdirs, _ in os.walk(pkg):
             sub_dirs = subdirs
             break

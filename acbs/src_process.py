@@ -60,7 +60,7 @@ class SourceProcessor(object):
             import magic
         except ImportError:
             logging.warning(
-                'ACBS cannot find libmagic bindings, will use bundled one instead.')
+                'ACBS cannot find libmagic bindings, will use file utility.')
             import acbs.magic as magic
         file_loc = self.src_full_loc or file_loc
         if res_type == 1:

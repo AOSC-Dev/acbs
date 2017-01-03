@@ -11,7 +11,7 @@ from acbs.parser import Parser, ACBSPackgeInfo
 from acbs.src_fetch import SourceFetcher
 from acbs.misc import Misc
 from acbs.src_process import SourceProcessor
-# from acbs import const
+from acbs.loader import LoaderHelper
 from acbs.start_build import Autobuild
 from acbs.deps import Dependencies
 
@@ -116,11 +116,12 @@ class BuildCore(object):
         logging.debug('Package group building order: {}'.format(pkgs_array))
         tmp_dir_loc = []
         self.build_main(single_pkg, tmp_dir_loc, skipbuild=True)
+        abbs_data = self.pkg_data.buffer.get('abbs_data')
         for pkg_name, pkg_dir in pkg_tuple:
             print(utils.full_line_banner(''))
             logging.info('Start building \033[36m%s::%s\033[0m' % (
                 single_pkg, pkg_name))
-            self.pkg_data.clear()
+            self.pkg_data.buffer['abbs_data'] = abbs_data
             self.build_main(pkg_dir, tmp_dir_loc)
 
     def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
@@ -137,7 +138,7 @@ class BuildCore(object):
         if not skipbuild:
             defines_loc = 'defines' if self.isgroup else 'autobuild/defines'
             self.pkg_data.update(parser.parse_ab3_defines(
-                os.path.join(target, defines_loc)))
+                os.path.join(self.tree_loc, target, defines_loc)))
             try_build = Dependencies().process_deps(
                 self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
             if try_build:
@@ -146,13 +147,16 @@ class BuildCore(object):
                     raise ACBSGeneralError('Dependency loop: {}'.format(
                         '->'.join(list(self.pending_pkgs + try_build))))
                 self.new_build_thread(try_build)
-        src_fetcher = SourceFetcher(
-            self.pkg_data.buffer['abbs_data'], self.dump_loc)
-        self.pkg_data.src_name = src_fetcher.fetch_src()
-        self.pkg_data.src_path = self.dump_loc
         if not tmp_dir_loc:
+            src_fetcher = SourceFetcher(
+                self.pkg_data.buffer['abbs_data'], self.dump_loc)
+            self.pkg_data.src_name = src_fetcher.fetch_src()
+            self.pkg_data.src_path = self.dump_loc
             tmp_dir_loc.append(SourceProcessor(self.pkg_data, self).process())
-        repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
+        if self.isgroup:
+            repo_ab_dir = repo_dir
+        else:
+            repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
         if not skipbuild:
             ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()

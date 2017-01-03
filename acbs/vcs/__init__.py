@@ -56,6 +56,12 @@ class VCS(object):
             return
         return repo_url.strip()
 
+    def vcs_checkout(self, commit=None, branch=None):
+        if commit:
+            self.vcs_executor(action='vcs_switchcommit', param=commit)
+        if branch:
+            self.vcs_executor(action='vcs_switchbranch', param=branch)
+
     def vcs_executor(self, action, url=None, param=None, proto=None, need_ret=False):
         """
         Execute commands of various VCS systems

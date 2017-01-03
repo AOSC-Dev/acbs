@@ -4,6 +4,7 @@ from urllib import parse
 import logging
 
 from acbs import utils
+from acbs.loader import LoaderHelper
 from acbs.vcs import VCS
 
 
@@ -79,8 +80,15 @@ class SourceFetcher(object):
 
     def vcs_dispatcher(self, url, src_type=None):
         logging.debug('Sending to VCS module:{} URL:{}'.format(src_type, url))
+        self.__register_vcs_checkout(url, src_type)
         VCS(url=url, repo_dir=os.path.join(self.dump_loc,
                                            self.pkg_name), proto=src_type).vcs_fetch_src()
+
+    def __register_vcs_checkout(self, url, src_type):
+        @LoaderHelper.register('before_build', (self, url, src_type))
+        def vcs_checkout(self, url, src_type):
+            VCS(url=url, repo_dir=os.path.join(self.dump_loc,
+                                               self.pkg_name), proto=src_type).vcs_checkout(commit=self.pkg_info.get(src_type.upper() + 'CO'), branch=self.pkg_info.get(src_type.upper() + 'BRCH'))
 
     '''
     External downloaders

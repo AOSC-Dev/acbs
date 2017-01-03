@@ -6,6 +6,7 @@ import logging
 
 from acbs import utils
 from acbs import const
+from acbs.loader import LoaderHelper
 from acbs.parser import Parser
 
 
@@ -87,6 +88,10 @@ class Autobuild(object):
                     exit_status = ab_proc.exitstatus
                     footer = '\n!!Build exited with %s' % exit_status
                     f.write(footer.encode())
+                    if exit_status is None:
+                        # When exit_status is None, it means process exited
+                        # abnormally, and pexpect don't know its exit code(bug)
+                        raise KeyboardInterrupt()
                     if exit_status:
                         raise subprocess.CalledProcessError(
                             ab_proc.status, 'autobuild')
@@ -94,9 +99,8 @@ class Autobuild(object):
             def start_nolog():
                 subprocess.check_call(['autobuild'])
 
+            LoaderHelper.callback('before_build')
             os.chdir(self.abdir)
-            # For logging support:
-            # ptyprocess.PtyProcessUnicode.spawn(['autobuild'])
             shadow_defines_loc = self.abdir
             parser_obj = Parser()
             parser_obj.abbs_spec = self.pkg_info

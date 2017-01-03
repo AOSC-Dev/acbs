@@ -72,7 +72,7 @@ class Parser(object):
                 abd_cont = abd_file.read()
         except OSError as ex:
             raise OSError(
-                'Failed to load autobuild defines file! Do you have read permission?') from ex
+                'Failed to load autobuild defines file! Does the file exist?') from ex
         script = "ARCH={}\n{}{}".format(
             utils.get_arch_name(), abd_cont,
             utils.gen_laundry_list(['PKGNAME', 'PKGDEP', 'BUILDDEP']))
@@ -93,13 +93,6 @@ class Parser(object):
         self.shared_data.opt_deps = []  # abd_config_dict['PKGREC'] <RfF>
         self.shared_data.buffer['ab3_def'] = abd_config_dict
         return self.shared_data
-
-    def bat_parse_ab3_defines(self, defines_files):
-        onion_list = []
-        for def_file in defines_files:
-            abd_config_dict = self.parse_ab3_defines(def_file)
-            onion_list.append(abd_config_dict)
-        return onion_list
 
     def parser_validate(self, in_dict):
         # just a simple naive validate for now
@@ -157,6 +150,32 @@ class Parser(object):
         return
 
 
+class ACBSVCSInfo(object):
+
+    def __init__(self, proto='', url='', branch='', rev=''):
+        self.proto = proto
+        self.url = url
+        self.branch = branch
+        self.rev = rev
+        self.buffer = {}
+
+    def clear(self):
+        self.__init__()
+
+    def update(self, other):
+        self.proto = other.proto or self.proto
+        self.branch = other.branch or self.branch
+        self.rev = other.rev or self.rev
+        self.url = other.url or self.url
+        self.buffer = utils.merge_dicts(self.buffer, other.buffer)
+
+    def __eq__(self, other):
+        # Ignore buffer
+        return (self.proto == other.proto)  \
+            and (self.url == other.url) and \
+            (self.rev == other.rev) and (self.branch == other.branch)
+
+
 class ACBSPackgeInfo(object):
 
     def __init__(self, name='', stash='', slug='', version=[], src_url=[], src_name='', src_path=''):
@@ -172,6 +191,7 @@ class ACBSPackgeInfo(object):
         self.opt_deps = []
         self.chksums = []  # format: [tuples]=>Just don't want to import od :-)
         self.buffer = {}
+        self.vcs = None
         # Used to store un-processed data to pass to next function
 
     def update(self, other):
@@ -183,7 +203,7 @@ class ACBSPackgeInfo(object):
         self.build_deps = utils.uniq(self.build_deps + other.build_deps)
         self.run_deps = utils.uniq(self.run_deps + other.run_deps)
         self.chksums = utils.uniq(self.chksums + other.chksums)
-        self.buffer = other.buffer or self.buffer
+        self.buffer = utils.merge_dicts(self.buffer, other.buffer)
 
     def clear(self):
         self = self.__init__()
