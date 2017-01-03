@@ -13,7 +13,7 @@ from acbs.mainflow import BuildCore
 
 def main():
     tmp_loc = '/var/cache/acbs/build/'
-    acbs_version = '20170102'
+    acbs_version = '20170103'
     parser = argparse.ArgumentParser(description=help_msg(acbs_version
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',
