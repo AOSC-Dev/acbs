@@ -68,7 +68,7 @@ class BuildCore(object):
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
         logger = logging.getLogger()
-        logger.setLevel(str_verbosity)
+        logger.setLevel(0)  # Set to lowest to bypass the initial filter
         str_handler = logging.StreamHandler()
         str_handler.setLevel(str_verbosity)
         str_handler.setFormatter(ACBSLogFormatter())
