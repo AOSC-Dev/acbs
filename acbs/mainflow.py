@@ -27,7 +27,7 @@ class BuildCore(object):
         self.tree = tree
         self.pkgs_que = set()
         self.pkgs_done = set()
-        self.pending_pkgs = set()
+        self.pending_pkgs = []
         self.dump_loc = '/var/cache/acbs/tarballs/'
         self.tmp_loc = '/var/cache/acbs/build/'
         self.conf_loc = '/etc/acbs/'
@@ -66,6 +66,8 @@ class BuildCore(object):
                 raise ACBSConfError('Tree not found!')
         else:
             Parser(main_data=self).write_acbs_conf()
+        if not ACBSVariables.get('pending'):
+            ACBSVariables.set('pending', [])
 
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
@@ -110,7 +112,6 @@ class BuildCore(object):
 
     def build_pkg_group(self, pkgs_array, single_pkg):
         self.isgroup = True
-        self.pkgs_que.discard(single_pkg)
         import collections
         pkgs_array = collections.OrderedDict(
             sorted(pkgs_array.items(), key=lambda x: x[0]))
@@ -130,11 +131,14 @@ class BuildCore(object):
             self.build_main(pkg_dir, tmp_dir_loc)
 
     def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
+        if not self.isgroup:
+            tmp_dir_loc.clear()
         try:
             pkg_slug = os.path.basename(target)
         except Exception:
             pkg_slug = target
             self.pkg_data.name = pkg_slug
+        ACBSVariables.get('pending').append(pkg_slug)
         parser = Parser(
             pkg_name=pkg_slug, spec_file_loc=os.path.abspath(target))
         if not tmp_dir_loc:
@@ -147,10 +151,11 @@ class BuildCore(object):
             try_build = Dependencies().process_deps(
                 self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
             if try_build:
-                if try_build in self.pending_pkgs:
+                if set(try_build).intersection(ACBSVariables.get('pending')):
                     # Suspect this is dependency loop
-                    raise ACBSGeneralError('Dependency loop: {}'.format(
-                        '->'.join(list(self.pending_pkgs + try_build))))
+                    err_msg = 'Dependency loop: %s' % '<->'.join(ACBSVariables.get('pending'))
+                    utils.err_msg(err_msg)
+                    raise ACBSGeneralError(err_msg)
                 self.new_build_thread(try_build)
         if not tmp_dir_loc:
             src_fetcher = SourceFetcher(
@@ -166,9 +171,7 @@ class BuildCore(object):
             ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()
             ab3.timed_start_ab3(rm_abdir=self.isgroup)
-        if tmp_dir_loc:
-            tmp_dir_loc.clear()
-        self.pkgs_que.discard(target)
+        self.pending_pkgs.pop()
         self.pkgs_done.add(target)
 
     def build_single_pkg(self, single_pkg):
@@ -178,6 +181,7 @@ class BuildCore(object):
         pkg_type_res = Finder.determine_pkg_type(single_pkg)
         if isinstance(pkg_type_res, dict):
             return self.build_pkg_group(pkg_type_res, single_pkg)  # FIXME
+        self.isgroup = False
         self.build_main(single_pkg)
         return 0
 

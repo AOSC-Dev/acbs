@@ -139,8 +139,6 @@ class SourceFetcher(object):
             raise AssertionError('Failed to fetch source with Wget!')
 
     def aria_get(self, url, threads=3, output=None):
-        if os.path.exists(output) and not os.path.exists(output + '.aria2'):
-            return
         aria_cmd = ['aria2c', '--max-connection-per-server={}'.format(
             threads), url, '--auto-file-renaming=false']
         # ,'--check-certificate=false'

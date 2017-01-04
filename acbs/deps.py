@@ -23,13 +23,13 @@ class Dependencies(object):
         logging.debug('Searching dependencies: {}'.format(search_pkgs_tmp))
         for i in search_pkgs_tmp:
             if i == pkg_slug:
-                _, pkgs_not_avail = self.search_deps(i)
+                _, pkgs_not_avail = self.search_deps([i])
                 if pkgs_not_avail:
                     raise ACBSGeneralError(
-                        'The package can\'t depends on its self!')
+                        'The package can\'t depends on its self! And no binary package found!')
                 else:
                     logging.warning(
-                        'The package depends on its self, however, it has been built at least once.')
+                        'The package depends on its self, however, it has binary package.')
             if not i.strip():
                 continue
             search_pkgs.append(i)

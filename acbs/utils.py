@@ -151,11 +151,11 @@ def err_msg(desc=None):
     """
     if desc is None:
         print('\n')
-        logging.error('Error occurred! Build terminated.')
+        logging.error('Error occurred!')
     else:
         print('\n')
         logging.error(
-            'Error occurred:\033[93m {} \033[0mBuild terminated.'.format(desc))
+            'Error occurred:\033[93m {} \033[0m'.format(desc))
 
 
 def group_match(pattern_list, string, logic_method):
