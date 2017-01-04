@@ -10,7 +10,7 @@ import shutil
 import argparse
 from acbs.mainflow import BuildCore
 
-acbs_version = '20170103B'
+acbs_version = '20170104'
 
 
 def main():
