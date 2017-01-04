@@ -58,9 +58,11 @@ class Autobuild(object):
                     raise ValueError(
                         'Failed to determine sub-directory, please specify manually.') from ex
         self.abdir = os.path.abspath(os.path.curdir)
+        target_dir = os.path.abspath(os.path.join(os.path.curdir, 'autobuild'))
+        if os.path.exists(target_dir):
+            shutil.rmtree(target_dir)
         try:
-            shutil.copytree(self.repo_dir,
-                            os.path.abspath(os.path.curdir + '/autobuild/'), symlinks=True)
+            shutil.copytree(self.repo_dir, target_dir, symlinks=True)
             self.abdir = os.path.abspath(os.path.curdir)
         except Exception as ex:
             raise Exception(

@@ -37,7 +37,7 @@ class Finder(object):
         if target is None:
             target = self.target
         if os.path.isdir(target):
-            return target
+            return os.path.relpath(target, self.path)
         target_slug = target.split('/')
         if len(target_slug) > 1:
             _, target = target_slug
@@ -46,7 +46,6 @@ class Finder(object):
             secpath = os.path.join(self.path, path)
             if not (os.path.isdir(secpath) and any(path.startswith(x) for x in categories)):
                 continue
-            category, section = path.split('-')
             for pkgpath in os.listdir(secpath):
                 if pkgpath == target and os.path.isdir(os.path.join(secpath, pkgpath)):
                     return os.path.relpath(os.path.join(secpath, pkgpath), self.path)
@@ -65,6 +64,8 @@ class Finder(object):
                     sub_pkgs.append(d)
                 else:
                     logging.warning('Unknown folder: %s in tree' % (d))
+            if not len(sub_pkgs):
+                raise ValueError('No vaild package found!')
             sub_dict = {}
             for i in sub_pkgs:
                 tmp_array = i.split('-', 1)

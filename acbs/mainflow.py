@@ -134,7 +134,7 @@ class BuildCore(object):
             pkg_name=pkg_slug, spec_file_loc=os.path.abspath(target))
         if not tmp_dir_loc:
             self.pkg_data.update(parser.parse_abbs_spec())
-        repo_dir = os.path.abspath(target)
+        repo_dir = os.path.abspath(os.path.join(self.tree_loc, target))
         if not skipbuild:
             defines_loc = 'defines' if self.isgroup else 'autobuild/defines'
             self.pkg_data.update(parser.parse_ab3_defines(
