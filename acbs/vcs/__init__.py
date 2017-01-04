@@ -83,7 +83,8 @@ class VCS(object):
         return sh_ret
 
     def vcs_fetch_src(self, proto=None):
-        logging.debug('Received VCS module name: {}'.format(proto or self.proto))
+        logging.debug('Received VCS module name: {}'.format(
+            proto or self.proto))
         logging.debug('Fetching {}'.format(self.target_url))
         if not (proto or self.proto):
             proto = self.vcs_chk_proto(self.target_url)
@@ -92,17 +93,20 @@ class VCS(object):
         try:
             os.listdir(self.repo_dir)
         except FileNotFoundError:
-            self.vcs_executor('vcs_repofetch', param=' '.join([self.target_url, self.repo_dir]), url=self.target_url, proto=proto)
+            self.vcs_executor('vcs_repofetch', param=' '.join(
+                [self.target_url, self.repo_dir]), url=self.target_url, proto=proto)
             return
         repo_url = self.vcs_repo_url()
         if repo_url not in ['?', None, ''] and repo_url != self.target_url:
             logging.debug(
                 'Current VCS URL: {}, requested URL: {}'.format(repo_url, self.target_url))
             logging.error('Target URL and existing VCS URL mismatch!')
-            logging.error('Target: %s VS Existing %s' % (repo_url, self.target_url))
+            logging.error('Target: %s VS Existing %s' %
+                          (repo_url, self.target_url))
             logging.warning('You have the following choices:')
             logging.warning('\t1. Remove the existing directory')
-            logging.warning('\t2. Correct the URL in either `spec` file or stash')
+            logging.warning(
+                '\t2. Correct the URL in either `spec` file or stash')
             raise Exception('See above...')
             '''
             import shutil
