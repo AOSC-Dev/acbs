@@ -236,13 +236,18 @@ def acbs_terminate(exit_code):
     sys.exit(exit_code)
 
 
-def time_this(desc_msg):
+def time_this(desc_msg, vars_ctx=None):
     def time_this_func(func):
         def dec_main(*args, **kwargs):
             import time
             now_time = time.time()
             ret = func(*args, **kwargs)
             time_span = time.time() - now_time
+            if vars_ctx:
+                if not vars_ctx.get('timings'):
+                    vars_ctx.set('timings', [human_time(time_span)])
+                else:
+                    vars_ctx.get('timings').append(human_time(time_span))
             logging.info(
                 '>>>>>>>>> %s: %s' % (desc_msg, human_time(time_span)))
             return ret
@@ -262,6 +267,23 @@ def human_time(full_seconds):
     out_str = out_str_tmp.replace(
         ':', ('{}:{}'.format(const.ANSI_GREEN, const.ANSI_RST)))
     return out_str
+
+
+class ACBSVariables(object):
+
+    buffer = {}
+
+    def __init__(self):
+        return
+
+    @classmethod
+    def get(cls, var_name):
+        return cls.buffer.get(var_name)
+
+    @classmethod
+    def set(cls, var_name, value):
+        cls.buffer[var_name] = value
+        return
 
 
 class ACBSLogFormatter(logging.Formatter):

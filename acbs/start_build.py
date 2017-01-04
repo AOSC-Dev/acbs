@@ -8,6 +8,7 @@ from acbs import utils
 from acbs import const
 from acbs.loader import LoaderHelper
 from acbs.parser import Parser
+from acbs.utils import ACBSVariables
 
 
 class Autobuild(object):
@@ -74,7 +75,7 @@ class Autobuild(object):
                                                  self.pkg_info['NAME'],
                                                  const.ANSI_RST)
 
-        @utils.time_this(desc_msg=helper_gen_msg())
+        @utils.time_this(desc_msg=helper_gen_msg(), vars_ctx=ACBSVariables)
         def start_ab3(self, *args, **kwargs):
             def start_logged():
                 import tempfile

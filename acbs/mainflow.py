@@ -12,6 +12,7 @@ from acbs.src_fetch import SourceFetcher
 from acbs.misc import Misc
 from acbs.src_process import SourceProcessor
 from acbs.loader import LoaderHelper
+from acbs.utils import ACBSVariables
 from acbs.start_build import Autobuild
 from acbs.deps import Dependencies
 
@@ -25,6 +26,7 @@ class BuildCore(object):
         self.isdebug = debug_mode
         self.tree = tree
         self.pkgs_que = set()
+        self.pkgs_done = set()
         self.pending_pkgs = set()
         self.dump_loc = '/var/cache/acbs/tarballs/'
         self.tmp_loc = '/var/cache/acbs/build/'
@@ -101,6 +103,9 @@ class BuildCore(object):
             else:
                 self.pkgs_que.update(matched_pkg)
                 self.build_single_pkg(matched_pkg)
+        print(utils.full_line_banner('Build Summary:'))
+        for name, time in zip(self.pkgs_done, ACBSVariables.get('timings')):
+            print('%s\t\t%s' % (name, time))
         return 0
 
     def build_pkg_group(self, pkgs_array, single_pkg):
@@ -161,7 +166,10 @@ class BuildCore(object):
             ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()
             ab3.timed_start_ab3(rm_abdir=self.isgroup)
+        if tmp_dir_loc:
+            tmp_dir_loc.clear()
         self.pkgs_que.discard(target)
+        self.pkgs_done.add(target)
 
     def build_single_pkg(self, single_pkg):
         logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))
