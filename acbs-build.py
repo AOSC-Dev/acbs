@@ -10,10 +10,11 @@ import shutil
 import argparse
 from acbs.mainflow import BuildCore
 
+acbs_version = '20170103B'
+
 
 def main():
     tmp_loc = '/var/cache/acbs/build/'
-    acbs_version = '20170103B'
     parser = argparse.ArgumentParser(description=help_msg(acbs_version
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',

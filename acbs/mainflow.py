@@ -58,8 +58,8 @@ class BuildCore(object):
         self.__install_logger(str_verbosity)
         Misc().dev_utilz_warn()
         if os.path.exists(os.path.join(self.conf_loc, 'forest.conf')):
-            self.tree_loc = Parser(
-                main_data=self).parse_acbs_conf(self.tree)
+            self.tree_loc = os.path.abspath(Parser(
+                main_data=self).parse_acbs_conf(self.tree))
             if not self.tree_loc:
                 raise ACBSConfError('Tree not found!')
         else:
