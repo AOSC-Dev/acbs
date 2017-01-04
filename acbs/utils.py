@@ -1,7 +1,6 @@
 import subprocess
 import logging
 import sys
-import traceback
 from acbs import const
 
 LOGIC_OR = 1
@@ -62,7 +61,8 @@ def test_progs(cmd, display=False):
             # _ = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
             proc = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            _, _ = proc.communicate()  # Maybe one day we'll need its output...?
+            _, _ = proc.communicate()
+            # Maybe one day we'll need its output...?
         else:
             subprocess.check_call(cmd)
     except Exception:
@@ -120,7 +120,7 @@ def get_arch_name():
     elif uname_var in ['armv7a', 'armv7l', 'armv8a', 'armv8l']:
         return 'armel'    # FIXME: Don't know too much about this...
     elif uname_var == 'mips64':
-        return 'mips64el' # FIXME: How about big endian...
+        return 'mips64el'  # FIXME: How about big endian...
     elif uname_var == 'mips':
         return 'mipsel'   # FIXME: This too...
     elif uname_var == 'powerpc':
@@ -130,6 +130,7 @@ def get_arch_name():
     else:
         return None
     return None
+
 
 def str_split_to_list(str_in, sep=' '):
     """

@@ -8,6 +8,13 @@ class LoaderHelper(object):
 
     @classmethod
     def register(cls, when, args=()):
+        '''
+        Register a callback
+
+        :param when: When to call the callback
+        :param args: Arguments that need to be passed to the callback, can't \
+        be keyword arguments
+        '''
         def func(fn):
             if not cls.func_maps.get(when):
                 cls.func_maps[when] = [(fn, args)]

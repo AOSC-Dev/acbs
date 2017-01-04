@@ -60,7 +60,7 @@ class Autobuild(object):
         self.abdir = os.path.abspath(os.path.curdir)
         try:
             shutil.copytree(self.repo_dir,
-                            os.path.abspath(os.path.curdir) + '/autobuild/', symlinks=True)
+                            os.path.abspath(os.path.curdir + '/autobuild/'), symlinks=True)
             self.abdir = os.path.abspath(os.path.curdir)
         except Exception as ex:
             raise Exception(
@@ -68,7 +68,9 @@ class Autobuild(object):
 
     def timed_start_ab3(self, *args, **kwargs):
         def helper_gen_msg():
-            return 'Time for building {}{}{}'.format(const.ANSI_LT_CYAN, self.pkg_info['NAME'], const.ANSI_RST)
+            return 'Time for building %s%s%s' % (const.ANSI_LT_CYAN,
+                                                 self.pkg_info['NAME'],
+                                                 const.ANSI_RST)
 
         @utils.time_this(desc_msg=helper_gen_msg())
         def start_ab3(self, *args, **kwargs):
@@ -81,7 +83,8 @@ class Autobuild(object):
                     f.write(header.encode())
                     ab_proc = pexpect.spawn('autobuild', logfile=f)
                     term_size = shutil.get_terminal_size()
-                    ab_proc.setwinsize(rows=term_size.lines, cols=term_size.columns)
+                    ab_proc.setwinsize(rows=term_size.lines,
+                                       cols=term_size.columns)
                     ab_proc.interact()
                     while (not ab_proc.isalive()) and (not ab_proc.terminated):
                         ab_proc.terminate()

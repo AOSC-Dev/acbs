@@ -35,6 +35,7 @@ MAGIC_NO_CHECK_BUILTIN = NO_CHECK_BUILTIN = 4173824
 
 
 class fakeMagic(object):
+
     def __init__(self):
         self.flags = []
         self.cmd_args = ['file', '-b']

@@ -25,7 +25,8 @@ def main():
     parser.add_argument('packages', nargs='*', help='Packages to be built')
     parser.add_argument('-c', '--clear', help='Clear build directory',
                         action='store_true', dest='clear_dir')
-    parser.add_argument('-s', '--system-log', help='Pass logs to system log collector', action='store_true', dest='syslog')
+    parser.add_argument('-s', '--system-log', help='Pass logs to system log collector',
+                        action='store_true', dest='syslog')
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
@@ -84,8 +85,10 @@ def clear_tmp(tmp_dir):
 
 
 def help_msg(acbs_version):
-    help_msg = '''ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''.format(acbs_version)
+    help_msg = '''ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''.format(
+        acbs_version)
     return help_msg
+
 
 if __name__ == '__main__':
     main()
