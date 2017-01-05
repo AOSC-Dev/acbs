@@ -171,7 +171,8 @@ class BuildCore(object):
             ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()
             ab3.timed_start_ab3(rm_abdir=self.isgroup)
-        self.pending_pkgs.pop()
+        if self.pending_pkgs:
+            self.pending_pkgs.pop()
         self.pkgs_done.add(target)
 
     def build_single_pkg(self, single_pkg):

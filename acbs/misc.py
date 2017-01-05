@@ -17,7 +17,7 @@ class Profiler(object):
             self.psutil_avail = False
 
     def __update_stats(self, log_warn=True, per_cpu=False):
-        if log_warn and self.psutil_avail:
+        if log_warn and (not self.psutil_avail):
             logging.warning(
                 'Unable to use psutil library, some functions are disabled.')
         # XXX: explanation needed
