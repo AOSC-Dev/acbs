@@ -26,8 +26,7 @@ class BuildCore(object):
         self.isdebug = debug_mode
         self.tree = tree
         self.pkgs_que = set()
-        self.pkgs_done = set()
-        self.pending_pkgs = []
+        self.pkgs_done = []
         self.dump_loc = '/var/cache/acbs/tarballs/'
         self.tmp_loc = '/var/cache/acbs/build/'
         self.conf_loc = '/etc/acbs/'
@@ -106,12 +105,11 @@ class BuildCore(object):
                 self.pkgs_que.update(matched_pkg)
                 self.build_single_pkg(matched_pkg)
         print(utils.full_line_banner('Build Summary:'))
-        for name, time in zip(self.pkgs_done, ACBSVariables.get('timings')):
-            print('%s\t\t%s' % (name, time))
+        self.print_summary()
         return 0
 
     def build_pkg_group(self, pkgs_array, single_pkg):
-        self.isgroup = True
+        self.isgroup = single_pkg
         import collections
         pkgs_array = collections.OrderedDict(
             sorted(pkgs_array.items(), key=lambda x: x[0]))
@@ -129,6 +127,33 @@ class BuildCore(object):
                 single_pkg, pkg_name))
             self.pkg_data.buffer['abbs_data'] = abbs_data
             self.build_main(pkg_dir, tmp_dir_loc)
+
+    def print_summary(self):
+        i = 0
+        group_name = None
+        prev_group_name = None
+        accum = 0.0
+
+        def swap_vars(prev_group_name):
+            ACBSVariables.get('timings').insert(i, accum)
+            self.pkgs_done.insert(i, prev_group_name)
+            prev_group_name = group_name
+
+        for it in self.pkgs_done:
+            if it.index('::'):
+                group_name, sub_name = it.split('::')
+                if prev_group_name and (group_name != prev_group_name):
+                    swap_vars(prev_group_name)
+                if group_name == sub_name:
+                    self.pkgs_done.remove(it)
+                else:
+                    accum += ACBSVariables.get('timings')[i]
+                i += 1
+        if group_name:
+            swap_vars(group_name)
+        x = [[name, time] for name, time in zip(self.pkgs_done, ACBSVariables.get('timings'))]
+        print(utils.format_column(x))
+        return
 
     def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
         if not self.isgroup:
@@ -153,7 +178,8 @@ class BuildCore(object):
             if try_build:
                 if set(try_build).intersection(ACBSVariables.get('pending')):
                     # Suspect this is dependency loop
-                    err_msg = 'Dependency loop: %s' % '<->'.join(ACBSVariables.get('pending'))
+                    err_msg = 'Dependency loop: %s' % '<->'.join(
+                        ACBSVariables.get('pending'))
                     utils.err_msg(err_msg)
                     raise ACBSGeneralError(err_msg)
                 self.new_build_thread(try_build)
@@ -171,9 +197,10 @@ class BuildCore(object):
             ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()
             ab3.timed_start_ab3(rm_abdir=self.isgroup)
-        if self.pending_pkgs:
-            self.pending_pkgs.pop()
-        self.pkgs_done.add(target)
+        if ACBSVariables.get('pending'):
+            ACBSVariables.get('pending').pop()
+        self.pkgs_done.append(
+            target if not self.isgroup else '%s::%s' % (self.isgroup, target))
 
     def build_single_pkg(self, single_pkg):
         logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))

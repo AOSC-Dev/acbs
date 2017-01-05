@@ -245,9 +245,9 @@ def time_this(desc_msg, vars_ctx=None):
             time_span = time.time() - now_time
             if vars_ctx:
                 if not vars_ctx.get('timings'):
-                    vars_ctx.set('timings', [human_time(time_span)])
+                    vars_ctx.set('timings', [time_span])
                 else:
-                    vars_ctx.get('timings').append(human_time(time_span))
+                    vars_ctx.get('timings').append(time_span)
             logging.info(
                 '>>>>>>>>> %s: %s' % (desc_msg, human_time(time_span)))
             return ret
@@ -267,6 +267,15 @@ def human_time(full_seconds):
     out_str = out_str_tmp.replace(
         ':', ('{}:{}'.format(const.ANSI_GREEN, const.ANSI_RST)))
     return out_str
+
+
+def format_column(data):
+    output = ''
+    col_width = max(len(str(word)) for row in data for word in row)
+    for row in data:
+        output = '%s%s\n' % (
+            output, ('\t'.join(str(word).ljust(col_width) for word in row)))
+    return output
 
 
 class ACBSVariables(object):
