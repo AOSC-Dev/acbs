@@ -100,8 +100,6 @@ class SourceFetcher(object):
             use_progs.append('aria')
         if utils.test_progs(['wget', '-h']):
             use_progs.append('wget')
-        if utils.test_progs(['curl', '-h']):
-            use_progs.append('curl')
         if utils.test_progs(['axel', '-h']):
             use_progs.append('axel')
         return use_progs
@@ -115,18 +113,6 @@ class SourceFetcher(object):
             subprocess.check_call(axel_cmd)
         except Exception:
             raise AssertionError('Failed to fetch source with Axel!')
-
-    def curl_get(self, url, output=None):
-        curl_cmd = ['curl', url]  # , '-k'
-        if output:
-            curl_cmd.insert(2, '-o')
-            curl_cmd.insert(3, output)
-        else:
-            curl_cmd.insert(2, '-O')
-        try:
-            subprocess.check_call(curl_cmd)
-        except Exception:
-            raise AssertionError('Failed to fetch source with cURL!')
 
     def wget_get(self, url, output):
         wget_cmd = ['wget', '-c', url]  # ,'--no-check-certificate'
