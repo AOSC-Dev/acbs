@@ -41,7 +41,7 @@ class Finder(object):
         target_slug = target.split('/')
         if len(target_slug) > 1:
             _, target = target_slug
-        categories = ('base-', 'extra-')
+        categories = ('base-', 'core-', 'extra-')
         for path in os.listdir(self.path):
             secpath = os.path.join(self.path, path)
             if not (os.path.isdir(secpath) and any(path.startswith(x) for x in categories)):
