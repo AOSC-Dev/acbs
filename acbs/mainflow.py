@@ -140,7 +140,7 @@ class BuildCore(object):
             prev_group_name = group_name
 
         for it in self.pkgs_done:
-            if it.index('::'):
+            if it.find('::') > -1:
                 group_name, sub_name = it.split('::')
                 if prev_group_name and (group_name != prev_group_name):
                     swap_vars(prev_group_name)
@@ -151,7 +151,7 @@ class BuildCore(object):
                 i += 1
         if group_name:
             swap_vars(group_name)
-        x = [[name, time] for name, time in zip(self.pkgs_done, ACBSVariables.get('timings'))]
+        x = [[name, utils.human_time(time)] for name, time in zip(self.pkgs_done, ACBSVariables.get('timings'))]
         print(utils.format_column(x))
         return
 
