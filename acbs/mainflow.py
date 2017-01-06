@@ -36,6 +36,7 @@ class BuildCore(object):
         self.acbs_version = version
         self.tree_loc = None
         self.log_to_system = syslog
+        self.shared_error = None
         self.acbs_settings = {'debug_mode': self.isdebug, 'tree': self.tree,
                               'version': self.acbs_version}
         if init:
@@ -214,27 +215,31 @@ class BuildCore(object):
         return 0
 
     def new_build_thread(self, try_build):
-        def slave_thread_build(pkg):
+        def slave_thread_build(pkg, shared_error):
             logging.debug(
                 'New build thread started for \033[36m{}\033[0m'.format(pkg))
-            new_build_instance = BuildCore(
-                **self.acbs_settings, pkgs_name=[pkg], init=False)
-            new_build_instance.tree_loc = self.tree_loc
-            return new_build_instance.build()
-        from multiprocessing import pool
-        from multiprocessing.pool import ThreadPool
-        for sub_pkg in list(try_build):
-            dumb_mutex = pool.threading.Lock()
-            dumb_mutex.acquire()
-            fake_pool = ThreadPool(processes=1)
             try:
-                sub_thread = fake_pool.apply_async(
-                    func=slave_thread_build, args=([sub_pkg]))
-                dumb_mutex.release()
-                return sub_thread.get()
+                new_build_instance = BuildCore(
+                    **self.acbs_settings, pkgs_name=[pkg], init=False)
+                new_build_instance.tree_loc = self.tree_loc
+                new_build_instance.shared_error = shared_error
+                new_build_instance.build()
             except Exception as ex:
+                shared_error.set()
+                raise
+            return
+        from multiprocessing import Process, Event, Lock
+        self.shared_error = Event()
+        for sub_pkg in list(try_build):
+            dumb_mutex = Lock()
+            dumb_mutex.acquire()
+            sub_thread = Process(target=slave_thread_build, args=(sub_pkg, self.shared_error))
+            sub_thread.start()
+            sub_thread.join()
+            dumb_mutex.release()
+            if self.shared_error.is_set():
                 raise ACBSGeneralError(
-                    'Sub-build process building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_pkg)) from ex
+                    'Sub-build process building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_pkg))
 
     def acbs_except_hdr(self, type, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
