@@ -9,16 +9,15 @@ import sys
 import shutil
 import argparse
 from acbs.mainflow import BuildCore
-
-acbs_version = '20170104'
+import acbs
 
 
 def main():
     tmp_loc = '/var/cache/acbs/build/'
-    parser = argparse.ArgumentParser(description=help_msg(acbs_version
+    parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',
-                        help='Show the version and exit', action="version", version='ACBS version {}'.format(acbs_version))
+                        help='Show the version and exit', action="version", version='ACBS version {}'.format(acbs.__version__))
     parser.add_argument(
         '-d', '--debug', help='Increase verbosity to ease debugging process', action="store_true")
     parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
@@ -33,7 +32,7 @@ def main():
         clear_tmp(tmp_dir=tmp_loc)
     if args.packages:
         acbs_core_args = {'pkgs_name': args.packages,
-                          'debug_mode': args.debug, 'version': acbs_version}
+                          'debug_mode': args.debug, 'version': acbs.__version__}
         if args.syslog:
             acbs_core_args['syslog'] = True
         if args.acbs_tree:

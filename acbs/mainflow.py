@@ -19,7 +19,7 @@ from acbs.deps import Dependencies
 
 class BuildCore(object):
 
-    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='?', init=True, syslog=False):
+    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False):
         '''
         '''
         self.pkgs_name = pkgs_name
