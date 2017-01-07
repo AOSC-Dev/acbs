@@ -46,6 +46,13 @@ class PackageManager(object):
                           (bk_name, function, args, bk_res))
         return hybrid_res
 
+    def correct_deps(self):
+        results = self.multi_backend_proc('pm_correction', '', True)
+        for result in results:
+            if not results[result]:
+                raise Exception('Failed to correct dependencies, you need to do this manually')
+        return
+
     def install_pkgs(self, pkgs):
         results = self.multi_backend_proc(
             'pm_repoinstall', ' '.join(pkgs), True)

@@ -22,3 +22,8 @@ pm_repoinstall(){
 pm_repoquery(){
   apt-cache show "$@"
 }
+
+pm_correction(){
+	apt-get update
+	apt-get install -f
+}

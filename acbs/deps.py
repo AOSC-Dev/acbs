@@ -1,5 +1,5 @@
 from .pm import PackageManager
-from acbs.utils import ACBSGeneralError
+from acbs.utils import ACBSGeneralError, uniq
 import logging
 
 
@@ -7,6 +7,7 @@ class Dependencies(object):
 
     def __init__(self):
         self.acbs_pm = PackageManager()
+        self.retry = False
 
     def search_deps(self, search_pkgs):
         pkgs_miss = self.acbs_pm.query_current_miss_pkgs(search_pkgs)
@@ -34,6 +35,9 @@ class Dependencies(object):
                 continue
             search_pkgs.append(i)
         pkgs_to_install, pkgs_not_avail = self.search_deps(search_pkgs)
+        if self.retry:
+            logging.warning('Dependencies still didn\'t satisfy, entering exhaust mode...')
+            return uniq(pkgs_not_avail + pkgs_to_install)
         if not pkgs_not_avail:
             pkgs_not_avail = []
         if pkgs_not_avail:
@@ -48,5 +52,8 @@ class Dependencies(object):
         try:
             self.acbs_pm.install_pkgs(pkgs_to_install)
         except Exception as ex:
-            raise ACBSGeneralError(
-                'Something went wrong when processing dependencies...') from ex
+            logging.warning('An error occurred when installing dependencies')
+            logging.info('Trying to correct dependencies...')
+            self.acbs_pm.correct_deps()
+            self.retry = True
+            self.process_deps(build_deps, run_deps, pkg_slug)

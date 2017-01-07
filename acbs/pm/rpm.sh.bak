@@ -18,3 +18,7 @@ pm_whoprov(){ rpm -q --whatprovides "$1" --qf '%{NAME}'; }
 pm_repoquery(){
   zypper search -x "$@"
 }
+
+pm_correction(){
+  exit 0
+}
