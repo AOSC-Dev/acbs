@@ -32,7 +32,6 @@ Mandatory dependencies:
 
 * Python 3 (>= 3.3): Running the program itself.
 * GNU File (libmagic): File type detection.
-* Util-Linux: File checksum verification.
 * LibArchive (bsdtar): Archive handling.
 * GNU Wget or Aria2: Source downloading.
 * Autobuild3_: Package building.

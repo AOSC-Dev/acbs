@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import logging
 import shutil
+import hashlib
 from acbs import utils
 from acbs.utils import ACBSGeneralError
 try:
@@ -118,7 +119,8 @@ class SourceProcessor(object):
     def chksum_pycrypto(self, chksum_tuple, target_file):
         hash_type, hash_value = chksum_tuple
         if hash_type.upper() not in (Crypto.Hash.__all__ + ['SHA1']):
-            raise Exception('Unsupported hash type %s! Currently supported: %s' % (
+            raise NotImplementedError(
+                'Unsupported hash type %s! Currently supported: %s' % (
                 hash_type, ' '.join(Crypto.Hash.__all__)))
         with open(target_file, 'rb') as f:
             content = f.read()
@@ -139,17 +141,18 @@ class SourceProcessor(object):
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
                 hash_type, target_file, hash_value, target_hash))
 
-    def chksum_coreutils(self, chksum_tuple, target_file):
+    def chksum_hashlib(self, chksum_tuple, target_file):
         hash_type, hash_value = chksum_tuple
-        predefined = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'md5']
-        if hash_type.lower() not in predefined:
-            raise Exception('Unsupported hash type %s! Currently supported: %s' % (
-                hash_type, ' '.join(predefined)))
-        if not os.path.exists(target_file):
-            raise OSError('Target file not found!')
-        hash_output = subprocess.check_output(
-            ['%ssum' % hash_type.lower(), target_file]).decode('utf-8')
-        target_hash = hash_output.split(' ')[0]
+        hash_type = hash_type.lower()
+        if hash_type not in hashlib.algorithms_available:
+            raise NotImplementedError(
+                'Unsupported hash type %s! Currently supported: %s' % (
+                hash_type, ' '.join(sorted(hashlib.algorithms_available))))
+        hash_obj = hashlib.new(hash_type)
+        with open(target_file, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b''):
+                hash_obj.update(chunk)
+        target_hash = hash_obj.hexdigest()
         if hash_value != target_hash:
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
                 hash_type, target_file, hash_value, target_hash))
@@ -160,13 +163,12 @@ class SourceProcessor(object):
         if not chksums:
             logging.warning('No checksum is found! This is discouraged!')
             return
-        if not pycrypto:
-            logging.warn('PyCrypto is not installed! Fall back to coreutils!')
-            for sum_ in chksums:
-                self.chksum_coreutils(sum_, self.src_full_loc)
-        else:
-            for sum_ in chksums:
-                self.chksum_pycrypto(sum_, self.src_full_loc)
+        for sum_ in chksums:
+            try:
+                self.chksum_hashlib(sum_, self.src_full_loc)
+            except NotImplementedError:
+                if pycrypto:
+                    self.chksum_pycrypto(sum_, self.src_full_loc)
 
     def decomp_lib(self):
         try:
