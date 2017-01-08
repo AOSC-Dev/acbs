@@ -7,7 +7,7 @@ class Dependencies(object):
 
     def __init__(self):
         self.acbs_pm = PackageManager()
-        self.retry = False
+        self.retry = 0
 
     def search_deps(self, search_pkgs):
         pkgs_miss = self.acbs_pm.query_current_miss_pkgs(search_pkgs)
@@ -35,9 +35,9 @@ class Dependencies(object):
                 continue
             search_pkgs.append(i)
         pkgs_to_install, pkgs_not_avail = self.search_deps(search_pkgs)
-        if self.retry:
+        if self.retry > 1:
             logging.warning('Dependencies still didn\'t satisfy, entering exhaust mode...')
-            return uniq(pkgs_not_avail + pkgs_to_install)
+            return uniq((pkgs_not_avail or []) + (pkgs_to_install or []))
         if not pkgs_not_avail:
             pkgs_not_avail = []
         if pkgs_not_avail:
@@ -55,5 +55,5 @@ class Dependencies(object):
             logging.warning('An error occurred when installing dependencies')
             logging.info('Trying to correct dependencies...')
             self.acbs_pm.correct_deps()
-            self.retry = True
+            self.retry += 1
             self.process_deps(build_deps, run_deps, pkg_slug)
