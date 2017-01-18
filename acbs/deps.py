@@ -8,6 +8,7 @@ class Dependencies(object):
     def __init__(self):
         self.acbs_pm = PackageManager()
         self.retry = 0
+        self.missing = []
 
     def search_deps(self, search_pkgs):
         pkgs_miss = self.acbs_pm.query_current_miss_pkgs(search_pkgs)
@@ -18,6 +19,16 @@ class Dependencies(object):
         return pkgs_to_install, None
 
     def process_deps(self, build_deps, run_deps, pkg_slug):
+        for i in range(0, 3):
+            try:
+                return self.process_deps_main(build_deps, run_deps, pkg_slug)
+            except Exception as ex:
+                self.acbs_pm.correct_deps()
+        return self.missing
+
+    def process_deps_main(self, build_deps, run_deps, pkg_slug):
+        print('!!', end=' ')
+        print(self.retry)
         logging.info('Checking for dependencies, this may take a while...')
         search_pkgs_tmp = (build_deps + run_deps)
         search_pkgs = []
@@ -34,26 +45,26 @@ class Dependencies(object):
             if not i.strip():
                 continue
             search_pkgs.append(i)
-        pkgs_to_install, pkgs_not_avail = self.search_deps(search_pkgs)
+        pkgs_to_install, self.missing = self.search_deps(search_pkgs)
         if self.retry > 1:
             logging.warning('Dependencies still didn\'t satisfy, entering exhaust mode...')
-            return uniq((pkgs_not_avail or []) + (pkgs_to_install or []))
-        if not pkgs_not_avail:
-            pkgs_not_avail = []
-        if pkgs_not_avail:
+            self.missing = uniq((pkgs_not_avail or []) + (pkgs_to_install or []))
+            logging.debug('Build:%s' % self.missing)
+            return
+        if self.missing:
             logging.info(
-                'Building in-tree dependencies: \033[36m{}\033[0m'.format(' '.join(pkgs_not_avail)))
-            return pkgs_not_avail
+                'Building in-tree dependencies: \033[36m{}\033[0m'.format(' '.join(self.missing)))
+            return self.missing
         if not pkgs_to_install:
             logging.info('All dependencies are met. Continue.')
             return
         logging.info('Will install \033[36m{}\033[0m as required.'.format(
             ' '.join(pkgs_to_install)))
         try:
-            self.acbs_pm.install_pkgs(pkgs_to_install)
+            # self.acbs_pm.install_pkgs(pkgs_to_install)
+            1 / 0
         except Exception as ex:
-            logging.warning('An error occurred when installing dependencies')
-            logging.info('Trying to correct dependencies...')
-            self.acbs_pm.correct_deps()
             self.retry += 1
-            self.process_deps(build_deps, run_deps, pkg_slug)
+            logging.warning('An error occurred when installing dependencies')
+            logging.info('Trying to correct dependencies...%s' % self.retry)
+            raise()

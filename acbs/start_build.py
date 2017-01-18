@@ -42,6 +42,7 @@ class Autobuild(object):
         os.chdir(self.tmp_dir_loc)
         if self.pkg_info['DUMMYSRC'] in ['true', '1', 'y']:
             self.pkg_info['SUBDIR'] = '.'
+        LoaderHelper.callback('before_copy_defines')
         if self.pkg_info['SUBDIR']:
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
