@@ -9,7 +9,7 @@ from acbs import utils
 from acbs.utils import ACBSGeneralError, ACBSLogFormatter, ACBSConfError
 from acbs.parser import Parser, ACBSPackgeInfo
 from acbs.src_fetch import SourceFetcher
-from acbs.misc import Misc
+from acbs.misc import Misc, Fortune
 from acbs.src_process import SourceProcessor
 from acbs.loader import LoaderHelper
 from acbs.utils import ACBSVariables
@@ -69,6 +69,12 @@ class BuildCore(object):
         if not ACBSVariables.get('pending'):
             ACBSVariables.set('pending', [])
 
+        @LoaderHelper.register('after_build_finish')
+        def fortune():
+            Fortune().get_comment()
+
+        LoaderHelper.callback('after_init')
+
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
         logger = logging.getLogger()
@@ -89,6 +95,7 @@ class BuildCore(object):
         logger.addHandler(log_file_handler)
 
     def build(self, pkgs=None):
+        LoaderHelper.callback('before_build_init')
         pkgs_to_build = pkgs or self.pkgs_name
         for pkg in pkgs_to_build:
             matched_pkg = Finder(
@@ -107,6 +114,7 @@ class BuildCore(object):
                 self.build_single_pkg(matched_pkg)
         print(utils.full_line_banner('Build Summary:'))
         self.print_summary()
+        LoaderHelper.callback('after_build_finish')
         return 0
 
     def build_pkg_group(self, pkgs_array, single_pkg):

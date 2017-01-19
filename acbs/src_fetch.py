@@ -88,7 +88,6 @@ class SourceFetcher(object):
     def __register_vcs_checkout(self, url, src_type):
         @LoaderHelper.register('before_copy_defines', (self, url, src_type))
         def vcs_checkout(self, url, src_type):
-            print('VCS CB: %s' % self.pkg_name)
             old_loc = os.path.abspath(os.path.curdir)
             os.chdir(self.pkg_name)
             VCS(url=url, repo_dir=os.path.join(self.dump_loc,

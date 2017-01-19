@@ -1,4 +1,6 @@
 import logging
+
+from urllib import request
 from acbs import const
 
 
@@ -48,6 +50,18 @@ class Profiler(object):
     def output_warn(self, warn_item, value):
         logging.warning('Build environment {}non-ideal{}: {}{}{} reached {}{}%{}'.format(const.ANSI_YELLOW,
                                                                                          const.ANSI_RST, const.ANSI_LT_CYAN, warn_item, const.ANSI_RST, const.ANSI_YELLOW, value, const.ANSI_RST))
+
+
+class Fortune(object):
+    API_ENDPOINT = 'http://whatthecommit.com/index.txt'
+
+    def __init__(self):
+        return
+
+    def get_comment(self):
+        req = request.urlopen(Fortune.API_ENDPOINT)
+        print('  # %s' % req.read().decode('utf-8'))
+        return
 
 
 class Misc(Profiler):
