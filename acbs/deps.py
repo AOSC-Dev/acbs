@@ -28,7 +28,7 @@ class Dependencies(object):
 
     def process_deps_main(self, build_deps, run_deps, pkg_slug):
         # print('!!', end=' ')
-        print(self.retry)
+        # print(self.retry)
         logging.info('Checking for dependencies, this may take a while...')
         search_pkgs_tmp = (build_deps + run_deps)
         search_pkgs = []

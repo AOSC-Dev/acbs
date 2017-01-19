@@ -23,9 +23,21 @@ class LoaderHelper(object):
             return fn
         return func
 
+    @classmethod
+    def clear(cls, when):
+        '''
+        Clear all callbacks in specified map
+
+        :param when: Map to be cleared
+        '''
+        if cls.func_maps.get(when):
+            cls.func_maps.pop(when)
+
     @staticmethod
-    def callback(when):
+    def callback(when, delete=True):
         cbs = LoaderHelper.func_maps.get(when)
         if cbs:
             for cb in cbs:
-                return cb[0](*cb[1])
+                cb[0](*cb[1])
+        if delete:
+            LoaderHelper.clear(when)
