@@ -27,7 +27,7 @@ class Dependencies(object):
         return self.missing
 
     def process_deps_main(self, build_deps, run_deps, pkg_slug):
-        print('!!', end=' ')
+        # print('!!', end=' ')
         print(self.retry)
         logging.info('Checking for dependencies, this may take a while...')
         search_pkgs_tmp = (build_deps + run_deps)
@@ -61,8 +61,7 @@ class Dependencies(object):
         logging.info('Will install \033[36m{}\033[0m as required.'.format(
             ' '.join(pkgs_to_install)))
         try:
-            # self.acbs_pm.install_pkgs(pkgs_to_install)
-            1 / 0
+            self.acbs_pm.install_pkgs(pkgs_to_install)
         except Exception as ex:
             self.retry += 1
             logging.warning('An error occurred when installing dependencies')

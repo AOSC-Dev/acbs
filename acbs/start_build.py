@@ -25,6 +25,7 @@ class Autobuild(object):
         self.pkg_info = self.pkg_data.buffer['abbs_data']
 
     def determine_subdir(self):
+        os.chdir(self.tmp_dir_loc)  # Reset location
         if os.path.isdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER']):
             return self.pkg_info['NAME'] + '-' + self.pkg_info['VER']
         elif os.path.isdir(self.pkg_info['NAME']):
@@ -105,9 +106,9 @@ class Autobuild(object):
             def start_nolog():
                 subprocess.check_call(['autobuild'])
 
-            LoaderHelper.callback('before_build')
             os.chdir(self.abdir)
             shadow_defines_loc = self.abdir
+            LoaderHelper.callback('before_build')
             parser_obj = Parser()
             parser_obj.abbs_spec = self.pkg_info
             parser_obj.defines_file_loc = shadow_defines_loc

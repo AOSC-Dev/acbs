@@ -88,8 +88,11 @@ class SourceFetcher(object):
     def __register_vcs_checkout(self, url, src_type):
         @LoaderHelper.register('before_copy_defines', (self, url, src_type))
         def vcs_checkout(self, url, src_type):
+            old_loc = os.path.abspath(os.path.curdir)
+            os.chdir(self.pkg_name)
             VCS(url=url, repo_dir=os.path.join(self.dump_loc,
                                                self.pkg_name), proto=src_type).vcs_checkout(commit=self.pkg_info.get(src_type.upper() + 'CO'), branch=self.pkg_info.get(src_type.upper() + 'BRCH'))
+            os.chdir(old_loc)
 
     '''
     External downloaders
