@@ -19,7 +19,7 @@ from acbs.deps import Dependencies
 
 class BuildCore(object):
 
-    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False):
+    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False, download_only=False):
         '''
         '''
         self.pkgs_name = pkgs_name
@@ -37,6 +37,7 @@ class BuildCore(object):
         self.tree_loc = None
         self.log_to_system = syslog
         self.shared_error = None
+        self.download_only = download_only
         self.acbs_settings = {'debug_mode': self.isdebug, 'tree': self.tree,
                               'version': self.acbs_version}
         if init:
@@ -159,12 +160,16 @@ class BuildCore(object):
                     accum += ACBSVariables.get('timings')[i]
                 i += 1
         if group_name:
-            swap_vars(group_name)
-        x = [[name, utils.human_time(time)] for name, time in zip(self.pkgs_done, ACBSVariables.get('timings'))]
+            swap_vars(group_name)        
+        if self.download_only:
+            x = [[name, 'Downloaded'] for name in self.pkgs_done]
+        else:
+            x = [[name, utils.human_time(time)] for name, time in zip(self.pkgs_done, ACBSVariables.get('timings'))]
         print(utils.format_column(x))
         return
 
     def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
+        skipbuild = skipbuild or self.download_only
         if not self.isgroup:
             tmp_dir_loc.clear()
         try:

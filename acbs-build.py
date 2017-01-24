@@ -27,6 +27,8 @@ def main():
                         action='store_true', dest='clear_dir')
     parser.add_argument('-s', '--system-log', help='Pass logs to system log collector',
                         action='store_true', dest='syslog')
+    parser.add_argument('-g', '--get',
+                        help='Only download source packages without building', action="store_true")
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
@@ -35,6 +37,8 @@ def main():
                           'debug_mode': args.debug, 'version': acbs.__version__}
         if args.syslog:
             acbs_core_args['syslog'] = True
+        if args.get:
+            acbs_core_args['download_only'] = True
         if args.acbs_tree:
             acbs_core_args['tree'] = args.acbs_tree[0]
             acbs_instance = BuildCore(**acbs_core_args)
