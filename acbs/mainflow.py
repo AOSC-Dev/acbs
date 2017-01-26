@@ -69,9 +69,9 @@ class BuildCore(object):
         if not ACBSVariables.get('pending'):
             ACBSVariables.set('pending', [])
 
-        @LoaderHelper.register('after_build_finish')
-        def fortune():
-            Fortune().get_comment()
+        # @LoaderHelper.register('after_build_finish')
+        # def fortune():
+        #     Fortune().get_comment()
 
         LoaderHelper.callback('after_init')
 
