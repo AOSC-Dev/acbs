@@ -42,7 +42,7 @@ class SourceProcessor(object):
             try:
                 logging.debug('Copy {} to {}'.format(
                     self.src_full_loc, self.shadow_ark_loc))
-                shutil.copytree(src=self.src_full_loc, dst=self.shadow_ark_loc)
+                shutil.copytree(src=self.src_full_loc, dst=self.shadow_ark_loc, symlinks=True, ignore=None)
             except Exception as ex:
                 print('Failed!')
                 raise ACBSGeneralError(
