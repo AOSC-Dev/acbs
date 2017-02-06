@@ -33,7 +33,7 @@ class Parser(object):
             raise OSError(
                 'Failed to load spec file! Do you have read permission?') from e
         # Stupid but necessary laundry list of possible varibles
-        script = '{}{}'.format(spec_cont, utils.gen_laundry_list([
+        script = 'ARCH={}\n{}{}'.format(utils.get_arch_name(), spec_cont, utils.gen_laundry_list([
             'VER', 'REL', 'SUBDIR', 'SRCTBL', 'GITSRC', 'GITCO', 'GITBRCH',
             'SVNSRC', 'SVNCO', 'HGSRC', 'BZRSRC', 'BZRCO', 'DUMMYSRC', 'CHKSUM'
         ]))
