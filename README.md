@@ -32,7 +32,7 @@ Mandatory:
   - [Autobuild3](https://github.com/AOSC-Dev/autobuild3): Package building.
 
 Optional:
-  - psutils: Build timing, disk space detection, device health (temperature).
+  - psutil: Build timing, disk space detection, device health (temperature).
   - libmagic: Python module to detect file type.
   - libarchive-c: Python module to handle archives.
   - pycrypto: Python module to verify file checksums.
