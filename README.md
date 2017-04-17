@@ -36,8 +36,7 @@ Optional:
   - libmagic: Python module to detect file type.
   - libarchive-c: Python module to handle archives.
   - pycrypto: Python module to verify file checksums.
-
-Note: May use ptyprocess for logging in the future.
+  - ptyprocess, pexpect: Build logging.
 
 Deployment
 ----------
