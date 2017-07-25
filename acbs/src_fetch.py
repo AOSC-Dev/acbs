@@ -74,8 +74,8 @@ class SourceFetcher(object):
                 raise KeyboardInterrupt('You aborted the download!') from ex
             except NameError:
                 raise NameError('An Internal Error occurred!')
-            except AssertionError:
-                continue
+            except AssertionError as ex:
+                raise ex
             except Exception as ex:
                 raise Exception('Something happend!') from ex
 
