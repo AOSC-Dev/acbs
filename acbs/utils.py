@@ -127,6 +127,8 @@ def get_arch_name():
         return 'powerpc'
     elif uname_var == 'ppc64':
         return 'ppc64'
+    elif uname_var == 'riscv64':
+        return 'riscv64'
     else:
         return None
     return None
