@@ -58,7 +58,7 @@ class SourceFetcher(object):
 
     def src_tbl_fetch(self, url, pkg_slug=None):
         use_progs = self.test_downloaders()
-        src_name = os.path.basename(url)
+        src_name = pkg_slug or os.path.basename(url)
         full_path = os.path.join(self.dump_loc, src_name)
         flag_file = full_path + '.dl'
         if os.path.exists(full_path) and (not os.path.exists(flag_file)):
