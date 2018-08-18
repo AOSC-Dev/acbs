@@ -15,7 +15,6 @@ class SourceFetcher(object):
         self.pkg_info = pkg_info
         self.dump_loc = dump_loc
         self.pkg_name = pkg_info['NAME']
-        self.src_name = None
         self.ind_dump_loc = os.path.join(self.dump_loc, self.pkg_name)
 
     def fetch_src(self):
@@ -47,9 +46,8 @@ class SourceFetcher(object):
             raise ValueError('Illegal source URL!!!') from ex
         if proto in ['http', 'https', 'ftp', 'ftps', 'ftpes']:
             src_tbl_name = pkg_name + '-' + pkg_ver
-            self.src_name = os.path.basename(url)
             self.src_tbl_fetch(url, src_tbl_name)
-            return self.src_name
+            return src_tbl_name
         else:  # or proto == 'git+https'
             logging.warning(
                 'In spec file: This source seems to refers to a VCS repository, but you misplaced it.')
