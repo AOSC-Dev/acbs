@@ -45,7 +45,7 @@ class SourceFetcher(object):
         except Exception as ex:
             raise ValueError('Illegal source URL!!!') from ex
         if proto in ['http', 'https', 'ftp', 'ftps', 'ftpes']:
-            src_tbl_name = pkg_name + '-' + pkg_ver
+            src_tbl_name = '%s-%s.bin' % (pkg_name, pkg_ver)
             self.src_tbl_fetch(url, src_tbl_name)
             return src_tbl_name
         else:  # or proto == 'git+https'
