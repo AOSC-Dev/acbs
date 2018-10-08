@@ -38,7 +38,32 @@ Acceptable Prefixes for ``SRCS``
 | file   | Opaque Binary Blobs (Remote Files) | No                  | [3]_      |
 +--------+------------------------------------+---------------------+-----------+
 
+Supported Checksum (Hashing) Algorithm
+--------------------------------------
+
++-----------+--------------+------------+
+| Algorithm | Recommended? | Notes      |
++-----------+--------------+------------+
+| MD2       | N            |            |
++-----------+--------------+------------+
+| MD5       | N            |            |
++-----------+--------------+------------+
+| SHA1      | N            |            |
++-----------+--------------+------------+
+| SHA256    | Y            |            |
++-----------+--------------+------------+
+| SHA224    | Y            | [5]_       |
++-----------+--------------+------------+
+| SHA384    | Y            |            |
++-----------+--------------+------------+
+| SHA512    | Y            | [6]_       |
++-----------+--------------+------------+
+| RIPEMD    | Y            | RIPEMD-160 |
++-----------+--------------+------------+
+
 .. [1] Auto deduction means if the prefix is omitted, whether ``acbs`` would try to deduce the missing prefix
 .. [2] Will attempt to extract the archive
 .. [3] Will leave the files as-is, implies ``SUBDIR='.'``
 .. [4] Only when the extension name contains ``.tar`` or ``.zip``
+.. [5] Although recommended, please consider using SHA256 or better
+.. [6] Although recommended, the hash sum is just too long. Currently, SHA256 is sufficient enough.

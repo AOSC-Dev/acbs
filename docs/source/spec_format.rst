@@ -45,7 +45,7 @@ Defines files are expected to exist in ``:/`` (root of the top project folder).
 * ``<VCS_NAME>BRCH``    If set, indicates required branch of the repository for the package.
 * ``<VCS_NAME>COMMIT``  If set, indicates required commit/revision of the repository for the package.
 * ``CHKSUM`` Expected format: ``<ALGO_NAME>::<HASH_VALUE>`` If set, ``acbs`` will check the checksum of the source file against this value not available if the source is from VCS.
-* ``SUBDIR`` If set, ``acbs`` will change to specified directory after finishing preparing the source files.
+* ``SUBDIR`` If set, ``acbs`` will change to specified directory after finishing preparing the source files. (For a list of supported hashing algorithms, see :doc:`appendix`)
 
 Upcoming, drafted, not yet implemented in current version:
 
