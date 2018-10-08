@@ -7,9 +7,9 @@
 #
 vcs_repofetch() {
 	if [[ ! -z $3 ]]; then
-		git clone --depth $3 $1 $2
+		git clone --recursive --depth $3 $1 $2
 	else
-		git clone $1 $2
+		git clone --recursive $1 $2
 	fi
 }
 
@@ -28,6 +28,7 @@ vcs_switchcommit() {
 # - remark - you may want to check if conflicts exist
 vcs_repoupdate() {
 	git pull $1
+	git submodule update --recursive
 }
 
 # vcs_test: accepts no arg
