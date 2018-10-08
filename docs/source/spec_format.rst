@@ -45,6 +45,7 @@ Defines files are expected to exist in ``:/`` (root of the top project folder).
 * ``<VCS_NAME>BRCH``    If set, indicates required branch of the repository for the package.
 * ``<VCS_NAME>COMMIT``  If set, indicates required commit/revision of the repository for the package.
 * ``CHKSUM`` Expected format: ``<ALGO_NAME>::<HASH_VALUE>`` If set, ``acbs`` will check the checksum of the source file against this value not available if the source is from VCS.
+* ``SUBDIR`` If set, ``acbs`` will change to specified directory after finishing preparing the source files.
 
 Upcoming, drafted, not yet implemented in current version:
 
@@ -52,5 +53,5 @@ Upcoming, drafted, not yet implemented in current version:
 * ``CHKSUMS`` Expected format: ``(<ALGO_NAME_1>::<HASH_VALUE_1> <ALGO_NAME_2>::<HASH_VALUE_2> ...)`` If set, ``acbs`` will check the checksum of the source files against this value not available if the source is from VCS. [2]_
 
 .. _Autobuild3: https://github.com/AOSC-Dev/aosc-os-abbs/wiki/Autobuild3
-.. [1] Example: ``SRCS=('git::git://github.com/AOSC-Dev/acbs' 'git::https://github.com/AOSC-Dev/acbs')`` This will make ``acbs`` to download two set of source files
-.. [2] Example: ``CHKSUMS=('sha1::a9c55882c935300bec93e209f1ec8a21f75638b7' 'sha256::4ccdbbd95d4aef058502c8ee07b1abb490f5ef4a4d6ff711440facd0b8eded33')`` This will make ``acbs`` to check two set of source files
+.. [1] Example: ``SRCS=('git::git://github.com/AOSC-Dev/acbs' 'git::https://github.com/AOSC-Dev/acbs')`` This will make ``acbs`` to download two sets of source files
+.. [2] Example: ``CHKSUMS=('sha1::a9c55882c935300bec93e209f1ec8a21f75638b7' 'sha256::4ccdbbd95d4aef058502c8ee07b1abb490f5ef4a4d6ff711440facd0b8eded33')`` This will make ``acbs`` to check two sets of source files
