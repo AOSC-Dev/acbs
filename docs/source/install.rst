@@ -48,7 +48,7 @@ Optional dependencies [1]_:
 
 .. _Autobuild3: https://github.com/AOSC-Dev/autobuild3
 
-.. [1] Note: By installing optional dependencies, ACBS can be enhanced. These dependencies are available on PyPI.
+.. [1] Note: By installing optional dependencies, functionalities of ACBS could be enhanced. These dependencies are available on PyPI.
 
 Initial configurations
 ----------------------

@@ -5,7 +5,7 @@
 
 Welcome to acbs's documentation!
 ================================
-ACBS - The next generation of building toolkit for AOSC OS written in Python.
+ACBS - The current generation of building toolkit for AOSC OS written in Python.
 
 Contents:
 
@@ -15,6 +15,8 @@ Contents:
    intro
    install
    api
+   spec_format
+   appendix
 
 
 
