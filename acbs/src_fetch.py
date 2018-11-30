@@ -98,8 +98,6 @@ class SourceFetcher(object):
 
     def test_downloaders(self):
         use_progs = []
-        if shutil.which('aria2c'):
-            use_progs.append('aria')
         if shutil.which('wget'):
             use_progs.append('wget')
         if shutil.which('axel'):
@@ -125,17 +123,3 @@ class SourceFetcher(object):
             subprocess.check_call(wget_cmd)
         except Exception:
             raise AssertionError('Failed to fetch source with Wget!')
-
-    def aria_get(self, url, threads=3, output=None):
-        aria_cmd = ['aria2c', '--max-connection-per-server={}'.format(
-            threads), url, '--auto-file-renaming=false']
-        # ,'--check-certificate=false'
-        if output:
-            aria_cmd.insert(2, '-d')
-            aria_cmd.insert(3, '/'.join(output.split('/')[:-1]))  # Temporary
-            aria_cmd.insert(4, '-o')
-            aria_cmd.insert(5, os.path.basename(output))
-        try:
-            subprocess.check_call(aria_cmd)
-        except Exception:
-            raise AssertionError('Failed to fetch source with Aria2!')
