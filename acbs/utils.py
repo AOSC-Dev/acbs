@@ -116,14 +116,14 @@ def get_arch_name():
     if uname_var in ['x86_64', 'amd64']:
         return 'amd64'
     elif uname_var == 'aarch64':
-        return 'aarch64'  # FIXME: Don't know ...
+        return 'arm64'  # FIXME: Don't know ...
     elif uname_var in ['armv7a', 'armv7l', 'armv8a', 'armv8l']:
         return 'armel'    # FIXME: Don't know too much about this...
     elif uname_var == 'mips64':
         return 'mips64el'  # FIXME: How about big endian...
     elif uname_var == 'mips':
         return 'mipsel'   # FIXME: This too...
-    elif uname_var == 'powerpc':
+    elif uname_var == 'ppc':
         return 'powerpc'
     elif uname_var == 'ppc64':
         return 'ppc64'
