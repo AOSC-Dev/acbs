@@ -166,8 +166,7 @@ class SourceProcessor(object):
         chksums = self.chksum_val
         logging.debug('Checksums: %s' % chksums)
         if not chksums:
-            logging.warning('No checksum is found! This is discouraged!')
-            return
+            raise ACBSGeneralError("No checksum is found. It's mandatory for SRCTBL.")
         for sum_ in chksums:
             try:
                 self.chksum_hashlib(sum_, self.src_full_loc)
