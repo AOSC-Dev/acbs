@@ -124,8 +124,6 @@ class SourceProcessor(object):
             raise NotImplementedError(
                 'Unsupported hash type %s! Currently supported: %s' % (
                 hash_type, ' '.join(Crypto.Hash.__all__)))
-        with open(target_file, 'rb') as f:
-            content = f.read()
         sub_hash_type = hash_type
         if hash_type.upper() == 'RIPEMD':
             sub_hash_type = 'RIPEMD160'
@@ -133,12 +131,16 @@ class SourceProcessor(object):
             sub_hash_type = 'SHA1'
             hash_type = 'SHA'
         try:
-            target_hash = getattr(
+            hash_obj = getattr(
                 getattr(Crypto.Hash, hash_type),
-                sub_hash_type + 'Hash')(content).hexdigest()
+                sub_hash_type + 'Hash')()
         except AttributeError:
             raise Exception(
                 'Algorithm %s does not support file hashing!' % hash_type)
+        with open(target_file, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b''):
+                hash_obj.update(chunk)
+        target_hash = hash_obj.hexdigest()
         if hash_value != target_hash:
             raise ACBSGeneralError('Checksums mismatch of type %s at file %s: %s x %s' % (
                 hash_type, target_file, hash_value, target_hash))
