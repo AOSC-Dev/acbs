@@ -119,6 +119,7 @@ class SourceProcessor(object):
 
     def chksum_pycrypto(self, chksum_tuple, target_file):
         hash_type, hash_value = chksum_tuple
+        hash_value = hash_value.lower()
         if hash_type.upper() not in (Crypto.Hash.__all__ + ['SHA1']):
             raise NotImplementedError(
                 'Unsupported hash type %s! Currently supported: %s' % (
@@ -145,6 +146,7 @@ class SourceProcessor(object):
     def chksum_hashlib(self, chksum_tuple, target_file):
         hash_type, hash_value = chksum_tuple
         hash_type = hash_type.lower()
+        hash_value = hash_value.lower()
         if hash_type not in hashlib.algorithms_available:
             raise NotImplementedError(
                 'Unsupported hash type %s! Currently supported: %s' % (
