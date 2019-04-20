@@ -202,7 +202,7 @@ class ACBSPackgeInfo(object):
         self.opt_deps = utils.uniq(self.opt_deps + other.opt_deps)
         self.build_deps = utils.uniq(self.build_deps + other.build_deps)
         self.run_deps = utils.uniq(self.run_deps + other.run_deps)
-        self.chksums = utils.uniq(self.chksums + other.chksums)
+        self.chksums = other.chksums or self.chksums
         self.buffer = utils.merge_dicts(self.buffer, other.buffer)
 
     def clear(self):
