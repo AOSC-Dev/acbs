@@ -170,9 +170,12 @@ class SourceProcessor(object):
         for sum_ in chksums:
             try:
                 self.chksum_hashlib(sum_, self.src_full_loc)
-            except NotImplementedError:
+            except NotImplementedError as ex:
                 if pycrypto:
                     self.chksum_pycrypto(sum_, self.src_full_loc)
+                else:
+                    raise NotImplementedError from ex
+            logging.info('\033[92mChecksum matched\033[0m for %s (%s)' % (self.src_full_loc, sum_[0]))
 
     def decomp_lib(self):
         try:
