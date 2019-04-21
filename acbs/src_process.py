@@ -19,10 +19,10 @@ except ImportError:
 
 class SourceProcessor(object):
 
-    def __init__(self, union_data, acbs_config):
-        self.tobj = tempfile.mkdtemp(dir=acbs_config.tmp_loc, prefix='acbs.')
+    def __init__(self, union_data, dump_loc, tmp_loc):
+        self.tobj = tempfile.mkdtemp(dir=tmp_loc, prefix='acbs.')
         self.pkg_name = union_data.name
-        self.src_loc = acbs_config.dump_loc
+        self.src_loc = dump_loc
         self.src_name = union_data.src_name
         self.chksum_val = union_data.chksums
         self.src_full_loc = None

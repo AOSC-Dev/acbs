@@ -4,7 +4,6 @@ from urllib import parse
 import logging
 import shutil
 
-from acbs import utils
 from acbs.loader import LoaderHelper
 from acbs.vcs import VCS
 

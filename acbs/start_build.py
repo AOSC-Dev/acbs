@@ -1,28 +1,31 @@
 import subprocess
 # import ptyprocess
 import os
+import time
+import signal
 import shutil
 import logging
+import tempfile
 
 from acbs import utils
 from acbs import const
 from acbs.loader import LoaderHelper
-from acbs.parser import Parser
 from acbs.utils import ACBSVariables
 
+SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
+     if v.startswith('SIG') and not v.startswith('SIG_'))
 
 class Autobuild(object):
 
-    def __init__(self, tmp_dir_loc, repo_dir, pkg_info, rm_abdir=False):
+    def __init__(self, tmp_dir_loc, repo_dir, pkg_info):
         self.tmp_dir_loc = tmp_dir_loc
         self.abdir = None
         logging.info('Build dir location: {}'.format(tmp_dir_loc))
         self.repo_dir = repo_dir
         self.pkg_data = pkg_info
-        self.rm_abdir = rm_abdir
-        global pkg_name
-        self.pkg_name = self.pkg_data.name
-        self.pkg_info = self.pkg_data.buffer['abbs_data']
+        self.pkg_name = self.pkg_data.pkg_name
+        self.pkg_info = self.pkg_data.abbs_data
+        self.issubpkg = self.pkg_data.issubpkg
 
     def determine_subdir(self):
         os.chdir(self.tmp_dir_loc)  # Reset location
@@ -41,10 +44,10 @@ class Autobuild(object):
 
     def copy_abd(self):
         os.chdir(self.tmp_dir_loc)
-        if self.pkg_info['DUMMYSRC'] in ['true', '1', 'y']:
+        if self.pkg_info.get('DUMMYSRC') in ('true', '1', 'y'):
             self.pkg_info['SUBDIR'] = '.'
         LoaderHelper.callback('before_copy_defines')
-        if self.pkg_info['SUBDIR']:
+        if self.pkg_info.get('SUBDIR'):
             try:
                 os.chdir(self.pkg_info['SUBDIR'])
             except FileNotFoundError as ex:
@@ -79,8 +82,6 @@ class Autobuild(object):
         @utils.time_this(desc_msg=helper_gen_msg(), vars_ctx=ACBSVariables)
         def start_ab3(self, *args, **kwargs):
             def start_logged():
-                import tempfile
-                import time
                 with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=os.path.curdir, delete=False) as f:
                     logging.info('Build log: %s' % f.name)
                     header = '!!ACBS Build Log\n!!Build start: %s\n' % time.ctime()
@@ -93,13 +94,13 @@ class Autobuild(object):
                     while (not ab_proc.isalive()) and (not ab_proc.terminated):
                         ab_proc.terminate()
                     exit_status = ab_proc.exitstatus
-                    footer = '\n!!Build exited with %s' % exit_status
+                    signal_status = ab_proc.signalstatus
+                    if signal_status:
+                        footer = '\n!!Build killed with %s' % SIGNAMES[signal_status]
+                    else:
+                        footer = '\n!!Build exited with %s' % exit_status
                     f.write(footer.encode())
-                    if exit_status is None:
-                        # When exit_status is None, it means process exited
-                        # abnormally, and pexpect don't know its exit code(bug)
-                        raise KeyboardInterrupt()
-                    if exit_status:
+                    if signal_status or exit_status:
                         raise subprocess.CalledProcessError(
                             ab_proc.status, 'autobuild')
 
@@ -109,10 +110,11 @@ class Autobuild(object):
             os.chdir(self.abdir)
             shadow_defines_loc = self.abdir
             LoaderHelper.callback('before_build')
-            parser_obj = Parser()
-            parser_obj.abbs_spec = self.pkg_info
-            parser_obj.defines_file_loc = shadow_defines_loc
-            parser_obj.parser_pass_through()
+            #parser_obj = Parser()
+            #parser_obj.abbs_spec = self.pkg_info
+            #parser_obj.defines_file_loc = shadow_defines_loc
+            #parser_obj.parser_pass_through()
+            self.pkg_info.write_ab3_defines(shadow_defines_loc)
             build_logging = True
             try:
                 import pexpect
@@ -127,6 +129,6 @@ class Autobuild(object):
             except subprocess.CalledProcessError as ex:
                 raise Exception(
                     'Autobuild 3 reported a building failure!') from ex
-            if self.rm_abdir:
+            if self.issubpkg:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
         return start_ab3(self)

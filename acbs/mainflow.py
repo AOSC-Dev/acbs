@@ -3,12 +3,11 @@ import logging.handlers
 import os
 import sys
 import traceback
-import collections
 
 from acbs.find import Finder
 from acbs import utils
 from acbs.utils import ACBSGeneralError, ACBSLogFormatter, ACBSConfError
-from acbs.parser import Parser, ACBSPackgeInfo
+from acbs.parser import ACBSPackageGroup, write_acbs_conf, parse_acbs_conf
 from acbs.src_fetch import SourceFetcher
 from acbs.misc import Misc, Fortune
 from acbs.src_process import SourceProcessor
@@ -20,7 +19,7 @@ from acbs.deps import Dependencies
 
 class BuildCore(object):
 
-    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False, download_only=False):
+    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False, download_only=False, pending=None):
         '''
         '''
         self.pkgs_name = pkgs_name
@@ -32,12 +31,13 @@ class BuildCore(object):
         self.tmp_loc = '/var/cache/acbs/build/'
         self.conf_loc = '/etc/acbs/'
         self.log_loc = '/var/log/acbs/'
-        self.pkg_data = ACBSPackgeInfo()
+        #self.pkg_data = ACBSPackgeInfo()
         self.acbs_version = version
         self.tree_loc = None
         self.log_to_system = syslog
         self.shared_error = None
         self.download_only = download_only
+        self.pending = pending or ()
         self.acbs_settings = {'debug_mode': self.isdebug, 'tree': self.tree,
                               'version': self.acbs_version}
         if init:
@@ -60,15 +60,13 @@ class BuildCore(object):
             raise IOError('\033[93mFailed to make work directory\033[0m!')
         self.__install_logger(str_verbosity)
         Misc().dev_utilz_warn()
+        forest_file = os.path.join(self.conf_loc, 'forest.conf')
         if os.path.exists(os.path.join(self.conf_loc, 'forest.conf')):
-            self.tree_loc = os.path.abspath(Parser(
-                main_data=self).parse_acbs_conf(self.tree))
+            self.tree_loc = os.path.abspath(parse_acbs_conf(forest_file, self.tree))
             if not self.tree_loc:
                 raise ACBSConfError('Tree not found!')
         else:
-            Parser(main_data=self).write_acbs_conf()
-        if not ACBSVariables.get('pending'):
-            ACBSVariables.set('pending', [])
+            self.tree_loc = os.path.abspath(write_acbs_conf(forest_file))
 
         # @LoaderHelper.register('after_build_finish')
         # def fortune():
@@ -112,29 +110,11 @@ class BuildCore(object):
                 pkgs_to_build.append(matched_pkg)
         for pkg in pkgs_to_build:
             self.pkgs_que.update(pkg)
-            self.build_single_pkg(pkg)
+            self.build_pkg_group(pkg)
         print(utils.full_line_banner('Build Summary:'))
         self.print_summary()
         LoaderHelper.callback('after_build_finish')
         return 0
-
-    def build_pkg_group(self, pkgs_array, single_pkg):
-        pkgs_array = collections.OrderedDict(
-            sorted(pkgs_array.items(), key=lambda x: x[0]))
-        pkg_tuple = [(lambda x, y, z: (y, '%s/0%s-%s' % (z, x, y)) if x < 10 else (y, '%s/%s-%s' %
-                                                                                   (z, str(x), y)))(i, pkgs_array[i], single_pkg) for i in pkgs_array]
-        logging.info('Package group detected\033[36m({})\033[0m: contains: \033[36m{}\033[0m'.format(
-            len(pkg_tuple), ' '.join([i[0] for i in pkg_tuple])))
-        logging.debug('Package group building order: {}'.format(pkgs_array))
-        tmp_dir_loc = []
-        self.build_main(single_pkg, tmp_dir_loc, skipbuild=True)
-        abbs_data = self.pkg_data.buffer.get('abbs_data')
-        for pkg_name, pkg_dir in pkg_tuple:
-            print(utils.full_line_banner(''))
-            logging.info('Start building \033[36m%s::%s\033[0m' % (
-                single_pkg, pkg_name))
-            self.pkg_data.buffer['abbs_data'] = abbs_data
-            self.build_main(pkg_dir, tmp_dir_loc)
 
     def print_summary(self):
         i = 0
@@ -162,75 +142,68 @@ class BuildCore(object):
         if self.download_only:
             x = [[name, 'Downloaded'] for name in self.pkgs_done]
         else:
-            x = [[name, utils.human_time(time)] for name, time in zip(self.pkgs_done, ACBSVariables.get('timings'))]
+            x = [[name, utils.human_time(time)] for name, time in zip(
+                self.pkgs_done, ACBSVariables.get('timings'))]
         print(utils.format_column(x))
         return
 
-    def build_main(self, target, tmp_dir_loc=[], skipbuild=False, groupname=None):
-        skipbuild = skipbuild or self.download_only
-        if not groupname:
-            tmp_dir_loc.clear()
-        try:
-            pkg_slug = os.path.basename(target)
-        except Exception:
-            pkg_slug = target
-            self.pkg_data.name = pkg_slug
-        ACBSVariables.get('pending').append(pkg_slug)
-        parser = Parser(
-            pkg_name=pkg_slug, spec_file_loc=os.path.abspath(target))
-        if not tmp_dir_loc:
-            self.pkg_data.update(parser.parse_abbs_spec())
-        repo_dir = os.path.abspath(os.path.join(self.tree_loc, target))
+    def build_main(self, pkg_data):
+        # , target, tmp_dir_loc=[], skipbuild=False, groupname=None
+        skipbuild = self.download_only
+        pkg_name = pkg_data.pkg_name
         if not skipbuild:
-            defines_loc = 'defines' if groupname else 'autobuild/defines'
-            self.pkg_data.update(parser.parse_ab3_defines(
-                os.path.join(self.tree_loc, target, defines_loc)))
             try_build = Dependencies().process_deps(
-                self.pkg_data.build_deps, self.pkg_data.run_deps, pkg_slug)
+                pkg_data.build_deps, pkg_data.run_deps, pkg_name)
             if try_build:
-                if set(try_build).intersection(ACBSVariables.get('pending')):
+                if set(try_build).intersection(self.pending):
                     # Suspect this is dependency loop
-                    err_msg = 'Dependency loop: %s' % '<->'.join(
-                        ACBSVariables.get('pending'))
+                    err_msg = 'Dependency loop: %s' % '<->'.join(self.pending)
                     utils.err_msg(err_msg)
                     raise ACBSGeneralError(err_msg)
-                self.new_build_thread(try_build)
-        if not tmp_dir_loc:
-            src_fetcher = SourceFetcher(
-                self.pkg_data.buffer['abbs_data'], self.dump_loc)
-            self.pkg_data.src_name = src_fetcher.fetch_src()
-            self.pkg_data.src_path = self.dump_loc
-            tmp_dir_loc.append(SourceProcessor(self.pkg_data, self).process())
-        if groupname:
-            repo_ab_dir = repo_dir
-        else:
-            repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
+                self.new_build_thread(pkg_name, try_build)
+        repo_ab_dir = pkg_data.ab_dir()
         if not skipbuild:
-            ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
+            ab3 = Autobuild(pkg_data.temp_dir, repo_ab_dir, pkg_data)
             ab3.copy_abd()
-            ab3.timed_start_ab3(rm_abdir=groupname)
-        if ACBSVariables.get('pending'):
-            ACBSVariables.get('pending').pop()
+            ab3.timed_start_ab3()
         self.pkgs_done.append(
-            target if not groupname else '%s::%s' % (groupname, target))
+            pkg_data.directory if pkg_data.subdir != 'autobuild'
+            else '%s::%s' % (pkg_data.directory, pkg_data.subdir))
 
-    def build_single_pkg(self, single_pkg):
-        logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))
+    def build_pkg_group(self, directory):
+        logging.info('Start building \033[36m{}\033[0m'.format(directory))
         os.chdir(self.tree_loc)
-        self.pkg_data.slug = single_pkg
-        pkg_type_res = Finder.determine_pkg_type(single_pkg)
-        if isinstance(pkg_type_res, dict):
-            return self.build_pkg_group(pkg_type_res, single_pkg)  # FIXME
-        self.build_main(single_pkg)
+        pkg_group = ACBSPackageGroup(directory, rootpath=self.tree_loc)
+        #pkg_type_res = Finder.determine_pkg_type(directory)
+        #if isinstance(pkg_type_res, dict):
+            #return self.build_pkg_group1(pkg_type_res, directory)  # FIXME
+        src_fetcher = SourceFetcher(pkg_group.abbs_data, self.dump_loc)
+        pkg_group.src_name = src_fetcher.fetch_src()
+        pkg_group.src_path = self.dump_loc
+        pkg_group.temp_dir = SourceProcessor(
+            self.pkg_data, self.dump_loc, self.tmp_loc).process()
+        subpkgs = pkg_group.subpackages()
+        isgroup = (len(subpkgs) > 1)
+        if isgroup:
+            logging.info('Package group detected\033[36m({})\033[0m: '
+                'contains: \033[36m{}\033[0m'.format(
+                len(subpkgs), ' '.join(p.pkg_name for p in subpkgs)))
+        for pkg_data in subpkgs:
+            print(utils.full_line_banner(''))
+            if isgroup:
+                logging.info('Start building \033[36m%s::%s\033[0m' % (
+                    directory, pkg_data.pkg_name))
+            self.build_main(pkg_data)
         return 0
 
-    def new_build_thread(self, try_build):
+    def new_build_thread(self, current_pkg, try_build):
         def slave_thread_build(pkg, shared_error):
             logging.debug(
                 'New build thread started for \033[36m{}\033[0m'.format(pkg))
             try:
                 new_build_instance = BuildCore(
-                    **self.acbs_settings, pkgs_name=[pkg], init=False)
+                    **self.acbs_settings, pkgs_name=[pkg], init=False,
+                    pending=self.pending + (current_pkg,))
                 new_build_instance.tree_loc = self.tree_loc
                 new_build_instance.shared_error = shared_error
                 new_build_instance.build()
@@ -243,7 +216,8 @@ class BuildCore(object):
         for sub_pkg in list(try_build):
             dumb_mutex = Lock()
             dumb_mutex.acquire()
-            sub_thread = Process(target=slave_thread_build, args=(sub_pkg, self.shared_error))
+            sub_thread = Process(
+                target=slave_thread_build, args=(sub_pkg, self.shared_error))
             sub_thread.start()
             sub_thread.join()
             dumb_mutex.release()

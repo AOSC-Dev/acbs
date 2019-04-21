@@ -1,5 +1,6 @@
 #!/bin/env python
 import os
+import re
 import logging
 
 '''
@@ -48,32 +49,6 @@ class Finder(object):
             for pkgpath in os.listdir(secpath):
                 if pkgpath == target and os.path.isdir(os.path.join(secpath, pkgpath)):
                     return os.path.relpath(os.path.join(secpath, pkgpath), self.path)
-
-    @staticmethod
-    def determine_pkg_type(pkg):
-        sub_pkgs = []
-        sub_dirs = []
-        for _, subdirs, _ in os.walk(pkg):
-            sub_dirs = subdirs
-            break
-        if len(sub_dirs) > 1:
-            import re
-            for d in sub_dirs:
-                if re.search(pattern=r'\d+-(.*)', string=d):
-                    sub_pkgs.append(d)
-                else:
-                    logging.warning('Unknown folder: %s in tree' % (d))
-            if not len(sub_pkgs):
-                raise ValueError('No vaild package found!')
-            sub_dict = {}
-            for i in sub_pkgs:
-                tmp_array = i.split('-', 1)
-                try:
-                    sub_dict[int(tmp_array[0])] = tmp_array[1]
-                except ValueError as ex:
-                    raise ValueError('Expecting numeric value, got {}'.format(
-                        tmp_array[0])) from ex
-            return sub_dict
 
     def acbs_verify_pkg(self, path, strict_mode=False):
         if os.path.exists(os.path.join(path, 'spec')):
