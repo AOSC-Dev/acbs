@@ -95,24 +95,24 @@ class BuildCore(object):
             '%(asctime)s:%(levelname)s:%(message)s'))
         logger.addHandler(log_file_handler)
 
-    def build(self, pkgs=None):
+    def build(self):
         LoaderHelper.callback('before_build_init')
-        pkgs_to_build = pkgs or self.pkgs_name
-        for pkg in pkgs_to_build:
+        pkgs_to_build = []
+        for pkg in self.pkgs_name:
             matched_pkg = Finder(
                 pkg, search_path=self.tree_loc).acbs_pkg_match()
             if isinstance(matched_pkg, list):
                 logging.info('Package build list found: \033[36m%s (%s)\033[0m' %
                              (os.path.basename(pkg), len(matched_pkg)))
-                self.pkgs_name.remove(pkg)
-                self.pkgs_name += matched_pkg
-                return self.build()
-            if not matched_pkg:
+                pkgs_to_build.extend(matched_pkg)
+            elif not matched_pkg:
                 raise ACBSGeneralError(
                     'No valid candidate package found for \033[36m%s\033[0m.' % pkg)
             else:
-                self.pkgs_que.update(matched_pkg)
-                self.build_single_pkg(matched_pkg)
+                pkgs_to_build.append(matched_pkg)
+        for pkg in pkgs_to_build:
+            self.pkgs_que.update(pkg)
+            self.build_single_pkg(pkg)
         print(utils.full_line_banner('Build Summary:'))
         self.print_summary()
         LoaderHelper.callback('after_build_finish')
