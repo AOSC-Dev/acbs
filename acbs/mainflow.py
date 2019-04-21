@@ -3,6 +3,7 @@ import logging.handlers
 import os
 import sys
 import traceback
+import collections
 
 from acbs.find import Finder
 from acbs import utils
@@ -32,7 +33,6 @@ class BuildCore(object):
         self.conf_loc = '/etc/acbs/'
         self.log_loc = '/var/log/acbs/'
         self.pkg_data = ACBSPackgeInfo()
-        self.isgroup = False
         self.acbs_version = version
         self.tree_loc = None
         self.log_to_system = syslog
@@ -119,8 +119,6 @@ class BuildCore(object):
         return 0
 
     def build_pkg_group(self, pkgs_array, single_pkg):
-        self.isgroup = single_pkg
-        import collections
         pkgs_array = collections.OrderedDict(
             sorted(pkgs_array.items(), key=lambda x: x[0]))
         pkg_tuple = [(lambda x, y, z: (y, '%s/0%s-%s' % (z, x, y)) if x < 10 else (y, '%s/%s-%s' %
@@ -168,9 +166,9 @@ class BuildCore(object):
         print(utils.format_column(x))
         return
 
-    def build_main(self, target, tmp_dir_loc=[], skipbuild=False):
+    def build_main(self, target, tmp_dir_loc=[], skipbuild=False, groupname=None):
         skipbuild = skipbuild or self.download_only
-        if not self.isgroup:
+        if not groupname:
             tmp_dir_loc.clear()
         try:
             pkg_slug = os.path.basename(target)
@@ -184,7 +182,7 @@ class BuildCore(object):
             self.pkg_data.update(parser.parse_abbs_spec())
         repo_dir = os.path.abspath(os.path.join(self.tree_loc, target))
         if not skipbuild:
-            defines_loc = 'defines' if self.isgroup else 'autobuild/defines'
+            defines_loc = 'defines' if groupname else 'autobuild/defines'
             self.pkg_data.update(parser.parse_ab3_defines(
                 os.path.join(self.tree_loc, target, defines_loc)))
             try_build = Dependencies().process_deps(
@@ -203,18 +201,18 @@ class BuildCore(object):
             self.pkg_data.src_name = src_fetcher.fetch_src()
             self.pkg_data.src_path = self.dump_loc
             tmp_dir_loc.append(SourceProcessor(self.pkg_data, self).process())
-        if self.isgroup:
+        if groupname:
             repo_ab_dir = repo_dir
         else:
             repo_ab_dir = os.path.join(repo_dir, 'autobuild/')
         if not skipbuild:
             ab3 = Autobuild(tmp_dir_loc[0], repo_ab_dir, self.pkg_data)
             ab3.copy_abd()
-            ab3.timed_start_ab3(rm_abdir=self.isgroup)
+            ab3.timed_start_ab3(rm_abdir=groupname)
         if ACBSVariables.get('pending'):
             ACBSVariables.get('pending').pop()
         self.pkgs_done.append(
-            target if not self.isgroup else '%s::%s' % (self.isgroup, target))
+            target if not groupname else '%s::%s' % (groupname, target))
 
     def build_single_pkg(self, single_pkg):
         logging.info('Start building \033[36m{}\033[0m'.format(single_pkg))
@@ -223,7 +221,6 @@ class BuildCore(object):
         pkg_type_res = Finder.determine_pkg_type(single_pkg)
         if isinstance(pkg_type_res, dict):
             return self.build_pkg_group(pkg_type_res, single_pkg)  # FIXME
-        self.isgroup = False
         self.build_main(single_pkg)
         return 0
 
