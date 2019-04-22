@@ -79,7 +79,8 @@ class BuildCore(object):
         logger.setLevel(0)  # Set to lowest to bypass the initial filter
         str_handler = logging.StreamHandler()
         str_handler.setLevel(str_verbosity)
-        str_handler.setFormatter(utils.ACBSColorFormatter())
+        str_handler.setFormatter(utils.ACBSColorFormatter(
+            '[%(colorlevelname)s] %(message)s'))
         logger.addHandler(str_handler)
         if self.log_to_system:
             log_file_handler = logging.handlers.SysLogHandler(

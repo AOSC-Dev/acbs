@@ -319,7 +319,7 @@ class ACBSColorFormatter(logging.Formatter):
         }
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
-            record.msg = '[%s]: %s' % (lvl_map[record.levelname], record.msg)
+            record.colorlevelname = lvl_map[record.levelname]
         return super(ACBSColorFormatter, self).format(record)
 
 
