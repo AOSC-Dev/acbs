@@ -204,6 +204,8 @@ class ACBSPackageInfo(object):
         self.src_path = None
         self.temp_dir = None
 
+        self.parse_abbs_spec()
+
     def __repr__(self):
         return "ACBSPackageInfo(%r, %r)" % (self.directory, self.subdir)
 
@@ -222,8 +224,9 @@ class ACBSPackageInfo(object):
         self.buffer = utils.merge_dicts(self.buffer, other.buffer)
 
     def parse_abbs_spec(self):
+        specfilename = os.path.join(self.rootpath, self.directory, 'spec')
         try:
-            with open(self.spec_file_loc + '/spec', 'rt') as spec_file:
+            with open(specfilename, 'rt') as spec_file:
                 spec_cont = spec_file.read()
         except OSError as e:
             raise OSError(
@@ -253,7 +256,7 @@ class ACBSPackageInfo(object):
         except OSError as ex:
             raise OSError(
                 'Failed to load autobuild defines file! Does the file exist?') from ex
-        script = "ARCH={}\n{}{}".format(utils.get_arch_name(), abd_cont)
+        script = "ARCH={}\n{}\n".format(utils.get_arch_name(), abd_cont)
         try:
             # Better to be replaced by subprocess.Popen
             abd_vars = eval_bashvar_ext(script)

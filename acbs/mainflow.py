@@ -31,7 +31,6 @@ class BuildCore(object):
         self.tmp_loc = '/var/cache/acbs/build/'
         self.conf_loc = '/etc/acbs/'
         self.log_loc = '/var/log/acbs/'
-        #self.pkg_data = ACBSPackgeInfo()
         self.acbs_version = version
         self.tree_loc = None
         self.log_to_system = syslog
@@ -182,7 +181,7 @@ class BuildCore(object):
         pkg_group.src_name = src_fetcher.fetch_src()
         pkg_group.src_path = self.dump_loc
         pkg_group.temp_dir = SourceProcessor(
-            self.pkg_data, self.dump_loc, self.tmp_loc).process()
+            pkg_group, self.dump_loc, self.tmp_loc).process()
         subpkgs = pkg_group.subpackages()
         isgroup = (len(subpkgs) > 1)
         if isgroup:

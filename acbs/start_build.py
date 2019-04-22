@@ -22,15 +22,15 @@ class Autobuild(object):
         self.abdir = None
         logging.info('Build dir location: {}'.format(tmp_dir_loc))
         self.repo_dir = repo_dir
-        self.pkg_data = pkg_info
-        self.pkg_name = self.pkg_data.pkg_name
-        self.pkg_info = self.pkg_data.abbs_data
-        self.issubpkg = self.pkg_data.issubpkg
+        self.pkg_info = pkg_info
+        self.pkg_name = self.pkg_info.pkg_name
+        self.pkg_data = self.pkg_info.abbs_data
+        self.issubpkg = self.pkg_info.issubpkg
 
     def determine_subdir(self):
         os.chdir(self.tmp_dir_loc)  # Reset location
-        if os.path.isdir(self.pkg_name + '-' + self.pkg_info['VER']):
-            return self.pkg_name + '-' + self.pkg_info['VER']
+        if os.path.isdir(self.pkg_name + '-' + self.pkg_data['VER']):
+            return self.pkg_name + '-' + self.pkg_data['VER']
         elif os.path.isdir(self.pkg_name):
             return self.pkg_name
         for dirs, subdirs, files in os.walk(self.tmp_dir_loc):
@@ -44,18 +44,18 @@ class Autobuild(object):
 
     def copy_abd(self):
         os.chdir(self.tmp_dir_loc)
-        if self.pkg_info.get('DUMMYSRC') in ('true', '1', 'y'):
-            self.pkg_info['SUBDIR'] = '.'
+        if self.pkg_data.get('DUMMYSRC') in ('true', '1', 'y'):
+            self.pkg_data['SUBDIR'] = '.'
         LoaderHelper.callback('before_copy_defines')
-        if self.pkg_info.get('SUBDIR'):
+        if self.pkg_data.get('SUBDIR'):
             try:
-                os.chdir(self.pkg_info['SUBDIR'])
+                os.chdir(self.pkg_data['SUBDIR'])
             except FileNotFoundError as ex:
                 raise OSError(
-                    'Failed to enter sub-directory `{}\'!'.format(self.pkg_info['SUBDIR'])) from ex
+                    'Failed to enter sub-directory `{}\'!'.format(self.pkg_data['SUBDIR'])) from ex
         else:
             try:
-                os.chdir(self.pkg_name + '-' + self.pkg_info['VER'])
+                os.chdir(self.pkg_name + '-' + self.pkg_data['VER'])
             except Exception:
                 try:
                     os.chdir(self.determine_subdir())
@@ -111,7 +111,7 @@ class Autobuild(object):
             shadow_defines_loc = self.abdir
             LoaderHelper.callback('before_build')
             #parser_obj = Parser()
-            #parser_obj.abbs_spec = self.pkg_info
+            #parser_obj.abbs_spec = self.pkg_data
             #parser_obj.defines_file_loc = shadow_defines_loc
             #parser_obj.parser_pass_through()
             self.pkg_info.write_ab3_defines(shadow_defines_loc)

@@ -93,11 +93,11 @@ def check_empty(logic_method, in_dict, in_array):
     '''
     if logic_method == 2:
         for i in in_array:
-            if in_dict[i] == '' or in_dict[i] is None:
+            if not in_dict.get(i):
                 return True  # This is empty
     elif logic_method == 1:
         for i in in_array:
-            if in_dict[i] != '' and in_dict[i] is not None:
+            if in_dict.get(i):
                 return False
         return True
     else:
