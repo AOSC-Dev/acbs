@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import re
 import sys
 from acbs import const
 
@@ -300,7 +301,7 @@ class ACBSVariables(object):
         return
 
 
-class ACBSLogFormatter(logging.Formatter):
+class ACBSColorFormatter(logging.Formatter):
     """
     ABBS-like format logger formatter class
     """
@@ -319,7 +320,18 @@ class ACBSLogFormatter(logging.Formatter):
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
             record.msg = '[%s]: %s' % (lvl_map[record.levelname], record.msg)
-        return super(ACBSLogFormatter, self).format(record)
+        return super(ACBSColorFormatter, self).format(record)
+
+
+class ACBSTextLogFormatter(logging.Formatter):
+    """
+    Formatter class for stripping color codes
+    """
+    re_ansi = re.compile('\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]')
+
+    def format(self, record):
+        record.msg = self.re_ansi.sub('', record.msg)
+        return super().format(record)
 
 
 class ACBSConfError(Exception):

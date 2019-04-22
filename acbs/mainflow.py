@@ -6,7 +6,7 @@ import traceback
 
 from acbs.find import Finder
 from acbs import utils
-from acbs.utils import ACBSGeneralError, ACBSLogFormatter, ACBSConfError
+from acbs.utils import ACBSGeneralError, ACBSConfError
 from acbs.parser import ACBSPackageGroup, write_acbs_conf, parse_acbs_conf
 from acbs.src_fetch import SourceFetcher
 from acbs.misc import Misc, Fortune
@@ -79,16 +79,17 @@ class BuildCore(object):
         logger.setLevel(0)  # Set to lowest to bypass the initial filter
         str_handler = logging.StreamHandler()
         str_handler.setLevel(str_verbosity)
-        str_handler.setFormatter(ACBSLogFormatter())
+        str_handler.setFormatter(utils.ACBSColorFormatter())
         logger.addHandler(str_handler)
         if self.log_to_system:
             log_file_handler = logging.handlers.SysLogHandler(
                 address='/dev/log')
         else:
             log_file_handler = logging.handlers.RotatingFileHandler(
-                os.path.join(self.log_loc, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=10)
+                os.path.join(self.log_loc, 'acbs-build.log'), mode='a',
+                maxBytes=2e5, backupCount=10)
         log_file_handler.setLevel(file_verbosity)
-        log_file_handler.setFormatter(logging.Formatter(
+        log_file_handler.setFormatter(utils.ACBSTextLogFormatter(
             '%(asctime)s:%(levelname)s:%(message)s'))
         logger.addHandler(log_file_handler)
 
@@ -232,6 +233,6 @@ class BuildCore(object):
             sys.__excepthook__(type, value, tb)
         else:
             print()
-            logging.fatal('Oops! \033[93m%s\033[0m: \033[93m%s\033[0m' % (
+            logging.fatal('Oops! \033[93m%s\033[0m: %s' % (
                 str(type.__name__), str(value)))
         logging.error('Traceback:\n' + ''.join(traceback.format_tb(tb)))
