@@ -227,10 +227,10 @@ class BuildCore(object):
                     'Sub-build process building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_pkg))
 
     def acbs_except_hdr(self, type, value, tb):
-        logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
         if self.isdebug:
             sys.__excepthook__(type, value, tb)
         else:
             print()
             logging.fatal('Oops! \033[93m%s\033[0m: \033[93m%s\033[0m' % (
                 str(type.__name__), str(value)))
+        logging.error('Traceback:\n' + ''.join(traceback.format_tb(tb)))

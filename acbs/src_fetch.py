@@ -17,23 +17,23 @@ class SourceFetcher(object):
         self.ind_dump_loc = os.path.join(self.dump_loc, self.pkg_name)
 
     def fetch_src(self):
-        if self.pkg_info['DUMMYSRC']:
+        if self.pkg_info.get('DUMMYSRC'):
             logging.info('Not fetching dummy source as required.')
             return
-        if self.pkg_info['SRCTBL']:
+        if self.pkg_info.get('SRCTBL'):
             return self.src_url_dispatcher()
-        for src in ['SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
-            if self.pkg_info[src]:
+        for src in ('SRCTBL', 'GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC'):
+            if self.pkg_info.get(src):
                 if src == 'SRCTBL':
                     return self.src_tbl_fetch(self.pkg_info[src])
-                if src in ['GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC']:
+                if src in ('GITSRC', 'SVNSRC', 'HGSRC', 'BZRSRC'):
                     self.vcs_dispatcher(
                         self.pkg_info[src], src_type=src[:-3].lower())
                     return self.pkg_name
         raise Exception('No source URL specified?!')
 
     def src_url_dispatcher(self):
-        url = self.pkg_info['SRCTBL']
+        url = self.pkg_info.get('SRCTBL')
         # url_array = url.split('\n').split(' ') #for future usage
         pkg_name = self.pkg_name
         pkg_ver = self.pkg_info['VER']
@@ -43,7 +43,7 @@ class SourceFetcher(object):
             # as placeholder
         except Exception as ex:
             raise ValueError('Illegal source URL!!!') from ex
-        if proto in ['http', 'https', 'ftp', 'ftps', 'ftpes']:
+        if proto in ('http', 'https', 'ftp', 'ftps', 'ftpes'):
             src_tbl_name = '%s-%s.bin' % (pkg_name, pkg_ver)
             self.src_tbl_fetch(url, src_tbl_name)
             return src_tbl_name
