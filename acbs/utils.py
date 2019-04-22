@@ -189,17 +189,16 @@ def group_match(pattern_list, string, logic_method):
         return False
 
 
-def full_line_banner(msg):
+def full_line_banner(msg, char='-'):
     """
     Print a full line banner with customizable texts
 
     :param msg: message you want to be printed
     """
     import shutil
-    bars_count = int((shutil.get_terminal_size().columns - len(msg)) / 2)
-    for i in range(0, bars_count):
-        msg = '-{}-'.format(msg)
-    return msg
+    bars_count = int((shutil.get_terminal_size().columns - len(msg) - 2) / 2)
+    bars = char*bars_count
+    return ' '.join((bars, msg, bars))
 
 
 def random_msg():

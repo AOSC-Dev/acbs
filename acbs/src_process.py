@@ -38,7 +38,7 @@ class SourceProcessor(object):
         else:
             return self.tobj
         if os.path.isdir(self.src_full_loc):
-            logging.info('Making a copy of the source directory...')
+            logging.debug('Making a copy of the source directory...')
             try:
                 logging.debug('Copy {} to {}'.format(
                     self.src_full_loc, self.shadow_ark_loc))
@@ -47,7 +47,7 @@ class SourceProcessor(object):
                 print('Failed!')
                 raise ACBSGeneralError(
                     'Failed to make a copy of source directory!') from ex
-            logging.info('Done on making a copy!')
+            logging.debug('Done on making a copy!')
             return self.tobj
         else:
             os.symlink(self.src_full_loc, self.shadow_ark_loc)

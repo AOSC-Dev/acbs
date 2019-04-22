@@ -45,7 +45,7 @@ class BuildCore(object):
     def init(self):
         sys.excepthook = self.acbs_except_hdr
         print(utils.full_line_banner(
-            'Welcome to ACBS - {}'.format(self.acbs_version)))
+            'Welcome to ACBS - {}'.format(self.acbs_version), '='))
         if self.isdebug:
             str_verbosity = logging.DEBUG
         else:
@@ -110,7 +110,7 @@ class BuildCore(object):
         for pkg in pkgs_to_build:
             self.pkgs_que.update(pkg)
             self.build_pkg_group(pkg)
-        print(utils.full_line_banner('Build Summary:'))
+        print(utils.full_line_banner('Build Summary:', '='))
         self.print_summary()
         LoaderHelper.callback('after_build_finish')
         return 0
@@ -131,7 +131,7 @@ class BuildCore(object):
                 group_name, sub_name = it.split('::')
                 if prev_group_name and (group_name != prev_group_name):
                     swap_vars(prev_group_name)
-                if group_name == sub_name:
+                if sub_name == 'autobuild':
                     self.pkgs_done.remove(it)
                 else:
                     accum += ACBSVariables.get('timings')[i]
@@ -178,6 +178,7 @@ class BuildCore(object):
         #pkg_type_res = Finder.determine_pkg_type(directory)
         #if isinstance(pkg_type_res, dict):
             #return self.build_pkg_group1(pkg_type_res, directory)  # FIXME
+        logging.info('Downloading sources...')
         src_fetcher = SourceFetcher(
             pkg_group.pkg_name, pkg_group.abbs_data, self.dump_loc)
         pkg_group.src_name = src_fetcher.fetch_src()
@@ -191,10 +192,7 @@ class BuildCore(object):
                 'contains: \033[36m{}\033[0m'.format(
                 len(subpkgs), ' '.join(p.pkg_name for p in subpkgs)))
         for pkg_data in subpkgs:
-            print(utils.full_line_banner(''))
-            if isgroup:
-                logging.info('Start building \033[36m%s::%s\033[0m' % (
-                    directory, pkg_data.pkg_name))
+            print(utils.full_line_banner('%s::%s' % (directory, pkg_data.pkg_name)))
             self.build_main(pkg_data)
         return 0
 
