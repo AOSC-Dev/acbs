@@ -154,6 +154,8 @@ class BuildCore(object):
             try_build = Dependencies().process_deps(
                 pkg_data.build_deps, pkg_data.run_deps, pkg_name)
             if try_build:
+                logging.info('Dependencies to build: \033[36m{}\033[0m'.format(
+                    ', '.join(try_build)))
                 if set(try_build).intersection(self.pending):
                     # Suspect this is dependency loop
                     err_msg = 'Dependency loop: %s' % '<->'.join(self.pending)
