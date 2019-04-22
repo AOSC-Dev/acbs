@@ -177,7 +177,8 @@ class BuildCore(object):
         #pkg_type_res = Finder.determine_pkg_type(directory)
         #if isinstance(pkg_type_res, dict):
             #return self.build_pkg_group1(pkg_type_res, directory)  # FIXME
-        src_fetcher = SourceFetcher(pkg_group.abbs_data, self.dump_loc)
+        src_fetcher = SourceFetcher(
+            pkg_group.pkg_name, pkg_group.abbs_data, self.dump_loc)
         pkg_group.src_name = src_fetcher.fetch_src()
         pkg_group.src_path = self.dump_loc
         pkg_group.temp_dir = SourceProcessor(

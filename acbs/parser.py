@@ -237,7 +237,6 @@ class ACBSPackageInfo(object):
                 'Malformed spec file found! Couldn\'t continue!') from ex
         # Assume it's UTF-8 since we have no clue of the real world on how it
         # works ... (just don't want to use chardet)
-        spec_vars['NAME'] = self.pkg_name
         spec_validate(spec_vars)
         self.version = (spec_vars['VER'], spec_vars.get('REL', ''))
         if spec_vars.get('CHKSUM'):

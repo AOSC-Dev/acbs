@@ -10,10 +10,10 @@ from acbs.vcs import VCS
 
 class SourceFetcher(object):
 
-    def __init__(self, pkg_info, dump_loc='/var/cache/acbs/tarballs/'):
+    def __init__(self, pkg_name, pkg_info, dump_loc='/var/cache/acbs/tarballs/'):
+        self.pkg_name = pkg_name
         self.pkg_info = pkg_info
         self.dump_loc = dump_loc
-        self.pkg_name = pkg_info['NAME']
         self.ind_dump_loc = os.path.join(self.dump_loc, self.pkg_name)
 
     def fetch_src(self):

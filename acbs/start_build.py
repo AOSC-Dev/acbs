@@ -29,10 +29,10 @@ class Autobuild(object):
 
     def determine_subdir(self):
         os.chdir(self.tmp_dir_loc)  # Reset location
-        if os.path.isdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER']):
-            return self.pkg_info['NAME'] + '-' + self.pkg_info['VER']
-        elif os.path.isdir(self.pkg_info['NAME']):
-            return self.pkg_info['NAME']
+        if os.path.isdir(self.pkg_name + '-' + self.pkg_info['VER']):
+            return self.pkg_name + '-' + self.pkg_info['VER']
+        elif os.path.isdir(self.pkg_name):
+            return self.pkg_name
         for dirs, subdirs, files in os.walk(self.tmp_dir_loc):
             if len(subdirs) == 1:
                 return os.path.join(self.tmp_dir_loc, subdirs[0])
@@ -55,7 +55,7 @@ class Autobuild(object):
                     'Failed to enter sub-directory `{}\'!'.format(self.pkg_info['SUBDIR'])) from ex
         else:
             try:
-                os.chdir(self.pkg_info['NAME'] + '-' + self.pkg_info['VER'])
+                os.chdir(self.pkg_name + '-' + self.pkg_info['VER'])
             except Exception:
                 try:
                     os.chdir(self.determine_subdir())
@@ -76,7 +76,7 @@ class Autobuild(object):
     def timed_start_ab3(self, *args, **kwargs):
         def helper_gen_msg():
             return 'Time for building %s%s%s' % (const.ANSI_LT_CYAN,
-                                                 self.pkg_info['NAME'],
+                                                 self.pkg_name,
                                                  const.ANSI_RST)
 
         @utils.time_this(desc_msg=helper_gen_msg(), vars_ctx=ACBSVariables)
