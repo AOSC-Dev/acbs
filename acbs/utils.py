@@ -279,6 +279,10 @@ def format_column(data):
     return output
 
 
+def format_packages(*packages):
+    return ', '.join('\033[36m%s\033[0m' % p for p in packages)
+
+
 class ACBSVariables(object):
 
     buffer = {}

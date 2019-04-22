@@ -104,7 +104,8 @@ class BuildCore(object):
                 pkgs_to_build.extend(matched_pkg)
             elif not matched_pkg:
                 raise ACBSGeneralError(
-                    'No valid candidate package found for \033[36m%s\033[0m.' % pkg)
+                    'No valid candidate package found for %s.' %
+                    utils.format_packages(pkg))
             else:
                 pkgs_to_build.append(matched_pkg)
         for pkg in pkgs_to_build:
@@ -154,8 +155,8 @@ class BuildCore(object):
             try_build = Dependencies().process_deps(
                 pkg_data.build_deps, pkg_data.run_deps, pkg_name)
             if try_build:
-                logging.info('Dependencies to build: \033[36m{}\033[0m'.format(
-                    ', '.join(try_build)))
+                logging.info('Dependencies to build: ' +
+                    utils.format_packages(try_build))
                 if set(try_build).intersection(self.pending):
                     # Suspect this is dependency loop
                     err_msg = 'Dependency loop: %s' % '<->'.join(self.pending)
@@ -172,7 +173,7 @@ class BuildCore(object):
             else '%s::%s' % (pkg_data.directory, pkg_data.subdir))
 
     def build_pkg_group(self, directory):
-        logging.info('Start building \033[36m{}\033[0m'.format(directory))
+        logging.info('Start building ' + utils.format_packages(directory))
         os.chdir(self.tree_loc)
         pkg_group = ACBSPackageGroup(directory, rootpath=self.tree_loc)
         #pkg_type_res = Finder.determine_pkg_type(directory)
@@ -188,9 +189,9 @@ class BuildCore(object):
         subpkgs = pkg_group.subpackages()
         isgroup = (len(subpkgs) > 1)
         if isgroup:
-            logging.info('Package group detected\033[36m({})\033[0m: '
-                'contains: \033[36m{}\033[0m'.format(
-                len(subpkgs), ' '.join(p.pkg_name for p in subpkgs)))
+            logging.info('Package group\033[36m({})\033[0m detected: '
+                'contains: {}'.format(
+                len(subpkgs), utils.format_packages(p.pkg_name for p in subpkgs)))
         for pkg_data in subpkgs:
             print(utils.full_line_banner('%s::%s' % (directory, pkg_data.pkg_name)))
             self.build_main(pkg_data)
@@ -199,7 +200,7 @@ class BuildCore(object):
     def new_build_thread(self, current_pkg, try_build):
         def slave_thread_build(pkg, shared_error):
             logging.debug(
-                'New build thread started for \033[36m{}\033[0m'.format(pkg))
+                'New build thread started for ' + utils.format_packages(pkg))
             try:
                 new_build_instance = BuildCore(
                     **self.acbs_settings, pkgs_name=[pkg], init=False,
@@ -223,7 +224,8 @@ class BuildCore(object):
             dumb_mutex.release()
             if self.shared_error.is_set():
                 raise ACBSGeneralError(
-                    'Sub-build process building \033[36m{}\033[0m \033[93mfailed!\033[0m'.format(sub_pkg))
+                    'Sub-build process building {} \033[93mfailed!\033[0m'.format(
+                    utils.format_packages(sub_pkg)))
 
     def acbs_except_hdr(self, type, value, tb):
         if self.isdebug:

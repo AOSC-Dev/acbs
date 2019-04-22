@@ -1,5 +1,5 @@
 from .pm import PackageManager
-from acbs.utils import ACBSGeneralError, uniq
+from acbs.utils import ACBSGeneralError, uniq, format_packages
 import logging
 
 
@@ -29,7 +29,8 @@ class Dependencies(object):
     def process_deps_main(self, build_deps, run_deps, pkg_slug):
         # print('!!', end=' ')
         # print(self.retry)
-        logging.info('Checking for dependencies, this may take a while...')
+        logging.info('Build dependencies: ' + format_packages(*build_deps))
+        logging.info('Other dependencies: ' + format_packages(*run_deps))
         search_pkgs_tmp = (build_deps + run_deps)
         search_pkgs = []
         logging.debug('Searching dependencies: {}'.format(search_pkgs_tmp))
@@ -49,7 +50,7 @@ class Dependencies(object):
         if self.retry > 1:
             logging.warning('Dependencies still didn\'t satisfy, entering exhaust mode...')
             self.missing = uniq((pkgs_not_avail or []) + (pkgs_to_install or []))
-            logging.debug('Build:%s' % self.missing)
+            logging.debug('Build: %s' % self.missing)
             return
         if self.missing:
             logging.info(
@@ -58,8 +59,8 @@ class Dependencies(object):
         if not pkgs_to_install:
             logging.info('All dependencies are met. Continue.')
             return
-        logging.info('Will install \033[36m{}\033[0m as required.'.format(
-            ' '.join(pkgs_to_install)))
+        logging.info('Will install {} as required.'.format(
+            format_packages(pkgs_to_install)))
         try:
             self.acbs_pm.install_pkgs(pkgs_to_install)
         except Exception as ex:
