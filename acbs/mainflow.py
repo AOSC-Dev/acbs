@@ -171,7 +171,7 @@ class BuildCore(object):
             ab3.copy_abd()
             ab3.timed_start_ab3()
         self.pkgs_done.append(
-            pkg_data.directory if pkg_data.subdir != 'autobuild'
+            pkg_data.directory if pkg_data.subdir == 'autobuild'
             else '%s::%s' % (pkg_data.directory, pkg_data.subdir))
 
     def build_pkg_group(self, directory):
