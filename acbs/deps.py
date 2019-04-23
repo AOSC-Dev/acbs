@@ -40,10 +40,10 @@ class Dependencies(object):
                 _, pkgs_not_avail = self.search_deps([i])
                 if pkgs_not_avail:
                     raise ACBSGeneralError(
-                        'The package can\'t depends on its self! And no binary package found!')
+                        "The package can't depends on its self, and no binary package  is found!")
                 else:
                     logging.warning(
-                        'The package depends on its self, however, it has binary package.')
+                        'The package depends on its self, but it has a binary package.')
             if not i.strip():
                 continue
             search_pkgs.append(i)

@@ -278,10 +278,10 @@ class ACBSPackageInfo(object):
                 fp.write('\n')
                 for k, v in write_ab.items():
                     fp.write('%s=\"%s\"\n' % (k, v))
-        except IOError as ex:
-            raise Exception(
-                'Failed to update information in \033[36m{}\033[0m'.format(
-                filename)) from ex
+        except IOError:
+            logging.error('Failed to update information in \033[36m{}\033[0m'.format(
+                filename))
+            raise
 
 class ACBSPackageGroup(ACBSPackageInfo):
 
