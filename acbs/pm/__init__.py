@@ -67,18 +67,18 @@ class PackageManager(object):
         """args: shell eval-style arguments. USE shlex.quote() or else."""
         with open(mod_file, 'rt') as f:
             sh_code = f.read()
-        excute_code = '%s\n%s %s\n' % (sh_code, function, args)
+        excute_code = ('%s\n%s %s\n' % (sh_code, function, args)).encode()
         try:
             if display:
                 try:
-                    subprocess.check_call(excute_code, shell=True)
+                    subprocess.run(['bash'], input=excute_code)
                 except subprocess.CalledProcessError:
                     return False
                 return True
             else:
                 try:
-                    output = subprocess.check_output(
-                        excute_code, shell=True, stderr=subprocess.STDOUT)
+                    output = subprocess.run(
+                        ['bash'], input=excute_code, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError:
                     return False
             return output.decode('utf-8')

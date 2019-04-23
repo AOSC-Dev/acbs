@@ -23,6 +23,7 @@ class Dependencies(object):
             try:
                 return self.process_deps_main(build_deps, run_deps, pkg_slug)
             except Exception as ex:
+                logging.info('Trying to correct dependencies...%s' % self.retry)
                 self.acbs_pm.correct_deps()
         return self.missing
 
@@ -67,5 +68,4 @@ class Dependencies(object):
         except Exception as ex:
             self.retry += 1
             logging.warning('An error occurred when installing dependencies')
-            logging.info('Trying to correct dependencies...%s' % self.retry)
             raise()
