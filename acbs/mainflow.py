@@ -80,7 +80,7 @@ class BuildCore(object):
         str_handler = logging.StreamHandler()
         str_handler.setLevel(str_verbosity)
         str_handler.setFormatter(utils.ACBSColorFormatter(
-            '[%(colorlevelname)s] %(message)s'))
+            '[%(colorlevelname)s]: %(message)s'))
         logger.addHandler(str_handler)
         if self.log_to_system:
             log_file_handler = logging.handlers.SysLogHandler(
@@ -193,7 +193,7 @@ class BuildCore(object):
         if isgroup:
             logging.info('Package group\033[36m({})\033[0m detected: '
                 'contains: {}'.format(
-                len(subpkgs), utils.format_packages(p.pkg_name for p in subpkgs)))
+                len(subpkgs), utils.format_packages(*(p.pkg_name for p in subpkgs))))
         for pkg_data in subpkgs:
             print(utils.full_line_banner('%s::%s' % (directory, pkg_data.pkg_name)))
             self.build_main(pkg_data)

@@ -29,8 +29,9 @@ class Dependencies(object):
     def process_deps_main(self, build_deps, run_deps, pkg_slug):
         # print('!!', end=' ')
         # print(self.retry)
-        logging.info('Build dependencies: ' + format_packages(*build_deps))
-        logging.info('Other dependencies: ' + format_packages(*run_deps))
+        if build_deps:
+            logging.info('Build dependencies: ' + format_packages(*build_deps))
+        logging.info('Dependencies: ' + format_packages(*run_deps))
         search_pkgs_tmp = (build_deps + run_deps)
         search_pkgs = []
         logging.debug('Searching dependencies: {}'.format(search_pkgs_tmp))
@@ -60,7 +61,7 @@ class Dependencies(object):
             logging.info('All dependencies are met. Continue.')
             return
         logging.info('Will install {} as required.'.format(
-            format_packages(pkgs_to_install)))
+            format_packages(*pkgs_to_install)))
         try:
             self.acbs_pm.install_pkgs(pkgs_to_install)
         except Exception as ex:
