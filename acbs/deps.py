@@ -19,13 +19,7 @@ class Dependencies(object):
         return pkgs_to_install, None
 
     def process_deps(self, build_deps, run_deps, pkg_slug):
-        for i in range(0, 3):
-            try:
-                return self.process_deps_main(build_deps, run_deps, pkg_slug)
-            except Exception as ex:
-                logging.info('Trying to correct dependencies...%s' % self.retry)
-                self.acbs_pm.correct_deps()
-        return self.missing
+        return self.process_deps_main(build_deps, run_deps, pkg_slug)
 
     def process_deps_main(self, build_deps, run_deps, pkg_slug):
         # print('!!', end=' ')
@@ -49,23 +43,15 @@ class Dependencies(object):
                 continue
             search_pkgs.append(i)
         pkgs_to_install, self.missing = self.search_deps(search_pkgs)
-        if self.retry > 1:
-            logging.warning('Dependencies still didn\'t satisfy, entering exhaust mode...')
-            self.missing = uniq((pkgs_not_avail or []) + (pkgs_to_install or []))
-            logging.debug('Build: %s' % self.missing)
-            return
-        if self.missing:
-            logging.info(
-                'Building in-tree dependencies: \033[36m{}\033[0m'.format(' '.join(self.missing)))
-            return self.missing
         if not pkgs_to_install:
-            logging.info('All dependencies are met. Continue.')
-            return
+            logging.info('No packages to install.')
+            return self.missing
         logging.info('Will install {} as required.'.format(
             format_packages(*pkgs_to_install)))
         try:
             self.acbs_pm.install_pkgs(pkgs_to_install)
+            pkgs_to_install = []
         except Exception as ex:
             self.retry += 1
-            logging.warning('An error occurred when installing dependencies')
-            raise()
+            logging.warning("Can't install: " + format_packages(*pkgs_to_install))
+        return self.missing + pkgs_to_install
