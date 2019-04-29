@@ -71,17 +71,17 @@ class PackageManager(object):
         try:
             if display:
                 try:
-                    subprocess.run(['bash'], input=excute_code)
+                    subprocess.run(['bash'], input=excute_code, check=True)
+                    return True
                 except subprocess.CalledProcessError:
                     return False
-                return True
-            else:
-                try:
-                    output = subprocess.run(
-                        ['bash'], input=excute_code, stderr=subprocess.STDOUT)
-                except subprocess.CalledProcessError:
-                    return False
-            return output.decode('utf-8')
+            try:
+                output = subprocess.run(
+                    ['bash'], input=excute_code, stderr=subprocess.STDOUT,
+                    stdout=subprocess.PIPE, check=True)
+                return output.decode('utf-8')
+            except subprocess.CalledProcessError:
+                return False
         except Exception:
             return
         return
