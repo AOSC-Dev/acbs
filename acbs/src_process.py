@@ -8,13 +8,6 @@ import shutil
 import hashlib
 from acbs import utils
 from acbs.utils import ACBSGeneralError
-try:
-    import Crypto.Hash
-    from Crypto.Hash import *
-    pycrypto = True
-    # This is a very strange library
-except ImportError:
-    pycrypto = False
 
 
 class SourceProcessor(object):
@@ -26,7 +19,6 @@ class SourceProcessor(object):
         self.src_name = pkg_info.src_name
         self.chksum_val = pkg_info.chksums
         self.src_full_loc = None
-        self.pycrypto = pycrypto
         self.shadow_ark_loc = None
 
     def process(self):
@@ -120,24 +112,6 @@ class SourceProcessor(object):
     def chksum_file(self, hash_type, target_file):
         if hash_type in hashlib.algorithms_available:
             hash_obj = hashlib.new(hash_type)
-        elif pycrypto:
-            if hash_type.upper() not in (Crypto.Hash.__all__ + ['SHA1']):
-                raise NotImplementedError(
-                    'Unsupported hash type %s! Currently supported: %s' % (
-                    hash_type, ' '.join(Crypto.Hash.__all__)))
-            sub_hash_type = hash_type
-            if hash_type.upper() == 'RIPEMD':
-                sub_hash_type = 'RIPEMD160'
-            elif hash_type.upper() in ['SHA', 'SHA1']:
-                sub_hash_type = 'SHA1'
-                hash_type = 'SHA'
-            try:
-                hash_obj = getattr(
-                    getattr(Crypto.Hash, hash_type),
-                    sub_hash_type + 'Hash')()
-            except AttributeError:
-                raise Exception(
-                    'Algorithm %s does not support file hashing!' % hash_type)
         else:
             raise NotImplementedError(
                 'Unsupported hash type %s! Currently supported: %s' % (
