@@ -35,7 +35,6 @@ Optional:
   - psutil: Build timing, disk space detection, device health (temperature).
   - libmagic: Python module to detect file type.
   - libarchive-c: Python module to handle archives.
-  - pycrypto: Python module to verify file checksums.
   - ptyprocess, pexpect: Build logging.
 
 Deployment
