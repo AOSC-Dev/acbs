@@ -1,5 +1,5 @@
 from .pm import PackageManager
-from acbs.utils import ACBSGeneralError, uniq, format_packages
+from acbs.utils import ACBSGeneralError, format_packages
 import logging
 
 
