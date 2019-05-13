@@ -15,8 +15,8 @@ class Dependencies(object):
         pkgs_to_install = self.acbs_pm.query_online_pkgs(pkgs_miss)
         pkgs_not_avail = (set(pkgs_miss) - set(pkgs_to_install))
         if pkgs_not_avail:
-            return None, pkgs_not_avail
-        return pkgs_to_install, None
+            return [], pkgs_not_avail
+        return pkgs_to_install, []
 
     def process_deps(self, build_deps, run_deps, pkg_slug):
         return self.process_deps_main(build_deps, run_deps, pkg_slug)
