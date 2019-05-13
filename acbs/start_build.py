@@ -127,8 +127,8 @@ class Autobuild(object):
                 else:
                     start_nolog()
             except subprocess.CalledProcessError as ex:
-                raise Exception(
-                    'Autobuild 3 reported a building failure!') from ex
+                logging.error('Autobuild 3 reported a building failure!')
+                raise
             if self.issubpkg:
                 shutil.rmtree(os.path.abspath(os.path.curdir) + '/autobuild/')
         return start_ab3(self)
