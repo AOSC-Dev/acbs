@@ -110,6 +110,7 @@ class SourceProcessor(object):
                 'Unable to decompress file! File corrupted?! Or Permission denied?!') from ex
 
     def chksum_file(self, hash_type, target_file):
+        hash_type = hash_type.lower()
         if hash_type in hashlib.algorithms_available:
             hash_obj = hashlib.new(hash_type)
         else:
