@@ -12,18 +12,18 @@ pm_exists(){
 }
 
 pm_repoupdate(){
-	apt update
+	apt-get update
 }
 
 pm_repoinstall(){
-	apt install "$@" --yes
+	apt-get install "$@" --yes
 }
 
 pm_repoquery(){
-	apt show "$@"
+	apt-get show "$@"
 }
 
 pm_correction(){
-	apt update
-	apt install -f
+	apt-get update
+	apt-get install -f
 }
