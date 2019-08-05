@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import os
+from shlex import quote
 
 
 class PackageManager(object):
@@ -37,6 +38,7 @@ class PackageManager(object):
         return list(online_pkgs_set)
 
     def multi_backend_proc(self, function, args, display=False):
+        """args: shell eval-style arguments. USE shlex.quote() or else."""
         hybrid_res = {}
         for bk in self.pm_backends:
             bk_name = os.path.basename(bk).split('.sh')[0]
@@ -55,13 +57,14 @@ class PackageManager(object):
 
     def install_pkgs(self, pkgs):
         results = self.multi_backend_proc(
-            'pm_repoinstall', ' '.join(pkgs), True)
+            'pm_repoinstall', ' '.join(map(quote, pkgs)), True)
         for result in results:
             if not results[result]:
                 raise subprocess.SubprocessError('Failed to install packages')
         return
 
     def pm_invoker(self, mod_file, function, args, display=False):
+        """args: shell eval-style arguments. USE shlex.quote() or else."""
         with open(mod_file, 'rt') as f:
             sh_code = f.read()
         excute_code = '%s\n%s %s\n' % (sh_code, function, args)
