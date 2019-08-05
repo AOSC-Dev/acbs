@@ -264,8 +264,8 @@ class ACBSPackageInfo(object):
             raise Exception(
                 'Malformed Autobuild defines file found! Couldn\'t continue!') from ex
         self.pkg_name = abd_vars['PKGNAME']
-        self.build_deps = abd_vars.get('BUILDDEP', '').split()
-        self.run_deps = abd_vars.get('PKGDEP', '').split()
+        self.build_deps = pkgs_nover(abd_vars.get('BUILDDEP', '').split())
+        self.run_deps = pkgs_nover(abd_vars.get('PKGDEP', '').split())
         self.opt_deps = []  # abd_vars.get('PKGREC', '') <RfF>
         self.ab3_def = abd_vars
 
