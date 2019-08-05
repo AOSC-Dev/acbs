@@ -6,6 +6,12 @@ import configparser
 
 from acbs import utils
 
+# In AB3, we allow for a version-spec suffix on a DEP when processing.
+re_version_spec = re.compile('(?:[<>=]=.*|_)$')
+
+def pkgs_nover(pkgs):
+    # Until something proves otherwise we will strip it off for now...
+    return [re_version_spec.sub('', p) for p in pkgs]
 
 class Parser(object):
 
@@ -88,8 +94,8 @@ class Parser(object):
         abd_config_dict = {}
         for i in abd_config['wrap']:
             abd_config_dict[i.upper()] = abd_config['wrap'][i]
-        self.shared_data.build_deps = abd_config_dict['BUILDDEP'].split()
-        self.shared_data.run_deps = abd_config_dict['PKGDEP'].split()
+        self.shared_data.build_deps = pkgs_nover(abd_config_dict['BUILDDEP'].split())
+        self.shared_data.run_deps = pkgs_nover(abd_config_dict['PKGDEP'].split())
         self.shared_data.opt_deps = []  # abd_config_dict['PKGREC'] <RfF>
         self.shared_data.buffer['ab3_def'] = abd_config_dict
         return self.shared_data
@@ -148,7 +154,6 @@ class Parser(object):
             raise Exception(
                 'Unable to write initial configuration file!') from ex
         return
-
 
 class ACBSVCSInfo(object):
 
