@@ -6,29 +6,29 @@
 # - return plain URL
 #
 vcs_repofetch() {
-	if [[ ! -z $3 ]]; then
-		git clone --recursive --depth $3 $1 $2
-	else
-		git clone --recursive $1 $2
-	fi
+	# always do it fast; and do 4 submodules at once
+	git clone --recurse-submodules --shallow-submodules -j4 --depth ${3:1} $1 $2
+	# but also always keep the refs (we could also do --no-single-branch but some repos are still huge with it)
+	git config 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*'
 }
 
 # vcs_switchbranch: accepts 1 arg: 1. new branch
 vcs_switchbranch() {
+	# it could be shallow, so let's fetch it first
+	git fetch --recurse-submodules --update-shallow -j4 origin $1
 	git checkout $1
 }
 
 # vcs_switchcommit: accepts 1 arg: 1. commit hash
 vcs_switchcommit() {
-	git checkout $1
+	vcs_switchbranch "$@"
 }
 
 # vcs_repoupdate: accepts 1 arg: 1. new URL
 # - return nothing
 # - remark - you may want to check if conflicts exist
 vcs_repoupdate() {
-	git pull $1
-	git submodule update --recursive
+	git pull --recurse-submodules --update-shallow -j4 $1
 }
 
 # vcs_test: accepts no arg
