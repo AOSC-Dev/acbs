@@ -86,9 +86,10 @@ class SourceProcessor(object):
 
     def decomp_file(self):
         file_type_name = self.file_type()
-        ext_list = ['x-tar*', 'zip*', 'x-zip*',
+        ext_list = ['x-tar*', 'zip*', 'x-zip*', 'tar*', 'bzip*',
                     'x-cpio*', 'x-gzip*', 'x-bzip*', 'x-xz*',
-                    'x-7z*', 'x-lzip*']
+                    'x-7z*', 'x-lzip*', '7z*', 'xz*', 'gzip*',
+                    'lzip*', 'cpio*']
         if (len(file_type_name[0].split('application')) > 1) and utils.group_match(ext_list, file_type_name[1], 1):
             # x-tar*|zip*|x-*zip*|x-cpio*|x-gzip*|x-bzip*|x-xz*
             pass
