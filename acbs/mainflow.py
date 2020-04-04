@@ -9,7 +9,6 @@ from acbs import utils
 from acbs.utils import ACBSGeneralError, ACBSConfError
 from acbs.parser import ACBSPackageGroup, write_acbs_conf, parse_acbs_conf
 from acbs.src_fetch import SourceFetcher
-from acbs.misc import Misc, Fortune
 from acbs.src_process import SourceProcessor
 from acbs.loader import LoaderHelper
 from acbs.utils import ACBSVariables
@@ -58,20 +57,12 @@ class BuildCore(object):
         except Exception:
             raise IOError('\033[93mFailed to make work directory\033[0m!')
         self.__install_logger(str_verbosity)
-        Misc().dev_utilz_warn()
-        forest_file = os.path.join(self.conf_loc, 'forest.conf')
         if os.path.exists(os.path.join(self.conf_loc, 'forest.conf')):
             self.tree_loc = os.path.abspath(parse_acbs_conf(forest_file, self.tree))
             if not self.tree_loc:
                 raise ACBSConfError('Tree not found!')
         else:
             self.tree_loc = os.path.abspath(write_acbs_conf(forest_file))
-
-        # @LoaderHelper.register('after_build_finish')
-        # def fortune():
-        #     Fortune().get_comment()
-
-        LoaderHelper.callback('after_init')
 
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
@@ -210,7 +201,7 @@ class BuildCore(object):
                 new_build_instance.tree_loc = self.tree_loc
                 new_build_instance.shared_error = shared_error
                 new_build_instance.build()
-            except Exception as ex:
+            except Exception:
                 shared_error.set()
                 raise
             return

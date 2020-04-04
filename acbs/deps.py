@@ -51,7 +51,7 @@ class Dependencies(object):
         try:
             self.acbs_pm.install_pkgs(pkgs_to_install)
             pkgs_to_install = []
-        except Exception as ex:
+        except Exception:
             self.retry += 1
             logging.warning("Can't install: " + format_packages(*pkgs_to_install))
         return self.missing + pkgs_to_install

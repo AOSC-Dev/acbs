@@ -24,7 +24,7 @@ class Finder(object):
             for pkg in pkg_list:
                 if not pkg.strip():
                     continue
-                match_res = self.acbs_pkg_match_core(target=pkg)
+                match_res = self.acbs_pkg_match_inner(target=pkg)
                 if match_res is not None:
                     group_pkg.append(match_res)
                 else:
@@ -32,9 +32,9 @@ class Finder(object):
             logging.debug('Packages to be built: %s' % ', '.join(group_pkg))
             return group_pkg
         else:
-            return self.acbs_pkg_match_core()
+            return self.acbs_pkg_match_inner()
 
-    def acbs_pkg_match_core(self, target=None):
+    def acbs_pkg_match_inner(self, target=None):
         if target is None:
             target = self.target
         if os.path.isdir(target):

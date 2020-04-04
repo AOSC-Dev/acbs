@@ -49,11 +49,11 @@ class SourceFetcher(object):
             return src_tbl_name
         else:  # or proto == 'git+https'
             logging.warning(
-                'In spec file: This source seems to refers to a VCS repository, but you misplaced it.')
+                'In spec file: This source seems to refer to a VCS repository, but you misplaced it.')
             self.vcs_dispatcher(url)
             return pkg_name
 
-    def src_tbl_fetch(self, url, pkg_slug=None):
+    def src_tbl_fetch(self, url: str, pkg_slug=None):
         use_progs = self.test_downloaders()
         src_name = pkg_slug or os.path.basename(url)
         full_path = os.path.join(self.dump_loc, src_name)

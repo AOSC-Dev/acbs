@@ -51,7 +51,7 @@ def main():
     sys.exit(0)
 
 
-def clear_tmp(tmp_dir):
+def clear_tmp(tmp_dir: str):
     from time import sleep
 
     def show_progress():
@@ -88,7 +88,7 @@ def clear_tmp(tmp_dir):
     return
 
 
-def help_msg(acbs_version):
+def help_msg(acbs_version: str):
     help_msg = '''ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''.format(
         acbs_version)
     return help_msg

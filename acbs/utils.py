@@ -8,7 +8,7 @@ LOGIC_OR = 1
 LOGIC_AND = 2
 
 
-def uniq(seq):  # Dave Kirby
+def uniq(seq: list) -> list:  # Dave Kirby
     # Order preserving
     """
     An order preserving de-duplicator by Dave Kirby
@@ -20,7 +20,7 @@ def uniq(seq):  # Dave Kirby
     return [x for x in seq if x not in seen and not seen.add(x)]
 
 
-def list2str(list_in, sep=' '):
+def list2str(list_in: list, sep=' ') -> str:
     """
     A simple conversion function to format `list` to `string` with given \
     seperator
@@ -33,7 +33,7 @@ def list2str(list_in, sep=' '):
     return sep.join(map(str, list_in))
 
 
-def gen_laundry_list(items):
+def gen_laundry_list(items: list) -> str:
     """
     Generate a laundry list for Bash to interpret
 
@@ -49,7 +49,7 @@ def gen_laundry_list(items):
     return str_out
 
 
-def test_progs(cmd, display=False):
+def test_progs(cmd, display=False) -> bool:
     """
     Test if the given external program can run without flaw
 
@@ -106,7 +106,7 @@ def check_empty(logic_method, in_dict, in_array):
     return False
 
 
-def get_arch_name():
+def get_arch_name() -> str:
     """
     Detect architecture of the host machine
 
@@ -161,7 +161,7 @@ def err_msg(desc=None):
             'Error occurred:\033[93m {} \033[0m'.format(desc))
 
 
-def group_match(pattern_list, string, logic_method):
+def group_match(pattern_list: list, string: str, logic_method: int) -> bool:
     """
     Match multiple patterns in one go.
 
@@ -187,7 +187,6 @@ def group_match(pattern_list, string, logic_method):
         return True
     else:
         raise ValueError('...')
-        return False
 
 
 def full_line_banner(msg, char='-'):
@@ -207,7 +206,7 @@ def random_msg():
     return ''
 
 
-def sh_executor(sh_file, function, args, display=False):
+def sh_executor(sh_file: str, function: str, args: list, display=False) -> bool:
     """
     Execute specified functions in external shell scripts with given args
 
@@ -228,17 +227,17 @@ def sh_executor(sh_file, function, args, display=False):
             return False
         return True
     else:
-        outs, errs = subprocess.Popen(
+        outs, _ = subprocess.Popen(
             ('bash',), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE).communicate(excute_code.encode('utf-8'))
     return outs.decode('utf-8')
 
 
-def acbs_terminate(exit_code):
+def acbs_terminate(exit_code: int) -> None:
     sys.exit(exit_code)
 
 
-def time_this(desc_msg, vars_ctx=None):
+def time_this(desc_msg: str, vars_ctx=None):
     def time_this_func(func):
         def dec_main(*args, **kwargs):
             import time
@@ -257,7 +256,7 @@ def time_this(desc_msg, vars_ctx=None):
     return time_this_func
 
 
-def human_time(full_seconds):
+def human_time(full_seconds: float) -> str:
     """
     Convert time span (in seconds) to more friendly format
 
@@ -271,7 +270,7 @@ def human_time(full_seconds):
     return out_str
 
 
-def format_column(data):
+def format_column(data: list) -> str:
     output = ''
     col_width = max(len(str(word)) for row in data for word in row)
     for row in data:

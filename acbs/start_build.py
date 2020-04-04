@@ -27,7 +27,7 @@ class Autobuild(object):
         self.pkg_data = self.pkg_info.abbs_data
         self.issubpkg = self.pkg_info.issubpkg
 
-    def determine_subdir(self):
+    def determine_subdir(self) -> str:
         os.chdir(self.tmp_dir_loc)  # Reset location
         if os.path.isdir(self.pkg_name + '-' + self.pkg_data['VER']):
             return self.pkg_name + '-' + self.pkg_data['VER']
