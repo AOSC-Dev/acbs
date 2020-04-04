@@ -10,7 +10,6 @@ from acbs.utils import ACBSGeneralError, ACBSConfError
 from acbs.parser import ACBSPackageGroup, write_acbs_conf, parse_acbs_conf
 from acbs.src_fetch import SourceFetcher
 from acbs.src_process import SourceProcessor
-from acbs.loader import LoaderHelper
 from acbs.utils import ACBSVariables
 from acbs.start_build import Autobuild
 from acbs.deps import Dependencies
@@ -86,7 +85,6 @@ class BuildCore(object):
         logger.addHandler(log_file_handler)
 
     def build(self):
-        LoaderHelper.callback('before_build_init')
         pkgs_to_build = []
         for pkg in self.pkgs_name:
             matched_pkg = Finder(
@@ -106,7 +104,6 @@ class BuildCore(object):
             self.build_pkg_group(pkg)
         print(utils.full_line_banner('Build Summary:', '='))
         self.print_summary()
-        LoaderHelper.callback('after_build_finish')
         return 0
 
     def print_summary(self):

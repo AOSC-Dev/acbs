@@ -109,11 +109,6 @@ class Autobuild(object):
 
             os.chdir(self.abdir)
             shadow_defines_loc = self.abdir
-            LoaderHelper.callback('before_build')
-            #parser_obj = Parser()
-            #parser_obj.abbs_spec = self.pkg_data
-            #parser_obj.defines_file_loc = shadow_defines_loc
-            #parser_obj.parser_pass_through()
             self.pkg_info.write_ab3_defines(shadow_defines_loc)
             build_logging = True
             try:
