@@ -27,6 +27,8 @@ def main():
                         action='store_true', dest='clear_dir')
     parser.add_argument('-s', '--system-log', help='Pass logs to system log collector',
                         action='store_true', dest='syslog')
+    parser.add_argument('-k', '--skip-deps', help='Skip dependency resolution',
+                        action='store_true', dest='no_deps')
     parser.add_argument('-g', '--get',
                         help='Only download source packages without building', action="store_true")
     args = parser.parse_args()

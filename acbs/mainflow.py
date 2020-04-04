@@ -17,7 +17,7 @@ from acbs.deps import Dependencies
 
 class BuildCore(object):
 
-    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False, download_only=False, pending=None):
+    def __init__(self, pkgs_name, debug_mode=False, tree='default', version='', init=True, syslog=False, download_only=False, pending=None, no_deps=False):
         '''
         '''
         self.pkgs_name = pkgs_name
@@ -35,6 +35,7 @@ class BuildCore(object):
         self.shared_error = None
         self.download_only = download_only
         self.pending = pending or ()
+        self.skip_deps = no_deps
         self.acbs_settings = {'debug_mode': self.isdebug, 'tree': self.tree,
                               'version': self.acbs_version}
         if init:
@@ -128,7 +129,7 @@ class BuildCore(object):
                     accum += ACBSVariables.get('timings')[i]
                 i += 1
         if group_name:
-            swap_vars(group_name)        
+            swap_vars(group_name)
         if self.download_only:
             x = [[name, 'Downloaded'] for name in self.pkgs_done]
         else:
@@ -144,15 +145,16 @@ class BuildCore(object):
         if not skipbuild:
             try_build = Dependencies().process_deps(
                 pkg_data.build_deps, pkg_data.run_deps, pkg_name)
-            if try_build:
-                logging.info('Dependencies to build: ' +
-                    utils.format_packages(try_build))
-                if set(try_build).intersection(self.pending):
-                    # Suspect this is dependency loop
-                    err_msg = 'Dependency loop: %s' % '<->'.join(self.pending)
-                    utils.err_msg(err_msg)
-                    raise ACBSGeneralError(err_msg)
-                self.new_build_thread(pkg_name, try_build)
+            if not self.skip_deps:
+                if try_build:
+                    logging.info('Dependencies to build: ' +
+                        utils.format_packages(try_build))
+                    if set(try_build).intersection(self.pending):
+                        # Suspect this is dependency loop
+                        err_msg = 'Dependency loop: %s' % '<->'.join(self.pending)
+                        utils.err_msg(err_msg)
+                        raise ACBSGeneralError(err_msg)
+                    self.new_build_thread(pkg_name, try_build)
         repo_ab_dir = pkg_data.ab_dir()
         if not skipbuild:
             ab3 = Autobuild(pkg_data.temp_dir, repo_ab_dir, pkg_data)
@@ -188,34 +190,17 @@ class BuildCore(object):
         return 0
 
     def new_build_thread(self, current_pkg, try_build):
-        def slave_thread_build(pkg, shared_error):
+        def slave_thread_build(pkg):
             logging.debug(
-                'New build thread started for ' + utils.format_packages(pkg))
-            try:
-                new_build_instance = BuildCore(
-                    **self.acbs_settings, pkgs_name=[pkg], init=False,
-                    pending=self.pending + (current_pkg,))
-                new_build_instance.tree_loc = self.tree_loc
-                new_build_instance.shared_error = shared_error
-                new_build_instance.build()
-            except Exception:
-                shared_error.set()
-                raise
-            return
-        from multiprocessing import Process, Event, Lock
-        self.shared_error = Event()
+                'New build started for \033[36m{}\033[0m'.format(pkg))
+            new_build_instance = BuildCore(
+                **self.acbs_settings, pkgs_name=[pkg], init=False,
+                pending=self.pending + (current_pkg,))
+            new_build_instance.tree_loc = self.tree_loc
+            new_build_instance.build()
+
         for sub_pkg in list(try_build):
-            dumb_mutex = Lock()
-            dumb_mutex.acquire()
-            sub_thread = Process(
-                target=slave_thread_build, args=(sub_pkg, self.shared_error))
-            sub_thread.start()
-            sub_thread.join()
-            dumb_mutex.release()
-            if self.shared_error.is_set():
-                raise ACBSGeneralError(
-                    'Sub-build process building {} \033[93mfailed!\033[0m'.format(
-                    utils.format_packages(sub_pkg)))
+            slave_thread_build(sub_pkg)
 
     def acbs_except_hdr(self, type, value, tb):
         if self.isdebug:

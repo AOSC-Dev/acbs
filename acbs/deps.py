@@ -22,8 +22,6 @@ class Dependencies(object):
         return self.process_deps_main(build_deps, run_deps, pkg_slug)
 
     def process_deps_main(self, build_deps, run_deps, pkg_slug):
-        # print('!!', end=' ')
-        # print(self.retry)
         if build_deps:
             logging.info('Build dependencies: ' + format_packages(*build_deps))
         logging.info('Dependencies: ' + format_packages(*run_deps))
