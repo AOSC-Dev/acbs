@@ -58,12 +58,24 @@ Supported Checksum (Hashing) Algorithm
 +-----------+--------------+------------+
 | SHA512    | Y            | [6]_       |
 +-----------+--------------+------------+
-| RIPEMD    | Y            | RIPEMD-160 |
+| BLAKE2B   | Y            |            |
++-----------+--------------+------------+
+| BLAKE2S   | Y            |            |
++-----------+--------------+------------+
+| SHA3_224  | Y            | [7]_       |
++-----------+--------------+------------+
+| SHA3_256  | Y            |            |
++-----------+--------------+------------+
+| SHA3_384  | Y            |            |
++-----------+--------------+------------+
+| SHA3_512  | Y            | [8]_       |
 +-----------+--------------+------------+
 
 .. [1] Auto deduction means if the prefix is omitted, whether ``acbs`` would try to deduce the missing prefix
 .. [2] Will attempt to extract the archive
 .. [3] Will leave the files as-is, implies ``SUBDIR='.'``
 .. [4] Only when the extension name contains ``.tar`` or ``.zip``
-.. [5] Although recommended, please consider using SHA256 or better
-.. [6] Although recommended, the hash sum is just too long. Currently, SHA256 is sufficient enough.
+.. [5] Although recommended, please consider using ``SHA256`` or better
+.. [6] Although recommended, the hash sum is just too long. Currently, ``SHA256`` is sufficient enough.
+.. [7] Although recommended, please consider using ``SHA3_256`` or better
+.. [8] Although recommended, the hash sum is just too long. Currently, ``SHA3_256`` is sufficient enough.

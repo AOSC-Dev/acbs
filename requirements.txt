@@ -1,5 +1,0 @@
-python-magic
-libarchive-c
-psutil
-ptyprocess
-pexpect

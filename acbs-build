@@ -8,11 +8,12 @@ import os
 import sys
 import shutil
 import argparse
-from acbs.mainflow import BuildCore
 import acbs
 
+from acbs.main import BuildCore
 
-def main():
+
+def main() -> None:
     tmp_loc = '/var/cache/acbs/build/'
     parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -25,8 +26,6 @@ def main():
     parser.add_argument('packages', nargs='*', help='Packages to be built')
     parser.add_argument('-c', '--clear', help='Clear build directory',
                         action='store_true', dest='clear_dir')
-    parser.add_argument('-s', '--system-log', help='Pass logs to system log collector',
-                        action='store_true', dest='syslog')
     parser.add_argument('-k', '--skip-deps', help='Skip dependency resolution',
                         action='store_true', dest='no_deps')
     parser.add_argument('-g', '--get',
@@ -34,18 +33,10 @@ def main():
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
+        del args.clear_dir
     if args.packages:
-        acbs_core_args = {'pkgs_name': args.packages,
-                          'debug_mode': args.debug, 'version': acbs.__version__}
-        if args.syslog:
-            acbs_core_args['syslog'] = True
-        if args.get:
-            acbs_core_args['download_only'] = True
-        if args.acbs_tree:
-            acbs_core_args['tree'] = args.acbs_tree[0]
-            acbs_instance = BuildCore(**acbs_core_args)
-        else:
-            acbs_instance = BuildCore(**acbs_core_args)
+        # the rest of the arguments are passed to the build process
+        acbs_instance = BuildCore(args)
         acbs_instance.build()
     # HACK: Workaround a bug in ArgumentParser
     if len(sys.argv) < 2:
@@ -53,7 +44,7 @@ def main():
     sys.exit(0)
 
 
-def clear_tmp(tmp_dir: str):
+def clear_tmp(tmp_dir: str) -> None:
     from time import sleep
 
     def show_progress():
@@ -61,11 +52,11 @@ def clear_tmp(tmp_dir: str):
             print(hide_cursor, end='')
             while not complete_status:
                 for bar in ['-', '\\', '|', '/']:
-                    print('\r[%s%%] Clearing cache...%s' %
-                          (int((sub_dirs_deleted / sub_dirs_count) * 100), bar), end='')
+                    print('\r[%s/%s] Clearing cache...%s' %
+                          (sub_dirs_deleted, sub_dirs_count, bar), end='')
                     sys.stdout.flush()
                     sleep(0.1)
-            print('\r[100%%] Clearing cache...done! %s\n' %
+            print('\r[OK] Clearing cache...done! %s\n' %
                   (show_cursor), end='')
         except Exception as ex:
             print(show_cursor, end='')
@@ -90,7 +81,7 @@ def clear_tmp(tmp_dir: str):
     return
 
 
-def help_msg(acbs_version: str):
+def help_msg(acbs_version: str) -> str:
     help_msg = '''ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''.format(
         acbs_version)
     return help_msg

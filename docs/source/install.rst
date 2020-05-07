@@ -30,7 +30,7 @@ Requirements
 
 Mandatory dependencies:
 
-* Python 3 (>= 3.3): Running the program itself.
+* Python 3 (>= 3.6): Running the program itself.
 * GNU File (libmagic): File type detection.
 * LibArchive (bsdtar): Archive handling.
 * GNU Wget or Aria2: Source downloading.
@@ -40,10 +40,9 @@ Mandatory dependencies:
 
 Optional dependencies [1]_:
 
-* psutils: Build timing, disk space detection.
 * libmagic: Python module to detect file type.
 * libarchive-c: Python module to handle archives.
-* pycrypto: Python module to verify file checksums.
+* pycryptodome: Python module to verify file checksums.
 * pexpect: Python module to simulate PTY sessions and log output to file.
 
 .. _Autobuild3: https://github.com/AOSC-Dev/autobuild3
@@ -54,7 +53,7 @@ Initial configurations
 ----------------------
 The configuration file located in ``/etc/acbs/forest.conf`` is a INI-like file.
 
-A bare-minimal example is shown below:
+A bare-minimum configuration example is shown below:
 
 ::
 
@@ -62,7 +61,7 @@ A bare-minimal example is shown below:
   location = /usr/lib/acbs/repo
 
 
-If you are feeling smart, variable substitutions are also acceptable:
+If you are feeling smart, variable substitutions are also supported:
 
 ::
 

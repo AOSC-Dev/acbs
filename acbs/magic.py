@@ -41,11 +41,11 @@ class fakeMagic(object):
         self.cmd_args = ['file', '-b']
         return
 
-    def magic_open(self, flags=[]):
+    def magic_open(self, flags=[]) -> None:
         self.flags = flags
         return
 
-    def add_cmds(self):
+    def add_cmds(self) -> None:
         if (self.flags & MAGIC_MIME):
             self.cmd_args.append('-i')
         elif (self.flags & MAGIC_MIME_TYPE):
@@ -55,10 +55,10 @@ class fakeMagic(object):
         elif (self.flags & MAGIC_COMPRESS):
             self.cmd_args.append('-z')
 
-    def load(self):
+    def load(self) -> None:
         pass
 
-    def file(self, *args):
+    def file(self, *args) -> bytes:
         self.add_cmds()
         self.cmd_args.append(*args)
         return subprocess.check_output(self.cmd_args)
@@ -67,6 +67,6 @@ class fakeMagic(object):
 mgc = fakeMagic()
 
 
-def open(flags):
+def open(flags: int):
     mgc.magic_open(flags)
     return mgc

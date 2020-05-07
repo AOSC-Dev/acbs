@@ -24,7 +24,7 @@ Dependencies
 ------------
 
 Mandatory:
-  - Python 3 (>= 3.3): Running the program itself.
+  - Python 3 (>= 3.6): Running the program itself.
   - GNU File (libmagic): File type detection.
   - Util-Linux: File checksum verification.
   - LibArchive (bsdtar): Archive handling.
@@ -32,9 +32,9 @@ Mandatory:
   - [Autobuild3](https://github.com/AOSC-Dev/autobuild3): Package building.
 
 Optional:
-  - psutil: Build timing, disk space detection, device health (temperature).
   - libmagic: Python module to detect file type.
   - libarchive-c: Python module to handle archives.
+  - pycrypto: Python module to verify file checksums.
   - ptyprocess, pexpect: Build logging.
 
 Deployment

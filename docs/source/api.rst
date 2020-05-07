@@ -3,24 +3,25 @@
 ACBS API Reference
 ==================
 
-.. module:: acbs.utils
+ACBS base
+---------
+ACBS base contains basic data structures.
 
+.. autoclass:: acbs.base.ACBSSourceInfo
+    :members:
+.. autoclass:: acbs.base.ACBSPackageInfo
+    :members:
+
+ACBS deps
+---------
+ACBS deps contains the dependency resolver.
+
+.. automodule:: acbs.deps
+    :members:
+
+ACBS utils
+----------
 ACBS utils contains some helper functions to perform some tasks easier.
 
-.. autofunction:: gen_laundry_list
-
-.. autofunction:: human_time
-
-.. autofunction:: err_msg
-
-.. autofunction:: full_line_banner
-
-.. autofunction:: group_match
-
-.. autofunction:: check_empty
-
-.. autofunction:: test_progs
-
-.. autofunction:: get_arch_name
-
-.. autofunction:: uniq
+.. automodule:: acbs.utils
+   :members:
