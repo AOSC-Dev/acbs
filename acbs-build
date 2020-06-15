@@ -10,11 +10,12 @@ import shutil
 import argparse
 import acbs
 
+from acbs.const import DUMP_DIR
 from acbs.main import BuildCore
 
 
 def main() -> None:
-    tmp_loc = '/var/cache/acbs/build/'
+    tmp_loc = DUMP_DIR
     parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',
@@ -56,7 +57,7 @@ def clear_tmp(tmp_dir: str) -> None:
                           (sub_dirs_deleted, sub_dirs_count, bar), end='')
                     sys.stdout.flush()
                     sleep(0.1)
-            print('\r[OK] Clearing cache...done! %s\n' %
+            print('\r[OK] Clearing cache...   %s\n' %
                   (show_cursor), end='')
         except Exception as ex:
             print(show_cursor, end='')

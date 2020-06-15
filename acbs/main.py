@@ -10,6 +10,7 @@ from acbs.find import find_package, check_package_groups, expand_package_group
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
 from acbs.pm import install_from_repo
+from acbs.const import CONF_DIR, DUMP_DIR, TMP_DIR, LOG_DIR
 from acbs import __version__
 
 
@@ -23,10 +24,10 @@ class BuildCore(object):
         self.build_queue = args.packages
         self.tree_dir = ''
         # static vars
-        self.conf_dir = '/etc/acbs/'
-        self.dump_dir = '/tmp/cache/acbs/tarballs/'
-        self.tmp_dir = '/tmp/cache/acbs/build/'
-        self.log_dir = '/tmp/log/acbs/'
+        self.conf_dir = CONF_DIR
+        self.dump_dir = DUMP_DIR
+        self.tmp_dir = TMP_DIR
+        self.log_dir = LOG_DIR
         self.init()
 
     def init(self) -> None:

@@ -11,3 +11,9 @@ ANSI_GREEN = '\033[32m'
 ANSI_YELLOW = '\033[93m'
 ANSI_BLUE = '\033[34m'
 ANSI_BROWN = '\033[33m'
+
+# Common paths
+CONF_DIR = '/etc/acbs/'
+DUMP_DIR = '/tmp/cache/acbs/tarballs/'
+TMP_DIR = '/tmp/cache/acbs/build/'
+LOG_DIR = '/tmp/log/acbs/'
