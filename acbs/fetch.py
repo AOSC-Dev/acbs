@@ -77,7 +77,8 @@ def tarball_processor(package: ACBSPackageInfo) -> None:
     os.symlink(info.source_location, os.path.join(
         package.build_location, facade_name))
     # decompress
-    # TODO: add support for decompress
+    logging.info('Extracting {}...'.format(facade_name))
+    subprocess.check_call(['bsdtar', '-xf', facade_name], cwd=package.build_location)
     return
 
 

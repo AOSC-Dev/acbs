@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Tuple, Deque
 from collections import OrderedDict, defaultdict, deque
 from acbs.parser import parse_package, ACBSPackageInfo
+from acbs.utils import make_build_dir
 import os
 
 
@@ -50,7 +51,8 @@ def find_package(name: str, search_path: str, group=False) -> List[ACBSPackageIn
                                 result.base_slug = '{cat}/{root}'.format(cat=os.path.basename(
                                     group_category), root=os.path.basename(group_root))
                                 result.group_seq = group_seq
-                                group_result = expand_package_group(result, search_path)
+                                group_result = expand_package_group(
+                                    result, search_path)
                                 return group_result
     if group:
         return []
@@ -60,21 +62,21 @@ def find_package(name: str, search_path: str, group=False) -> List[ACBSPackageIn
         return find_package(name, search_path, True)
 
 
-def hoist_package_groups(packages: List[List[ACBSPackageInfo]]):
+def check_package_groups(packages: List[ACBSPackageInfo]):
     """In AOSC OS build rules, the package group need to be built sequentially together.
     This function will check if the package inside the group will be built sequentially
     """
-    groups_seen = set()
-    for group in packages:
-        for pkg in group:
-            base_slug = pkg.base_slug
-            if not base_slug:
-                continue
-            if base_slug in groups_seen:
-                group.remove(pkg)
-            else:
-                pkg.group_seq = 0
-                groups_seen.add(base_slug)
+    groups_seen: Dict[str, int] = {}
+    for pkg in packages:
+        base_slug = pkg.base_slug
+        if not base_slug:
+            continue
+        if base_slug in groups_seen:
+            if groups_seen[base_slug] < pkg.group_seq:
+                raise ValueError('Package {} (in {}) has a different sequential order after dependency resolution'.format(
+                    pkg.name, base_slug))
+        else:
+            groups_seen[base_slug] = pkg.group_seq
 
 
 def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACBSPackageInfo]:
@@ -99,4 +101,9 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACB
                 'Malformed sub-package name: {name}'.format(name=entry.name)) from ex
     # because the directory order is arbitrary, we need to sort them
     sorted(actionables, key=lambda a: a.group_seq)
+    # pre-assign build location for sub-packages
+    # FIXME: we should consider extract this hardcoded path to somewhere
+    location = make_build_dir('/tmp/cache/acbs/build/')
+    for a in actionables:
+        a.build_location = location
     return actionables

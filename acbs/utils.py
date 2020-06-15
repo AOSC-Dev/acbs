@@ -104,9 +104,9 @@ def guess_subdir(path: str) -> Optional[str]:
     name = None
     count = 0
     for subdir in os.scandir(path):
-        count += 1
         if subdir.is_dir():
             name = subdir.name
+            count += 1
         if count > 1:
             return None
     if count < 1:  # probably dummysrc
@@ -116,6 +116,9 @@ def guess_subdir(path: str) -> Optional[str]:
 
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     shutil.copytree(task.script_location, os.path.join(build_dir, 'autobuild'))
+    with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
+        f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\n'.format(
+            task.rel, task.source_uri.version))
     os.chdir(build_dir)
     subprocess.check_call(['autobuild'])
 

@@ -20,6 +20,7 @@ class ACBSSourceInfo(object):
 class ACBSPackageInfo(object):
     def __init__(self, name: str, deps: List[str], location: str, source_uri: ACBSSourceInfo) -> None:
         self.name = name
+        self.rel = '0'
         self.deps = deps
         self.installables: List[str] = []  # installable dependencies
         self.build_location = ''

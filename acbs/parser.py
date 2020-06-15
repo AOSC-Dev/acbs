@@ -3,6 +3,7 @@ from collections import OrderedDict, defaultdict, deque
 from acbs import bashvar
 from acbs.utils import get_arch_name
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
+from acbs.pm import filter_dependencies
 import os
 import configparser
 
@@ -63,8 +64,10 @@ def parse_package(location: str) -> ACBSPackageInfo:
         return ACBSPackageInfo(name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
     result = ACBSPackageInfo(
         name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
+    release = spec_var.get('REL') or '0'
+    result.rel = release
 
-    return result
+    return filter_dependencies(result)
 
 
 def get_deps_graph(packages: List[ACBSPackageInfo]) -> 'OrderedDict[str, ACBSPackageInfo]':

@@ -6,9 +6,10 @@ import os
 
 from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, ACBSLogFormatter
 from acbs.parser import get_tree_by_name, get_deps_graph
-from acbs.find import find_package, hoist_package_groups, expand_package_group
+from acbs.find import find_package, check_package_groups, expand_package_group
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
+from acbs.pm import install_from_repo
 from acbs import __version__
 
 
@@ -101,6 +102,7 @@ class BuildCore(object):
         if error:
             raise RuntimeError(
                 'Dependencies NOT resolved. Couldn\'t continue!')
+        check_package_groups(packages)
         logging.info(
             'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
         logging.debug('Queue: {}'.format(packages))
@@ -110,9 +112,10 @@ class BuildCore(object):
         for task in packages:
             logging.info('Building {}...'.format(task.name))
             fetch_source(task.source_uri, self.dump_dir, task.name)
-            build_dir = make_build_dir(self.tmp_dir)
-            task.build_location = build_dir
-            process_source(task)
+            if not task.build_location or not os.path.exists(task.build_location):
+                build_dir = make_build_dir(self.tmp_dir)
+                task.build_location = build_dir
+                process_source(task)
             if task.source_uri.subdir:
                 build_dir = os.path.join(build_dir, task.source_uri.subdir)
             else:
@@ -120,13 +123,7 @@ class BuildCore(object):
                 if not subdir:
                     raise RuntimeError('Could not determine sub-directory, please specify manually.')
                 build_dir = os.path.join(build_dir, subdir)
-            if task.base_slug:  # this is a package group (hoisted before)
-                packages = expand_package_group(task, self.tree_dir)
-                for pkg in packages:
-                    # TODO: install installable dependencies
-                    invoke_autobuild(pkg, build_dir)
-                continue
-            # TODO: install installable dependencies
+            install_from_repo(task.installables)
             invoke_autobuild(task, build_dir)
 
 
