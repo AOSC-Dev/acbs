@@ -102,3 +102,5 @@ def get_tree_by_name(filename: str, tree_name) -> str:
 
 arch = os.environ.get('CROSS') or os.environ.get(
     'ARCH') or get_arch_name() or ''
+if not arch:
+    raise ValueError('Unable to determine architecture name')
