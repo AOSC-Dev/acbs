@@ -77,7 +77,7 @@ class BuildCore(object):
             package = find_package(i, self.tree_dir)
             if not package:
                 raise RuntimeError('Could not find package {}'.format(i))
-            packages.append(package)
+            packages.extend(package)
         if not self.no_deps:
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
@@ -88,9 +88,6 @@ class BuildCore(object):
             resolved = [[package] for package in packages]
         # print a newline
         print()
-        # hoist package groups if any
-        # side-effect: `resolved` will be modified inplace
-        hoist_package_groups(resolved)
         packages.clear()  # clear package list for the search results
         # here we will check if there is any loop in the dependency graph
         for dep in resolved:
@@ -106,6 +103,7 @@ class BuildCore(object):
                 'Dependencies NOT resolved. Couldn\'t continue!')
         logging.info(
             'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
+        logging.debug('Queue: {}'.format(packages))
         logging.info('Packages to be built: {}'.format(
             print_package_names(packages, 5)))
         # build process

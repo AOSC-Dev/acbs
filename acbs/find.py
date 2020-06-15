@@ -4,7 +4,7 @@ from acbs.parser import parse_package, ACBSPackageInfo
 import os
 
 
-def find_package(name: str, search_path: str, group=False) -> Optional[ACBSPackageInfo]:
+def find_package(name: str, search_path: str, group=False) -> List[ACBSPackageInfo]:
     with os.scandir(search_path) as it:
         # scan categories
         for entry in it:
@@ -18,7 +18,7 @@ def find_package(name: str, search_path: str, group=False) -> Optional[ACBSPacka
                     full_search_path = os.path.join(
                         search_path, entry.name, entry_inner.name, 'autobuild')
                     if entry_inner.name == name and os.path.isdir(full_search_path):
-                        return parse_package(full_search_path)
+                        return [parse_package(full_search_path)]
                     if not group:
                         continue
                     # is this a package group?
@@ -50,9 +50,10 @@ def find_package(name: str, search_path: str, group=False) -> Optional[ACBSPacka
                                 result.base_slug = '{cat}/{root}'.format(cat=os.path.basename(
                                     group_category), root=os.path.basename(group_root))
                                 result.group_seq = group_seq
-                                return result
+                                group_result = expand_package_group(result, search_path)
+                                return group_result
     if group:
-        return None
+        return []
     else:
         # if cannot find a package without considering it as part of a group
         # then re-search with group enabled
@@ -61,11 +62,8 @@ def find_package(name: str, search_path: str, group=False) -> Optional[ACBSPacka
 
 def hoist_package_groups(packages: List[List[ACBSPackageInfo]]):
     """In AOSC OS build rules, the package group need to be built sequentially together.
-    This function will hoist all the packages that belong to the same group to the first package in the group
-    that occurs in the build queue.
+    This function will check if the package inside the group will be built sequentially
     """
-    # FIXME: This algorithm is not very robust, if a package depends on some package within a group
-    # then the dependency graph will be incorrect
     groups_seen = set()
     for group in packages:
         for pkg in group:
