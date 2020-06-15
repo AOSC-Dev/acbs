@@ -62,7 +62,7 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
                                p, lowlink, index, stackstate, stack, depth)
             lowlink[vert] = min(lowlink[p], lowlink[vert])
         # adjacent package is in the stack which means it is part of a loop
-        elif stackstate[p] == True:
+        elif stackstate[p] is True:
             lowlink[vert] = min(lowlink[p], index[vert])
 
     w = ''

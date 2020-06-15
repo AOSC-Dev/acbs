@@ -122,11 +122,11 @@ class BuildCore(object):
             else:
                 subdir = guess_subdir(build_dir)
                 if not subdir:
-                    raise RuntimeError('Could not determine sub-directory, please specify manually.')
+                    raise RuntimeError(
+                        'Could not determine sub-directory, please specify manually.')
                 build_dir = os.path.join(build_dir, subdir)
             install_from_repo(task.installables)
             invoke_autobuild(task, build_dir)
-
 
     def acbs_except_hdr(self, type, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))

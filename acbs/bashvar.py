@@ -18,7 +18,8 @@ optwhitespace = pp.Optional(whitespace).setName("optwhitespace")
 comment = ('#' + pp.CharsNotIn('\n')).setName("comment")
 integer = (pp.Word(pp.nums) | pp.Combine('-' + pp.Word(pp.nums)))
 
-varname = pp.Word(pp.alphas + '_', pp.alphanums + '_').setResultsName("varname")
+varname = pp.Word(pp.alphas + '_', pp.alphanums +
+                  '_').setResultsName("varname")
 # ${parameter/pattern/string}
 substsafe = pp.CharsNotIn('/#%*?[}\'"`\\')
 
@@ -32,16 +33,16 @@ expansion_param = pp.Group(
             (pp.Literal(':').setResultsName("exptype") + pp.Group(
                 pp.Word(pp.nums) |
                 (whitespace + pp.Combine('-' + pp.Word(pp.nums)))
-                ).setResultsName("offset") +
+            ).setResultsName("offset") +
                 pp.Optional(pp.Literal(':') + integer.setResultsName("length")))
             ^ (pp.oneOf('/ // /# /%').setResultsName("exptype") +
                 pp.Optional(substsafe.setResultsName("pattern") +
-                pp.Optional(pp.Literal('/') +
-                pp.Optional(substsafe, '').setResultsName("string")))
-            )
+                            pp.Optional(pp.Literal('/') +
+                                        pp.Optional(substsafe, '').setResultsName("string")))
+               )
             ^ (pp.oneOf("# ## % %%").setResultsName("exptype") +
                 pp.Optional(substsafe.setResultsName("pattern"))
-            )
+               )
         ) +
         pp.Literal('}').suppress()
     ) | varname)
@@ -86,14 +87,18 @@ bashvarfile = pp.ZeroOrMore(line)
 
 ParseException = pp.ParseException
 
+
 class VariableWarning(UserWarning):
     pass
+
 
 class BashErrorWarning(UserWarning):
     pass
 
+
 class ParseError(Exception):
     pass
+
 
 def combine_value(tokens, variables):
     val = ''
@@ -141,7 +146,8 @@ def combine_value(tokens, variables):
                     var = var[:-len(pattern)]
             val += var
         else:
-            warnings.warn('variable "%s" is undefined' % varname, VariableWarning)
+            warnings.warn('variable "%s" is undefined' %
+                          varname, VariableWarning)
     else:
         for tok in tokens:
             if isinstance(tok, str):
@@ -149,6 +155,7 @@ def combine_value(tokens, variables):
             else:
                 val += combine_value(tok, variables)
     return ''.join(val)
+
 
 def eval_bashvar_literal(source):
     parsed = bashvarfile.parseString(source, parseAll=True)
@@ -168,10 +175,12 @@ def eval_bashvar_literal(source):
                 variables[line['varname']] = val
     return variables
 
+
 def uniq(seq):  # Dave Kirby
     # Order preserving
     seen = set()
     return [x for x in seq if x not in seen and not seen.add(x)]
+
 
 def eval_bashvar_ext(source, filename=None):
     # we don't specify encoding here because the env will do.
@@ -194,11 +203,12 @@ def eval_bashvar_ext(source, filename=None):
             stderr=subprocess.PIPE).communicate(''.join(stdin).encode('utf-8'))
     if errs:
         warnings.warn(errs.decode('utf-8', 'backslashreplace').rstrip(),
-            BashErrorWarning)
+                      BashErrorWarning)
     lines = [l.replace('\\n', '\n') for l in outs.decode('utf-8').splitlines()]
     if len(var) != len(lines) and not errs:
         warnings.warn('bash output not expected', BashErrorWarning)
     return collections.OrderedDict(zip(var, lines))
+
 
 def eval_bashvar(source: str, filename=None, msg=False):
     with warnings.catch_warnings(record=True) as wns:
@@ -217,6 +227,7 @@ def eval_bashvar(source: str, filename=None, msg=False):
             return ret, '\n'.join(msgs) if msgs else None
         else:
             return ret
+
 
 def read_bashvar(fp, filename=None, msg=False):
     return eval_bashvar(

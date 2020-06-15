@@ -3,8 +3,8 @@ from acbs.base import ACBSPackageInfo
 import logging
 
 
-installed_cache: List[str]= []
-available_cache: List[str]= []
+installed_cache: List[str] = []
+available_cache: List[str] = []
 
 
 def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:

@@ -78,7 +78,8 @@ def tarball_processor(package: ACBSPackageInfo) -> None:
         package.build_location, facade_name))
     # decompress
     logging.info('Extracting {}...'.format(facade_name))
-    subprocess.check_call(['bsdtar', '-xf', facade_name], cwd=package.build_location)
+    subprocess.check_call(['bsdtar', '-xf', facade_name],
+                          cwd=package.build_location)
     return
 
 
@@ -96,7 +97,8 @@ def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
 def git_processor(package: ACBSPackageInfo) -> None:
     info = package.source_uri
     if not info.revision:
-        raise ValueError('Please specify a specific git commit for this package. (GITCO not defined)')
+        raise ValueError(
+            'Please specify a specific git commit for this package. (GITCO not defined)')
     if not info.source_location:
         raise ValueError('Where is the git repository?')
     checkout_location = os.path.join(package.build_location, package.name)
@@ -108,20 +110,23 @@ def git_processor(package: ACBSPackageInfo) -> None:
     logging.info('Fetching submodules (if any)...')
     # submodule checkout does not work with --work-tree
     subprocess.check_call(
-        ['git', '--git-dir', info.source_location, 'submodule', 'update', '--init', '--recursive']
-        , cwd=checkout_location)
+        ['git', '--git-dir', info.source_location, 'submodule', 'update', '--init', '--recursive'], cwd=checkout_location)
     return None
 
 
 def svn_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not info.revision:
-        raise ValueError('Please specify a svn revision for this package. (SVNCO not defined)')
-    logging.info('Checking out subversion repository at r{}'.format(info.revision))
+        raise ValueError(
+            'Please specify a svn revision for this package. (SVNCO not defined)')
+    logging.info(
+        'Checking out subversion repository at r{}'.format(info.revision))
     if not os.path.exists(full_path):
-        subprocess.check_call(['svn', 'co', '--force', '-r', info.revision, info.url, full_path])
+        subprocess.check_call(
+            ['svn', 'co', '--force', '-r', info.revision, info.url, full_path])
     else:
-        subprocess.check_call(['svn', 'up', '--force', '-r', info.revision], cwd=full_path)
+        subprocess.check_call(
+            ['svn', 'up', '--force', '-r', info.revision], cwd=full_path)
     info.source_location = full_path
     return info
 
@@ -150,7 +155,8 @@ def hg_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[
 def hg_processor(package: ACBSPackageInfo) -> None:
     info = package.source_uri
     if not info.revision:
-        raise ValueError('Please specify a specific hg commit for this package. (HGCO not defined)')
+        raise ValueError(
+            'Please specify a specific hg commit for this package. (HGCO not defined)')
     if not info.source_location:
         raise ValueError('Where is the hg repository?')
     checkout_location = os.path.join(package.build_location, package.name)

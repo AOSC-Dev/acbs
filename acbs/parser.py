@@ -42,7 +42,8 @@ def parse_package_url(var: Dict[str, str]) -> ACBSSourceInfo:
                 '{type_}BRANCH'.format(type_=type_))
     # No sources specified?
     if acbs_source_info.type == 'none':
-        raise ValueError('No sources specified, if this is intended, please set `DUMMYSRC=1`')
+        raise ValueError(
+            'No sources specified, if this is intended, please set `DUMMYSRC=1`')
     return acbs_source_info
 
 
