@@ -2,9 +2,9 @@ name: CI checks
 
 on:
   push:
-    branches: [ master ]
+    branches: [ staging, production, dx ]
   pull_request:
-    branches: [ master ]
+    branches: [ staging, production ]
 
 jobs:
   build:
