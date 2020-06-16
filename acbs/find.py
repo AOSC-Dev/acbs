@@ -101,7 +101,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACB
             raise ValueError(
                 'Malformed sub-package name: {name}'.format(name=entry.name)) from ex
     # because the directory order is arbitrary, we need to sort them
-    sorted(actionables, key=lambda a: a.group_seq)
+    actionables = sorted(actionables, key=lambda a: a.group_seq)
     # pre-assign build location for sub-packages
     location = make_build_dir(TMP_DIR)
     for a in actionables:
