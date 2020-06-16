@@ -46,7 +46,7 @@ def fix_pm_states(escaped: List[str]):
 def check_if_installed(name: str) -> bool:
     logging.debug('Checking if %s is installed' % name)
     try:
-        subprocess.check_output(['dpkg', '-s', name])
+        subprocess.check_output(['dpkg', '-s', name], stderr=subprocess.STDOUT)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -55,7 +55,7 @@ def check_if_installed(name: str) -> bool:
 def check_if_available(name: str) -> bool:
     logging.debug('Checking if %s is available' % name)
     try:
-        subprocess.check_output(['apt-cache', 'show', escape_package_name(name)])
+        subprocess.check_output(['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
         return True
     except subprocess.CalledProcessError:
         return False
