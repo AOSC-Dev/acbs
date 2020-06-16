@@ -132,7 +132,13 @@ class BuildCore(object):
                 build_dir = os.path.join(build_dir, subdir)
             install_from_repo(task.installables)
             start = time.monotonic()
-            invoke_autobuild(task, build_dir)
+            try:
+                invoke_autobuild(task, build_dir)
+            except Exception as ex:
+                # early printing of build summary before exploding
+                if build_timings:
+                    print_build_timings(build_timings)
+                raise RuntimeError('Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
             build_timings.append((task.name, time.monotonic() - start))
         print_build_timings(build_timings)
 
