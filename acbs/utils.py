@@ -6,8 +6,9 @@ import subprocess
 import os
 import time
 import signal
+import datetime
 
-from typing import Optional, List
+from typing import Optional, List, Tuple, Sequence
 from acbs.const import *
 from acbs.base import ACBSPackageInfo
 
@@ -126,7 +127,7 @@ def start_build_capture(build_dir: str):
         logging.info('Build log: %s' % f.name)
         header = '!!ACBS Build Log\n!!Build start: %s\n' % time.ctime()
         f.write(header.encode())
-        process = pexpect.spawn('wget', logfile=f)
+        process = pexpect.spawn('autobuild', logfile=f)
         term_size = shutil.get_terminal_size()
         # we need to adjust the pseudo-terminal size to match the actual screen size
         process.setwinsize(rows=term_size.lines,
@@ -159,6 +160,35 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     logging.warning(
         'Build logging not available due to pexpect not installed.')
     subprocess.check_call(['autobuild'])
+
+
+def human_time(full_seconds: float) -> str:
+    """
+    Convert time span (in seconds) to more friendly format
+    :param seconds: Time span in seconds (decimal is acceptable)
+    """
+    out_str_tmp = '{}'.format(
+        datetime.timedelta(seconds=full_seconds))
+    out_str = out_str_tmp.replace(
+        ':', ('{}:{}'.format(ANSI_GREEN, ANSI_RST)))
+    return out_str
+
+
+def format_column(data: Sequence[Tuple[str, ...]]) -> str:
+    output = ''
+    col_width = max(len(str(word)) for row in data for word in row)
+    for row in data:
+        output = '%s%s\n' % (
+            output, ('\t'.join(str(word).ljust(col_width) for word in row)))
+    return output
+
+
+def print_build_timings(timings: List[Tuple[str, float]]):
+    formatted_timings: List[Tuple[str, str]] = []
+    for timing in timings:
+        formatted_timings.append((timing[0], human_time(timing[1])))
+    print(full_line_banner('Build Summary'))
+    print(format_column(formatted_timings))
 
 
 class ACBSLogFormatter(logging.Formatter):

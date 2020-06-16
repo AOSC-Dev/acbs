@@ -3,8 +3,10 @@ import logging.handlers
 import traceback
 import sys
 import os
+import time
 
-from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, ACBSLogFormatter
+from typing import List, Tuple
+from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, print_build_timings, ACBSLogFormatter
 from acbs.parser import get_tree_by_name, get_deps_graph
 from acbs.find import find_package, check_package_groups, expand_package_group
 from acbs.deps import tarjan_search
@@ -71,6 +73,7 @@ class BuildCore(object):
 
     def build(self) -> None:
         packages = []
+        build_timings: List[Tuple[str, float]] = []
         error = False
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
@@ -113,6 +116,8 @@ class BuildCore(object):
         for task in packages:
             logging.info('Building {}...'.format(task.name))
             fetch_source(task.source_uri, self.dump_dir, task.name)
+            if self.dl_only:
+                continue
             if not task.build_location or not os.path.exists(task.build_location):
                 build_dir = make_build_dir(self.tmp_dir)
                 task.build_location = build_dir
@@ -126,7 +131,10 @@ class BuildCore(object):
                         'Could not determine sub-directory, please specify manually.')
                 build_dir = os.path.join(build_dir, subdir)
             install_from_repo(task.installables)
+            start = time.monotonic()
             invoke_autobuild(task, build_dir)
+            build_timings.append((task.name, time.monotonic() - start))
+        print_build_timings(build_timings)
 
     def acbs_except_hdr(self, type, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
