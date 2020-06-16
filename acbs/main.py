@@ -130,7 +130,9 @@ class BuildCore(object):
                     raise RuntimeError(
                         'Could not determine sub-directory, please specify manually.')
                 build_dir = os.path.join(build_dir, subdir)
-            install_from_repo(task.installables)
+            if task.installables:
+                logging.info('Installing dependencies from repository...')
+                install_from_repo(task.installables)
             start = time.monotonic()
             try:
                 invoke_autobuild(task, build_dir)
