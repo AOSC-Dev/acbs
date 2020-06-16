@@ -108,9 +108,8 @@ def git_processor(package: ACBSPackageInfo) -> None:
         ['git', '--git-dir', info.source_location, '--work-tree', checkout_location,
          'checkout', '-f', info.revision or ''])
     logging.info('Fetching submodules (if any)...')
-    # submodule checkout does not work with --work-tree
     subprocess.check_call(
-        ['git', '--git-dir', info.source_location, 'submodule', 'update', '--init', '--recursive'], cwd=checkout_location)
+        ['git', '--git-dir', info.source_location, '--work-tree', checkout_location, 'submodule', 'update', '--init', '--recursive'], cwd=checkout_location)
     return None
 
 
