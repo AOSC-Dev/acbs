@@ -79,6 +79,7 @@ def clear_tmp(tmp_dir: str) -> None:
         shutil.rmtree(os.path.join(tmp_dir, dirs))
         sub_dirs_deleted += 1
     complete_status = True
+    indicator.join()
     return
 
 
