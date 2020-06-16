@@ -4,13 +4,24 @@ import re
 import tempfile
 import subprocess
 import os
+import time
+import signal
 
 from typing import Optional, List
 from acbs.const import *
 from acbs.base import ACBSPackageInfo
 
+build_logging = False
+
+try:
+    import pexpect
+    build_logging = True
+except ImportError:
+    pass
 
 tarball_pattern = r'\.(tar\..+|cpio\..+)'
+SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
+                if v.startswith('SIG') and not v.startswith('SIG_'))
 
 
 def guess_extension_name(filename: str) -> str:
@@ -110,12 +121,43 @@ def guess_subdir(path: str) -> Optional[str]:
     return name
 
 
+def start_build_capture(build_dir: str):
+    with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=build_dir, delete=False) as f:
+        logging.info('Build log: %s' % f.name)
+        header = '!!ACBS Build Log\n!!Build start: %s\n' % time.ctime()
+        f.write(header.encode())
+        process = pexpect.spawn('wget', logfile=f)
+        term_size = shutil.get_terminal_size()
+        # we need to adjust the pseudo-terminal size to match the actual screen size
+        process.setwinsize(rows=term_size.lines,
+                           cols=term_size.columns)
+        process.interact()
+        # keep killing the process until it finishes
+        while (not process.isalive()) and (not process.terminated):
+            process.terminate()
+        exit_status = process.exitstatus
+        signal_status = process.signalstatus
+        if signal_status:
+            footer = '\n!!Build killed with %s' % SIGNAMES[signal_status]
+        else:
+            footer = '\n!!Build exited with %s' % exit_status
+        f.write(footer.encode())
+        if signal_status or exit_status:
+            raise RuntimeError('autobuild3 did not exit successfully.')
+
+
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     shutil.copytree(task.script_location, os.path.join(build_dir, 'autobuild'))
+    # Inject variables to defines
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\n'.format(
             task.rel, task.source_uri.version))
     os.chdir(build_dir)
+    if build_logging:
+        start_build_capture(build_dir)
+        return
+    logging.warning(
+        'Build logging not available due to pexpect not installed.')
     subprocess.check_call(['autobuild'])
 
 
