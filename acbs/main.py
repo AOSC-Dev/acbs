@@ -6,6 +6,7 @@ import os
 import time
 
 from typing import List, Tuple
+from pathlib import Path
 from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, print_build_timings, ACBSLogFormatter
 from acbs.parser import get_tree_by_name, get_deps_graph
 from acbs.find import find_package, check_package_groups, expand_package_group
@@ -118,11 +119,15 @@ class BuildCore(object):
             fetch_source(task.source_uri, self.dump_dir, task.name)
             if self.dl_only:
                 continue
-            if not task.build_location or not os.path.exists(task.build_location):
+            if not task.build_location:
                 build_dir = make_build_dir(self.tmp_dir)
                 task.build_location = build_dir
                 process_source(task)
             else:
+                # First sub-package in a meta-package
+                if not os.path.exists(os.path.join(task.build_location, '.acbs-stamp')):
+                    process_source(task)
+                    Path(os.path.join(task.build_location, '.acbs-stamp')).touch()
                 build_dir = task.build_location
             if task.source_uri.subdir:
                 build_dir = os.path.join(build_dir, task.source_uri.subdir)
