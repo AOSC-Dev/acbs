@@ -109,6 +109,9 @@ def git_processor(package: ACBSPackageInfo) -> None:
     logging.info('Fetching submodules (if any)...')
     subprocess.check_call(
         ['git', '--git-dir', info.source_location, '--work-tree', checkout_location, 'submodule', 'update', '--init', '--recursive'], cwd=checkout_location)
+    with open(os.path.join(package.build_location, '.acbs-script'), 'wt') as f:
+        f.write(
+            'ACBS_SRC=\'%s\';acbs_copy_git(){ cp -ar "${ACBS_SRC}" .git/; sed -i \'s|bare = true|bare = false|\' \'.git/config\'; }' % (info.source_location))
     return None
 
 
