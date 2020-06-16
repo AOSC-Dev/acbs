@@ -1,14 +1,13 @@
-import re
 import subprocess
-import os
 import logging
+import os
 import shutil
+import subprocess
 from typing import Callable, Optional, Tuple, Dict
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib
 from acbs.utils import guess_extension_name
-
 
 fetcher_signature = Callable[[ACBSSourceInfo,
                               str, str], Optional[ACBSSourceInfo]]

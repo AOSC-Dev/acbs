@@ -1,11 +1,12 @@
-from typing import List, Optional, Dict, Tuple, Deque
-from collections import OrderedDict, defaultdict, deque
+import configparser
+import os
+from collections import OrderedDict
+from typing import List, Dict
+
 from acbs import bashvar
-from acbs.utils import get_arch_name
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-import os
-import configparser
+from acbs.utils import get_arch_name
 
 
 def parse_package_url(var: Dict[str, str]) -> ACBSSourceInfo:

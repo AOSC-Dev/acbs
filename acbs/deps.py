@@ -1,9 +1,9 @@
-from typing import List, Optional, Dict, Tuple, Deque
-from collections import OrderedDict, defaultdict, deque
-from acbs.parser import ACBSPackageInfo
-from acbs.find import find_package
-
 import sys
+from collections import OrderedDict, defaultdict, deque
+from typing import List, Dict, Deque
+
+from acbs.find import find_package
+from acbs.parser import ACBSPackageInfo
 
 # package information cache
 pool: Dict[str, ACBSPackageInfo] = {}

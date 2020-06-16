@@ -1,8 +1,8 @@
 # coding: utf-8
 
-'''
+"""
 Fake magic bindings
-'''
+"""
 import subprocess
 
 # Flag constants for open and setflags

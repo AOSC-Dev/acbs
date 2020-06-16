@@ -1,5 +1,5 @@
 import hashlib
-from typing import Tuple, Optional
+from typing import Tuple
 
 
 def check_hash_hashlib(chksum_tuple: Tuple[str, str], target_file: str) -> None:

@@ -1,20 +1,21 @@
 import logging
 import logging.handlers
-import traceback
-import sys
 import os
+import sys
 import time
-
-from typing import List, Tuple
+import traceback
 from pathlib import Path
-from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, print_build_timings, ACBSLogFormatter
-from acbs.parser import get_tree_by_name, get_deps_graph
-from acbs.find import find_package, check_package_groups, expand_package_group
+from typing import List, Tuple
+
+from acbs import __version__
+from acbs.const import CONF_DIR, DUMP_DIR, TMP_DIR, LOG_DIR
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
+from acbs.find import find_package, check_package_groups
+from acbs.parser import get_tree_by_name, get_deps_graph
 from acbs.pm import install_from_repo
-from acbs.const import CONF_DIR, DUMP_DIR, TMP_DIR, LOG_DIR
-from acbs import __version__
+from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, \
+    print_build_timings, ACBSLogFormatter
 
 
 class BuildCore(object):

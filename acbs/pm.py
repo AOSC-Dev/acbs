@@ -1,9 +1,9 @@
-from typing import List, Optional, Dict, Tuple, Deque
-from acbs.base import ACBSPackageInfo
 import logging
-import subprocess
 import re
+import subprocess
+from typing import List, Dict
 
+from acbs.base import ACBSPackageInfo
 
 installed_cache: Dict[str, bool] = {}
 available_cache: Dict[str, bool] = {}
