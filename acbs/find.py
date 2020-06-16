@@ -1,12 +1,72 @@
-from typing import List, Optional, Dict, Tuple, Deque
-from collections import OrderedDict, defaultdict, deque
+import os
+from typing import List, Dict, Optional
+
+from acbs.const import TMP_DIR
 from acbs.parser import parse_package, ACBSPackageInfo
 from acbs.utils import make_build_dir
-from acbs.const import TMP_DIR
-import os
 
 
-def find_package(name: str, search_path: str, group=False) -> List[ACBSPackageInfo]:
+def check_package_group(name: str, search_path: str, entry_path: str) -> Optional[List[ACBSPackageInfo]]:
+    # is this a package group?
+    with os.scandir(os.path.join(search_path, entry_path)) as group:
+        # scan potential package groups
+        for entry_group in group:
+            full_search_path = os.path.join(
+                search_path, entry_path, entry_group.name)
+            # condition: `defines` inside a folder but not named `autobuild`
+            if os.path.basename(full_search_path) == 'autobuild' or not os.path.isfile(
+                    os.path.join(full_search_path, 'defines')):
+                continue
+            # because the package inside the group will have a different name than the folder name
+            # we will parse the defines file to decide
+            result = parse_package(full_search_path)
+            if result and result.name == name:
+                # name of the package inside the group
+                package_alias = os.path.basename(
+                    full_search_path)
+                try:
+                    group_seq = int(
+                        package_alias.split('-')[0])
+                except (ValueError, IndexError) as ex:
+                    raise ValueError('Invalid package alias: {alias}'.format(
+                        alias=package_alias)) from ex
+                group_root = os.path.realpath(
+                    os.path.join(full_search_path, '..'))
+                group_category = os.path.realpath(
+                    os.path.join(group_root, '..'))
+                result.base_slug = '{cat}/{root}'.format(cat=os.path.basename(
+                    group_category), root=os.path.basename(group_root))
+                result.group_seq = group_seq
+                group_result = expand_package_group(
+                    result, search_path)
+                return group_result
+    return None
+
+
+def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
+    if os.path.isfile(os.path.join(search_path, name)):
+        with open(os.path.join(search_path, name), 'rt') as f:
+            content = f.read()
+        packages = content.splitlines()
+        results = []
+        for p in packages:
+            found = find_package_inner(p, search_path)
+            if not found:
+                raise RuntimeError('Package {} requested in {} was not found.'.format(p, name))
+            results.extend(found)
+        return results
+    return find_package_inner(name, search_path)
+
+
+def find_package_inner(name: str, search_path: str, group=False) -> List[ACBSPackageInfo]:
+    if os.path.isdir(os.path.join(search_path, name)):
+        flat_path = os.path.join(search_path, name, 'autobuild')
+        if os.path.isdir(flat_path):
+            return [parse_package(os.path.join(search_path, name, 'autobuild'))]
+        # is this a package group?
+        group_result = check_package_group(name, search_path, name)
+        if group_result:
+            return group_result
     with os.scandir(search_path) as it:
         # scan categories
         for entry in it:
@@ -24,43 +84,15 @@ def find_package(name: str, search_path: str, group=False) -> List[ACBSPackageIn
                     if not group:
                         continue
                     # is this a package group?
-                    with os.scandir(os.path.join(search_path, entry.name, entry_inner.name)) as group:
-                        # scan potential package groups
-                        for entry_group in group:
-                            full_search_path = os.path.join(
-                                search_path, entry.name, entry_inner.name, entry_group.name)
-                            # condition: `defines` inside a folder but not named `autobuild`
-                            if os.path.basename(full_search_path) == 'autobuild' or not os.path.isfile(os.path.join(full_search_path, 'defines')):
-                                continue
-                            # because the package inside the group will have a different name than the folder name
-                            # we will parse the defines file to decide
-                            result = parse_package(full_search_path)
-                            if result and result.name == name:
-                                # name of the package inside the group
-                                package_alias = os.path.basename(
-                                    full_search_path)
-                                try:
-                                    group_seq = int(
-                                        package_alias.split('-')[0])
-                                except (ValueError, IndexError) as ex:
-                                    raise ValueError('Invalid package alias: {alias}'.format(
-                                        alias=package_alias)) from ex
-                                group_root = os.path.realpath(
-                                    os.path.join(full_search_path, '..'))
-                                group_category = os.path.realpath(
-                                    os.path.join(group_root, '..'))
-                                result.base_slug = '{cat}/{root}'.format(cat=os.path.basename(
-                                    group_category), root=os.path.basename(group_root))
-                                result.group_seq = group_seq
-                                group_result = expand_package_group(
-                                    result, search_path)
-                                return group_result
+                    group_result = check_package_group(name, search_path, os.path.join(entry.name, entry_inner.name))
+                    if group_result:
+                        return group_result
     if group:
         return []
     else:
         # if cannot find a package without considering it as part of a group
         # then re-search with group enabled
-        return find_package(name, search_path, True)
+        return find_package_inner(name, search_path, True)
 
 
 def check_package_groups(packages: List[ACBSPackageInfo]):
