@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Tuple, Deque
 from collections import OrderedDict, defaultdict, deque
 from acbs.parser import parse_package, ACBSPackageInfo
 from acbs.utils import make_build_dir
-from acbs.const import DUMP_DIR
+from acbs.const import TMP_DIR
 import os
 
 
@@ -103,7 +103,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACB
     # because the directory order is arbitrary, we need to sort them
     sorted(actionables, key=lambda a: a.group_seq)
     # pre-assign build location for sub-packages
-    location = make_build_dir(DUMP_DIR)
+    location = make_build_dir(TMP_DIR)
     for a in actionables:
         a.build_location = location
     return actionables

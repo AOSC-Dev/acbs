@@ -10,12 +10,12 @@ import shutil
 import argparse
 import acbs
 
-from acbs.const import DUMP_DIR
+from acbs.const import TMP_DIR
 from acbs.main import BuildCore
 
 
 def main() -> None:
-    tmp_loc = DUMP_DIR
+    tmp_loc = TMP_DIR
     parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',
