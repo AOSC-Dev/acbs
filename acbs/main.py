@@ -122,6 +122,8 @@ class BuildCore(object):
                 build_dir = make_build_dir(self.tmp_dir)
                 task.build_location = build_dir
                 process_source(task)
+            else:
+                build_dir = task.build_location
             if task.source_uri.subdir:
                 build_dir = os.path.join(build_dir, task.source_uri.subdir)
             else:
