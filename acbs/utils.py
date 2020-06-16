@@ -15,7 +15,7 @@ from acbs.base import ACBSPackageInfo
 build_logging = False
 
 try:
-    import pexpect
+    import pexpect  # type: ignore
     build_logging = True
 except ImportError:
     pass

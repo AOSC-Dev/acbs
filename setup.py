@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="acbs",
-    version="0.1.20200411",
+    version="0.1.20200615",
     author="liushuyu",
     author_email="liushuyu@aosc.io",
     description="AOSC CI Building System",
@@ -17,6 +17,9 @@ setuptools.setup(
     install_requires=[
         "pyparsing>=2.4,<3"
     ],
+    extras_require={
+        "Build logging": ["pexpect"]
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
