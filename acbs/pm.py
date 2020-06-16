@@ -5,8 +5,8 @@ import subprocess
 import re
 
 
-installed_cache: List[str] = []
-available_cache: List[str] = []
+installed_cache: Dict[str, bool] = {}
+available_cache: Dict[str, bool] = {}
 
 
 def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
@@ -37,7 +37,7 @@ def fix_pm_states(escaped: List[str]):
             command.extend(escaped)
             subprocess.check_call(command)
             return
-        except Exception:
+        except subprocess.CalledProcessError:
             count += 1
             continue
     raise RuntimeError('Unable to correct package manager states...')
@@ -45,19 +45,29 @@ def fix_pm_states(escaped: List[str]):
 
 def check_if_installed(name: str) -> bool:
     logging.debug('Checking if %s is installed' % name)
+    cached = installed_cache.get(name)
+    if cached is not None:
+        return cached
     try:
         subprocess.check_output(['dpkg', '-s', name], stderr=subprocess.STDOUT)
+        installed_cache[name] = True
         return True
     except subprocess.CalledProcessError:
+        installed_cache[name] = False
         return False
 
 
 def check_if_available(name: str) -> bool:
     logging.debug('Checking if %s is available' % name)
+    cached = available_cache.get(name)
+    if cached is not None:
+        return cached
     try:
         subprocess.check_output(['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
+        available_cache[name] = True
         return True
     except subprocess.CalledProcessError:
+        available_cache[name] = False
         return False
 
 
