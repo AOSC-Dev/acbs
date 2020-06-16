@@ -148,7 +148,10 @@ def start_build_capture(build_dir: str):
 
 
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
-    shutil.copytree(task.script_location, os.path.join(build_dir, 'autobuild'))
+    dst_dir = os.path.join(build_dir, 'autobuild')
+    if os.path.exists(dst_dir) and task.group_seq > 1:
+        shutil.rmtree(dst_dir)
+    shutil.copytree(task.script_location, dst_dir)
     # Inject variables to defines
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\n'.format(
