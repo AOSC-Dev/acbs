@@ -41,7 +41,6 @@ Mandatory dependencies:
 Optional dependencies [1]_:
 
 * libmagic: Python module to detect file type.
-* libarchive-c: Python module to handle archives.
 * pycryptodome: Python module to verify file checksums.
 * pexpect: Python module to simulate PTY sessions and log output to file.
 

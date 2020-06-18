@@ -14,6 +14,7 @@ Contents:
 
    intro
    install
+   dx
    api
    spec_format
    appendix
