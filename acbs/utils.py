@@ -60,19 +60,19 @@ def get_arch_name() -> Optional[str]:
     """
     import platform
     uname_var = platform.machine() or platform.processor()
-    if uname_var in ['x86_64', 'amd64']:
-        return 'amd64'
-    elif uname_var in ['armv7a', 'armv7l', 'armv8a', 'armv8l']:
-        return 'armel'
-    else:
-        return {
+    return {
+            'x86_64': 'amd64',
+            'i486': 'i486',
+            'i686': 'i686',
+            'armv7l': 'armel',
+            'armv8l': 'armel',
             'aarch64': 'arm64',
-            'mips64': 'mips64el',  # FIXME: How about big endian...
-            'mips': 'mipsel',  # FIXME: This too...
             'ppc': 'powerpc',
             'ppc64': 'ppc64',
-            'riscv64': 'riscv64'
-        }.get(uname_var)
+            'ppc64le': 'ppc64el',
+            'riscv64': 'riscv64',
+            'mips64': 'mips64r2el'
+        }.get(uname_var) or uname_var
 
 
 def full_line_banner(msg: str, char='-') -> str:
