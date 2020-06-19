@@ -39,8 +39,7 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
         if info.chksum[1]:
             filename = info.chksum[1]
         else:
-            logging.warning('No checksum found.')
-            filename = os.path.basename(info.url)
+            raise ValueError('No checksum found. Please specify the checksum!')
         full_path = os.path.join(source_location, filename)
         flag_path = os.path.join(source_location, '{}.dl'.format(filename))
         if os.path.exists(full_path) and not os.path.exists(flag_path):
