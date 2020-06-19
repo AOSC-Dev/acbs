@@ -12,6 +12,7 @@ import acbs
 
 from acbs.const import TMP_DIR
 from acbs.main import BuildCore
+from acbs.query import acbs_query
 
 
 def main() -> None:
@@ -24,6 +25,8 @@ def main() -> None:
         '-d', '--debug', help='Increase verbosity to ease debugging process', action="store_true")
     parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
                         help='Specify which abbs-tree to use')
+    parser.add_argument('-q', '--query', nargs=1, dest='acbs_query',
+                        help='Do a simple ACBS query')
     parser.add_argument('packages', nargs='*', help='Packages to be built')
     parser.add_argument('-c', '--clear', help='Clear build directory',
                         action='store_true', dest='clear_dir')
@@ -35,6 +38,12 @@ def main() -> None:
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
         del args.clear_dir
+    if args.acbs_query:
+        result = acbs_query(args.acbs_query[0])
+        if not result:
+            sys.exit(1)
+        print(result)
+        sys.exit(0)
     if args.packages:
         # the rest of the arguments are passed to the build process
         acbs_instance = BuildCore(args)

@@ -1,0 +1,31 @@
+#!/bin/bash
+# $1 name
+_acbs_comp_package() {
+    local tree
+    tree="$(acbs-build -q 'tree:default')"
+    if [[ -z "$tree" || ! -d "$tree" ]]; then
+        return
+    fi
+    COMPREPLY=($(find "$tree/groups/" -maxdepth 1 -mindepth 1 -type f -printf 'groups/%f\n'))
+    if [[ "$1" == *'/'* ]]; then
+        return
+    fi
+    COMPREPLY+=($(find "$tree" -maxdepth 2 -mindepth 2 -type d -not -path "$tree/.git" -name "${1}*" -printf '%f\n'))
+}
+
+_acbs()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=($(compgen -W '-v --version -d --debug -t --tree -q --query -c --clear -k --skip-deps -g --get' -- "$cur"))
+    elif [[ $prev == "-t" || $prev == "--tree" ]]; then
+        forest="$(acbs-build -q 'path:conf')/forest.conf"
+        COMPREPLY=($(gawk 'match($0,/\[(.*)\]/,m) {print m[1]}' "$forest"))
+    else
+        _acbs_comp_package "$cur"
+    fi
+}
+
+complete -F _acbs acbs-build
