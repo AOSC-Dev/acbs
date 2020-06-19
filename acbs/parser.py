@@ -2,7 +2,7 @@ import configparser
 import logging
 import os
 from collections import OrderedDict
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
@@ -57,10 +57,13 @@ def parse_package(location: str) -> ACBSPackageInfo:
         var = bashvar.eval_bashvar(f.read(), filename=defines_location)
     with open(spec_location, 'rt') as f:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
-    deps: str = var.get('PKGDEP__{arch}'.format(
-        arch=arch.upper())) or var.get('PKGDEP') or ''
-    builddeps: str = var.get('BUILDDEP__{arch}'.format(
-        arch=arch.upper())) or var.get('BUILDDEP')
+    deps_arch: Optional[str] = var.get('PKGDEP__{arch}'.format(
+        arch=arch.upper()))
+    # determine whether this is an undefined value or an empty string
+    deps: str = (var.get('PKGDEP') or '') if deps_arch is None else deps_arch
+    builddeps_arch: Optional[str] = var.get('BUILDDEP__{arch}'.format(
+        arch=arch.upper()))
+    builddeps: str = var.get('BUILDDEP') if builddeps_arch is None else builddeps_arch
     deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
     acbs_source_info = parse_package_url(spec_var)
