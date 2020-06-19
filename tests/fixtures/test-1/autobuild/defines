@@ -1,0 +1,5 @@
+PKGNAME='test-1'
+PKGDEP="test-2 test-3"
+PKGDEP__ARCH="${PKGDEP} test-17"
+BUILDDEP="test-4"
+BUILDDEP__ARCH=""
