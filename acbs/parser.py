@@ -12,14 +12,14 @@ from acbs.utils import get_arch_name
 
 def parse_package_url(var: Dict[str, str]) -> ACBSSourceInfo:
     acbs_source_info = ACBSSourceInfo('none', '', '')
-    if var.get('DUMMYSRC') in ['y', 'yes', '1']:
-        return acbs_source_info
     version = var.get('VER')
     if version:
         acbs_source_info.version = version
     subdir = var.get('SUBDIR')
     if subdir:
         acbs_source_info.subdir = subdir
+    if var.get('DUMMYSRC') in ['y', 'yes', '1']:
+        return acbs_source_info
     url = var.get('SRCTBL')
     if url:
         acbs_source_info.type = 'tarball'
