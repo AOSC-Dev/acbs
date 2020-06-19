@@ -1,4 +1,5 @@
 import configparser
+import logging
 import os
 from collections import OrderedDict
 from typing import List, Dict
@@ -49,6 +50,7 @@ def parse_package_url(var: Dict[str, str]) -> ACBSSourceInfo:
 
 
 def parse_package(location: str) -> ACBSPackageInfo:
+    logging.debug('Parsing {}...'.format(location))
     defines_location = os.path.join(location, "defines")
     spec_location = os.path.join(location, '..', 'spec')
     with open(defines_location, 'rt') as f:
