@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+wget https://bootstrap.pypa.io/get-pip.py
+python3 get-pip.py --user
+pip install --user pyparsing
+python3 setup.py install --user
+
+export PATH="$HOME:/.local/bin/":$PATH
+echo 'Try acbs-build acbs now'
