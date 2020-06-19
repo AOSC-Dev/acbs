@@ -15,7 +15,7 @@ from acbs.find import find_package, check_package_groups
 from acbs.parser import get_tree_by_name, get_deps_graph
 from acbs.pm import install_from_repo
 from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, \
-    print_build_timings, ACBSLogFormatter
+    print_build_timings, has_stamp, ACBSLogFormatter
 
 
 class BuildCore(object):
@@ -117,7 +117,8 @@ class BuildCore(object):
         # build process
         for task in packages:
             logging.info('Building {}...'.format(task.name))
-            fetch_source(task.source_uri, self.dump_dir, task.name)
+            if not has_stamp(task.build_location):
+                fetch_source(task.source_uri, self.dump_dir, task.name)
             if self.dl_only:
                 continue
             if not task.build_location:
@@ -126,7 +127,7 @@ class BuildCore(object):
                 process_source(task)
             else:
                 # First sub-package in a meta-package
-                if not os.path.exists(os.path.join(task.build_location, '.acbs-stamp')):
+                if not has_stamp(task.build_location):
                     process_source(task)
                     Path(os.path.join(task.build_location, '.acbs-stamp')).touch()
                 build_dir = task.build_location

@@ -122,6 +122,10 @@ def guess_subdir(path: str) -> Optional[str]:
     return name
 
 
+def has_stamp(path: str) -> bool:
+    return os.path.exists(os.path.join(path, '.acbs-stamp'))
+
+
 def start_build_capture(build_dir: str):
     with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=build_dir, delete=False) as f:
         logging.info('Build log: %s' % f.name)
