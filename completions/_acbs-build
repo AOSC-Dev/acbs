@@ -1,0 +1,40 @@
+#compdef acbs-build
+typeset -A opt_args
+local context state line
+
+local -a _acbs_comp_package
+function _acbs_comp_package() {
+    local tree
+    tree="$(acbs-build -q 'tree:default' 2>/dev/null)"
+    if [[ -z "$tree" || ! -d "$tree" ]]; then
+        return
+    fi
+    REPLY="$(find "$tree/groups/" -maxdepth 1 -mindepth 1 -type f -printf 'groups/%f\n')"
+    if [[ "$1" == *'/'* ]]; then
+        _describe -t commands 'packages' "${(f)REPLY}" -V1
+        return
+    fi
+    REPLY+=" $(find "$tree" -maxdepth 2 -mindepth 2 -type d -not -path "$tree/.git" -printf '%f\n')"
+    _describe -t commands 'packages' "${(f)REPLY}" -V1
+}
+
+local -a flags
+flags=(
+    '(-v --version)'{-v,--version}'[Show the version and exit]'
+    '(-d --debug)'{-d,--debug}'[Increase verbosity to ease debugging process]'
+    '(-t --tree)'{-t,--tree}'[Specify which abbs-tree to use]:tree:'
+    '(-q --query)'{-q,--query}'[Do a simple ACBS query]'
+    '(-c --clear)'{-c,--clear}'[Clear build directory]'
+    '(-k --skip-deps)'{-k,--skip-deps}'[Skip dependency resolution]'
+    '(-g --get)'{-g,--get}'[Only download source packages without building]'
+)
+
+_arguments \
+    '(- 1 *)'{-h,--help}'[Show this help]' \
+    '*:: :->subcmd'
+
+if [[ "$state" == "subcmd" ]];then
+    _acbs_comp_package
+else
+    _arguments -s : "$flags[@]"
+fi
