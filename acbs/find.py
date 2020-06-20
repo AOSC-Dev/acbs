@@ -2,12 +2,16 @@ import os
 from typing import List, Dict, Optional
 
 from acbs.const import TMP_DIR
-from acbs.parser import parse_package, ACBSPackageInfo
+from acbs.parser import parse_package, ACBSPackageInfo, ACBSSourceInfo
 from acbs.utils import make_build_dir
 
 
 def check_package_group(name: str, search_path: str, entry_path: str) -> Optional[List[ACBSPackageInfo]]:
     # is this a package group?
+    if os.path.basename(entry_path) == os.path.basename(name) and os.path.isfile(os.path.join(search_path, entry_path, 'spec')):
+        stub = ACBSPackageInfo(name, [], '', ACBSSourceInfo('none', '', ''))
+        stub.base_slug = entry_path
+        return expand_package_group(stub, search_path)
     with os.scandir(os.path.join(search_path, entry_path)) as group:
         # scan potential package groups
         for entry_group in group:
@@ -52,7 +56,8 @@ def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
         for p in packages:
             found = find_package_inner(p, search_path)
             if not found:
-                raise RuntimeError('Package {} requested in {} was not found.'.format(p, name))
+                raise RuntimeError(
+                    'Package {} requested in {} was not found.'.format(p, name))
             results.extend(found)
         return results
     return find_package_inner(name, search_path)
@@ -84,7 +89,8 @@ def find_package_inner(name: str, search_path: str, group=False) -> List[ACBSPac
                     if not group:
                         continue
                     # is this a package group?
-                    group_result = check_package_group(name, search_path, os.path.join(entry.name, entry_inner.name))
+                    group_result = check_package_group(
+                        name, search_path, os.path.join(entry.name, entry_inner.name))
                     if group_result:
                         return group_result
     if group:

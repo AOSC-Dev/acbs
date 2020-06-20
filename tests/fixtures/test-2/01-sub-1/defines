@@ -1,0 +1,3 @@
+PKGNAME='sub-1'
+PKGDEP="test-12"
+BUILDDEP="test-4"
