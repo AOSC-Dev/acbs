@@ -111,15 +111,16 @@ def check_package_groups(packages: List[ACBSPackageInfo]):
         if not base_slug:
             continue
         if base_slug in groups_seen:
-            if groups_seen[base_slug] < pkg.group_seq:
-                raise ValueError('Package {} (in {}) has a different sequential order after dependency resolution'.format(
-                    pkg.name, base_slug))
+            if groups_seen[base_slug] > pkg.group_seq:
+                raise ValueError('Package {} (in {}) has a different sequential order (#{}) after dependency resolution'.format(
+                    pkg.name, base_slug, pkg.group_seq))
         else:
             groups_seen[base_slug] = pkg.group_seq
 
 
 def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACBSPackageInfo]:
     group_root = os.path.join(search_path, package.base_slug)
+    original_base = package.base_slug
     actionables: List[ACBSPackageInfo] = []
     for entry in os.scandir(group_root):
         if not entry.is_dir():
@@ -133,6 +134,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACB
             sequence = int(splitted[0])
             package = parse_package(entry.path)
             if package:
+                package.base_slug = original_base
                 package.group_seq = sequence
                 actionables.append(package)
         except ValueError as ex:
