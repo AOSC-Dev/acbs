@@ -2,7 +2,7 @@
 # $1 name
 _acbs_comp_package() {
     local tree
-    tree="$(acbs-build -q 'tree:default')"
+    tree="$(acbs-build -q 'tree:default' 2>/dev/null)"
     if [[ -z "$tree" || ! -d "$tree" ]]; then
         return
     fi
@@ -21,7 +21,10 @@ _acbs()
     if [[ $cur == -* ]]; then
         COMPREPLY=($(compgen -W '-v --version -d --debug -t --tree -q --query -c --clear -k --skip-deps -g --get' -- "$cur"))
     elif [[ $prev == "-t" || $prev == "--tree" ]]; then
-        forest="$(acbs-build -q 'path:conf')/forest.conf"
+        forest="$(acbs-build -q 'path:conf' 2>/dev/null)/forest.conf"
+        if [[ "$?" -ne "0" ]]; then
+            return
+        fi
         COMPREPLY=($(gawk 'match($0,/\[(.*)\]/,m) {print m[1]}' "$forest"))
     else
         _acbs_comp_package "$cur"

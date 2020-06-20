@@ -1,5 +1,8 @@
 function __acbs_complete_package
-    set tree (acbs-build -q 'tree:default')
+    set tree (acbs-build -q 'tree:default' 2>/dev/null)
+    if test $status != 0
+        return
+    end
     if test -z $tree -o ! -d $tree
         return
     end
@@ -11,7 +14,10 @@ function __acbs_complete_package
 end
 
 function __acbs_complete_tree
-    set forest (acbs-build -q 'path:conf')/forest.conf
+    set forest (acbs-build -q 'path:conf' 2>/dev/null)/forest.conf
+    if test $status != 0
+        return
+    end
     gawk 'match($0,/\[(.*)\]/,m) {print m[1]}' "$forest"
 end
 
