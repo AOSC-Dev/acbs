@@ -119,7 +119,7 @@ class BuildCore(object):
             logging.info('Building {}...'.format(task.name))
             source_name = task.name
             if task.base_slug:
-                source_name = task.base_slug.split('/')[0]
+                source_name = os.path.basename(task.base_slug)
             if not has_stamp(task.build_location):
                 fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
