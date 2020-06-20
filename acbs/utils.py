@@ -175,6 +175,8 @@ def human_time(full_seconds: float) -> str:
     Convert time span (in seconds) to more friendly format
     :param seconds: Time span in seconds (decimal is acceptable)
     """
+    if full_seconds < 0:
+        return 'Download only'
     out_str_tmp = '{}'.format(
         datetime.timedelta(seconds=full_seconds))
     out_str = out_str_tmp.replace(

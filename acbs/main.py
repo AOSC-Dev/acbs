@@ -123,6 +123,7 @@ class BuildCore(object):
             if not has_stamp(task.build_location):
                 fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
+                build_timings.append((task.name, -1))
                 continue
             if not task.build_location:
                 build_dir = make_build_dir(self.tmp_dir)
