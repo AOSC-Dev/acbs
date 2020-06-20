@@ -1,9 +1,50 @@
 #!/bin/bash -e
 
+python3 --version
+
+echo '[-] Installing required dependencies to local user folder...'
+rm -f get-pip.py
 wget https://bootstrap.pypa.io/get-pip.py
 python3 get-pip.py --user
 pip install --user pyparsing
+echo '[-] Installing acbs (stage 0)...'
 python3 setup.py install --user
+rm -f get-pip.py
 
-export PATH="$HOME:/.local/bin/":$PATH
-echo 'Try acbs-build acbs now'
+echo '[-] Testing acbs...'
+"$HOME/.local/bin/acbs-build" --version
+
+if ! command -v autobuild > /dev/null 2>&1; then
+    echo '[!] Autobuild3 not detected on your system.'
+    echo '[!] Please manually run the following command:'
+    echo 'export PATH="$HOME:/.local/bin/":$PATH'
+    exit 0
+fi
+
+if ! command -v git > /dev/null 2>&1; then
+    echo '[!] GIT not detected on your system.'
+    exit 1
+fi
+
+echo '[-] Installing acbs (stage 1)...'
+TMPDIR="$(mktemp -d)"
+cd "$TMPDIR"
+git clone --depth 10 -b stable https://github.com/AOSC-Dev/aosc-os-abbs
+ABBSDIR="$(readlink -f aosc-os-abbs)"
+mkdir -p '/etc/acbs/'
+mkdir -p '/var/cache/acbs/'{build,tarballs}
+mkdir -p '/var/log/acbs/'
+cat << EOF > /etc/acbs/forest.conf
+[default]
+location = ${ABBSDIR}
+EOF
+"$HOME/.local/bin/acbs-build" acbs
+cd ..
+
+echo '[-] Installing acbs (final)...'
+
+acbs-build acbs
+
+echo '[-] Cleaning up...'
+rm -rf "$TMPDIR"
+acbs-build -c
