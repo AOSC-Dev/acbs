@@ -34,6 +34,7 @@ ABBSDIR="$(readlink -f aosc-os-abbs)"
 mkdir -p '/etc/acbs/'
 mkdir -p '/var/cache/acbs/'{build,tarballs}
 mkdir -p '/var/log/acbs/'
+[ -f /etc/acbs/forest.conf ] && echo '[-] Backing up forest.conf...' && cp -v /etc/acbs/forest.conf /etc/acbs/forest.conf.bak
 cat << EOF > /etc/acbs/forest.conf
 [default]
 location = ${ABBSDIR}
@@ -48,3 +49,4 @@ acbs-build acbs
 echo '[-] Cleaning up...'
 rm -rf "$TMPDIR"
 acbs-build -c
+cp -v /etc/acbs/forest.conf.bak /etc/acbs/forest.conf
