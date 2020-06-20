@@ -6,7 +6,8 @@ _acbs_comp_package() {
     if [[ -z "$tree" || ! -d "$tree" ]]; then
         return
     fi
-    COMPREPLY=($(find "$tree/groups/" -maxdepth 1 -mindepth 1 -type f -printf 'groups/%f\n'))
+    GROUPS="$(find "$tree/groups/" -maxdepth 1 -mindepth 1 -type f -printf 'groups/%f\n')"
+    COMPREPLY=($(compgen -W "$GROUPS" -- "${1}"))
     if [[ "$1" == *'/'* ]]; then
         return
     fi
