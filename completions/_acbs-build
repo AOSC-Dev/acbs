@@ -27,14 +27,12 @@ flags=(
     '(-c --clear)'{-c,--clear}'[Clear build directory]'
     '(-k --skip-deps)'{-k,--skip-deps}'[Skip dependency resolution]'
     '(-g --get)'{-g,--get}'[Only download source packages without building]'
+    '(- 1 *)'{-h,--help}'[Show this help]'
+    '*:: :->subcmd'
 )
 
-_arguments \
-    '(- 1 *)'{-h,--help}'[Show this help]' \
-    '*:: :->subcmd'
+_arguments -s : "$flags[@]"
 
 if [[ "$state" == "subcmd" ]];then
     _acbs_comp_package
-else
-    _arguments -s : "$flags[@]"
 fi
