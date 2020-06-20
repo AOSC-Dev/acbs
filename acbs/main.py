@@ -117,18 +117,21 @@ class BuildCore(object):
         # build process
         for task in packages:
             logging.info('Building {}...'.format(task.name))
+            source_name = task.name
+            if task.base_slug:
+                source_name = task.base_slug.split('/')[0]
             if not has_stamp(task.build_location):
-                fetch_source(task.source_uri, self.dump_dir, task.name)
+                fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
                 continue
             if not task.build_location:
                 build_dir = make_build_dir(self.tmp_dir)
                 task.build_location = build_dir
-                process_source(task)
+                process_source(task, source_name)
             else:
                 # First sub-package in a meta-package
                 if not has_stamp(task.build_location):
-                    process_source(task)
+                    process_source(task, source_name)
                     Path(os.path.join(task.build_location, '.acbs-stamp')).touch()
                 build_dir = task.build_location
             if task.source_uri.subdir:
