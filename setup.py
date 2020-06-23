@@ -17,7 +17,7 @@ class get_pybind_include(object):
 
 
 ext_modules = [Extension(
-    'miniapt_query', sorted(['src/miniapt-query.cc']), include_dirs=[get_pybind_include()], language='c++', optional=True
+    'acbs.miniapt_query', sorted(['src/miniapt-query.cc']), include_dirs=[get_pybind_include()], extra_link_args=['-lapt-pkg'], language='c++', optional=True
 )]
 
 with open("README.md", "r") as fh:

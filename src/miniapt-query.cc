@@ -9,14 +9,18 @@
 static pkgPolicy *policy;
 static pkgCache *cache;
 static pkgDepCache *depCache;
+static bool initialized = false;
 
 bool apt_init_system()
 {
-    return pkgInitConfig(*_config) && pkgInitSystem(*_config, _system);
+    initialized = pkgInitConfig(*_config) && pkgInitSystem(*_config, _system);
+    return initialized;
 }
 
 int check_available(const char *name)
 {
+    if (!initialized)
+        return -1;
     pkgCacheFile cachefile;
     pkgDepCache *depCache = cachefile.GetDepCache();
     if (!depCache)
@@ -29,10 +33,12 @@ int check_available(const char *name)
         return -3;
 
     APT::CacheSetHelper helper(true, GlobalError::NOTICE);
-    APT::PackageList pkgset = APT::PackageList::FromCommandLine(cachefile, &name, helper);
+    const char *list[2] = {name, NULL};
+    APT::PackageList pkgset = APT::PackageList::FromCommandLine(cachefile, list, helper);
     for (APT::PackageList::const_iterator Pkg = pkgset.begin(); Pkg != pkgset.end(); ++Pkg)
     {
-        if (depCache->GetCandidateVersion(Pkg)) return 1;
+        if (depCache->GetCandidateVersion(Pkg))
+            return 1;
     }
     return 0;
 }
