@@ -7,7 +7,14 @@ from acbs.base import ACBSPackageInfo
 
 installed_cache: Dict[str, bool] = {}
 available_cache: Dict[str, bool] = {}
+use_native_bindings: bool = True
 
+try:
+    from acbs.miniapt_query import apt_init_system, check_if_available as apt_check_if_available
+    if not apt_init_system():
+        raise ImportError('Initialization failure.')
+except ImportError:
+    use_native_bindings = False
 
 def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
     installables = []
@@ -62,6 +69,8 @@ def check_if_available(name: str) -> bool:
     cached = available_cache.get(name)
     if cached is not None:
         return cached
+    if use_native_bindings:
+        return apt_check_if_available(name) == 1
     try:
         subprocess.check_output(['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
         available_cache[name] = True
