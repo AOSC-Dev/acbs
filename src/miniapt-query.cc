@@ -8,7 +8,6 @@
 
 static pkgPolicy *policy;
 static pkgCache *cache;
-static pkgDepCache *depCache;
 static bool initialized = false;
 
 bool apt_init_system()
