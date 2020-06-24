@@ -2,27 +2,27 @@
 - WIP, check back soon!
 
 ### General Code Logic
-- Code cleanup
-- Find a better way to handle shell script execution
+- [X] Code cleanup
+- [X] ~~Find a better way to handle shell script execution~~ No direct shell script execution now
 
 ### Multiple source format? [Resolved]
 
-- [X] Arch `PKGBUILD` like spec:
+- Arch `PKGBUILD` like spec:
 
   This is Bash compatible
 
   Breaks compatiblity with `abbs`
   ```bash
-  SRCTBL=('url1', 'url2')
+  SRCS=('url1', 'url2')
   ```
 
-- Simple form:
+- [X] Simple form:
 
   This is Bash compatible
 
   Breaks compatiblity with `abbs`
   ```bash
-  SRCTBL='url1 url2'
+  SRCS='url1 url2'
   ```
 
 
