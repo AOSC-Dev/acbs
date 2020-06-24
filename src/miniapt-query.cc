@@ -1,3 +1,6 @@
+#include <apt-pkg/init.h>
+#include <apt-pkg/pkgsystem.h>
+
 #include <apt-pkg/cachefile.h>
 #include <apt-pkg/pkgcache.h>
 #include <apt-pkg/policy.h>
