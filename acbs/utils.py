@@ -9,7 +9,7 @@ import signal
 import datetime
 
 from typing import Optional, List, Tuple, Sequence
-from acbs.const import *
+from acbs.const import ANSI_RST, ANSI_BROWN, ANSI_LT_CYAN, ANSI_GREEN, ANSI_RED, ANSI_YELLOW
 from acbs.base import ACBSPackageInfo
 
 build_logging = False

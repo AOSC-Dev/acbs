@@ -1,6 +1,5 @@
 import unittest
-
-from unittest.mock import create_autospec
+import unittest.mock
 
 import acbs.parser
 import acbs.find

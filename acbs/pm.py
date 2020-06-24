@@ -16,6 +16,7 @@ try:
 except ImportError:
     use_native_bindings = False
 
+
 def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
     installables = []
     deps = []
@@ -72,7 +73,8 @@ def check_if_available(name: str) -> bool:
     if use_native_bindings:
         return apt_check_if_available(name) == 1
     try:
-        subprocess.check_output(['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
+        subprocess.check_output(
+            ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
         available_cache[name] = True
         return True
     except subprocess.CalledProcessError:
@@ -90,6 +92,7 @@ def install_from_repo(packages: List[str]):
     try:
         subprocess.check_call(command)
     except subprocess.CalledProcessError:
-        logging.warning('Failed to install dependencies, attempting to correct issues...')
+        logging.warning(
+            'Failed to install dependencies, attempting to correct issues...')
         fix_pm_states(escaped)
     return

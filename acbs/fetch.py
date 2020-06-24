@@ -2,7 +2,6 @@ import subprocess
 import logging
 import os
 import shutil
-import subprocess
 from typing import Callable, Optional, Tuple, Dict
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
@@ -107,7 +106,10 @@ def git_processor(package: ACBSPackageInfo, source_name: str) -> None:
          'checkout', '-f', info.revision or ''])
     logging.info('Fetching submodules (if any)...')
     subprocess.check_call(
-        ['git', '--git-dir', info.source_location, '--work-tree', checkout_location, 'submodule', 'update', '--init', '--recursive'], cwd=checkout_location)
+        [
+            'git', '--git-dir', info.source_location, '--work-tree', checkout_location,
+            'submodule', 'update', '--init', '--recursive'
+        ], cwd=checkout_location)
     with open(os.path.join(package.build_location, '.acbs-script'), 'wt') as f:
         f.write(
             'ACBS_SRC=\'%s\';acbs_copy_git(){ abinfo \'Copying git folder...\'; cp -ar "${ACBS_SRC}" .git/; sed -i \'s|bare = true|bare = false|\' \'.git/config\'; }' % (info.source_location))

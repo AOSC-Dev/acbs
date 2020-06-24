@@ -149,7 +149,7 @@ class BuildCore(object):
             start = time.monotonic()
             try:
                 invoke_autobuild(task, build_dir)
-            except Exception as ex:
+            except Exception:
                 # early printing of build summary before exploding
                 if build_timings:
                     print_build_timings(build_timings)
