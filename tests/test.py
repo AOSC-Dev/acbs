@@ -3,6 +3,7 @@ import unittest.mock
 
 import acbs.parser
 import acbs.find
+import acbs.pm
 
 from acbs.utils import make_build_dir
 from acbs.const import TMP_DIR
@@ -64,6 +65,16 @@ class TestSearching(unittest.TestCase):
         result, make_build_dir_mock = find_package_generic('fixtures/test-2')
         make_build_dir_mock.assert_called_once_with(TMP_DIR)
         self.assertEqual(len(result), 2)
+
+
+class TestMisc(unittest.TestCase):
+    def test_apt_name_escaping(self):
+        self.assertEqual(acbs.pm.escape_package_name('test++'), 'test\\+\\+')
+        self.assertEqual(acbs.pm.escape_package_name('test+-'), 'test\\+-')
+
+    def test_apt_install_escaping(self):
+        self.assertEqual(acbs.pm.escape_package_name_install('test++'), 'test\\+\\++')
+        self.assertEqual(acbs.pm.escape_package_name_install('test+-'), 'test\\+-+')
 
 
 if __name__ == '__main__':
