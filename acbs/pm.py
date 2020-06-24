@@ -36,6 +36,13 @@ def escape_package_name(name: str) -> str:
     return re.sub(r'([+*?])', '\\\\\\1', name)
 
 
+def escape_package_name_install(name: str) -> str:
+    escaped = escape_package_name(name)
+    if escaped.endswith('+') or escaped.endswith('-'):
+        return '{}+'.format(escaped)
+    return escaped
+
+
 def fix_pm_states(escaped: List[str]):
     count = 0
     while count < 3:
@@ -86,7 +93,7 @@ def install_from_repo(packages: List[str]):
     logging.debug('Installing %s' % packages)
     escaped = []
     for package in packages:
-        escaped.append(escape_package_name(package))
+        escaped.append(escape_package_name_install(package))
     command = ['apt-get', 'install', '-y']
     command.extend(escaped)
     try:
