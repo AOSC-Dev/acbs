@@ -86,7 +86,7 @@ def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
         subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
     else:
         logging.info('Updating repository...')
-        subprocess.check_call(['git', 'fetch', '--all'], cwd=full_path)
+        subprocess.check_call(['git', 'fetch', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
     info.source_location = full_path
     return info
 
