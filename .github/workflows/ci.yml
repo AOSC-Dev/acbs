@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 mypy
+        pip install flake8 mypy pyparsing
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Type checking using mypy
       run: |
@@ -31,6 +31,9 @@ jobs:
         flake8 . --exclude='build,.mypy_cache,venv,dist' --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --exclude='build,.mypy_cache,venv,dist' --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    # TODO: add unittests here once we have some
     - name: Run unittests
       run: python -m unittest discover ./tests/
+    - name: Install native dependencies
+      run: sudo apt-get install -y libapt-pkg-dev
+    - name: Test building
+      run: python setup.py build -f
