@@ -17,10 +17,19 @@ pair_signature = Tuple[fetcher_signature, processor_signature]
 def fetch_source(info: ACBSSourceInfo, source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
     logging.info('Fetching required source files...')
     type_ = info.type
+    retry = 0
     fetcher: Optional[pair_signature] = handlers.get(type_.upper())
     if not fetcher or not callable(fetcher[0]):
         raise NotImplementedError('Unsupported source type: {}'.format(type_))
-    return fetcher[0](info, source_location, package_name)
+    while retry < 5:
+        retry += 1
+        try:
+            return fetcher[0](info, source_location, package_name)
+        except Exception as ex:
+            logging.exception(ex)
+            logging.warning('Retrying ({}/5)...'.format(retry))
+            continue
+    raise RuntimeError('Unable to fetch source files, failed 5 times in a row.')
 
 
 def process_source(info: ACBSPackageInfo, source_name: str) -> None:
