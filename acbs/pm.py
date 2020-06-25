@@ -78,10 +78,20 @@ def check_if_available(name: str) -> bool:
     if cached is not None:
         return cached
     if use_native_bindings:
-        return apt_check_if_available(name) == 1
+        logging.debug('... using libapt-pkg')
+        try:
+            if apt_check_if_available(name) != 1:
+                return False
+            subprocess.check_output(
+                ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError:
+            return False
     try:
         subprocess.check_output(
             ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
+        logging.debug('Checking if %s can be installed' % name)
+        subprocess.check_output(
+            ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT)
         available_cache[name] = True
         return True
     except subprocess.CalledProcessError:

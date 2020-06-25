@@ -37,7 +37,7 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     stack.append(vert)
 
     # search package begin
-    print('.', end='', flush=True, file=sys.stderr)
+    print('.', end='', flush=True)
     current_package = packages.get(vert)
     if current_package is None:
         package = pool.get(vert) or find_package(vert, search_path)
