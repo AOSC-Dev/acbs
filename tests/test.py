@@ -5,7 +5,7 @@ import acbs.parser
 import acbs.find
 import acbs.pm
 
-from acbs.utils import make_build_dir
+from acbs.utils import make_build_dir, guess_extension_name
 from acbs.const import TMP_DIR
 
 
@@ -75,6 +75,11 @@ class TestMisc(unittest.TestCase):
     def test_apt_install_escaping(self):
         self.assertEqual(acbs.pm.escape_package_name_install('test++'), 'test\\+\\++')
         self.assertEqual(acbs.pm.escape_package_name_install('test+-'), 'test\\+-+')
+
+    def test_guess_extension_name(self):
+        self.assertEqual(guess_extension_name('test-1.2.3.tar.gz'), '.tar.gz')
+        self.assertEqual(guess_extension_name('test-1.2.3.bin'), '.bin')
+        self.assertEqual(guess_extension_name('test'), '')
 
 
 if __name__ == '__main__':

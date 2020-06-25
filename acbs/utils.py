@@ -40,13 +40,17 @@ def guess_extension_name(filename: str) -> str:
         extension = re_result.group(1)
     else:
         # normal single extension name
-        extensions = filename.split('.', 1)
+        extensions = None
+        for i in range(len(filename) - 1, -1, -1):
+            if filename[i] == '.':
+                extensions = filename[i+1:]
+                break
         # no extension name?
-        if len(extensions) != 2:
+        if not extensions:
             return ''
         else:
             # strip out query parameters
-            extension = extensions[1].split('?', 1)[0]
+            extension = extensions.split('?', 1)[0]
     if extension:
         extension = '.' + extension
     return extension
