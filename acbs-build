@@ -13,7 +13,7 @@ import acbs
 from acbs.const import TMP_DIR
 from acbs.main import BuildCore
 from acbs.query import acbs_query
-from acbs.checkpoint import do_resume_checkpoint
+from acbs.resume import do_resume_checkpoint
 
 
 def main() -> None:

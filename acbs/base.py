@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple
 
+from acbs import __version__
 
 class ACBSSourceInfo(object):
     def __init__(self, type: str, url: str, version: str, revision=None, branch=None, depth=None) -> None:
@@ -33,3 +34,14 @@ class ACBSPackageInfo(object):
 
     def __repr__(self) -> str:
         return '<ACBSPackageInfo {name}: - deps: {deps} - uri: {uri}>'.format(name=self.name, deps=self.deps, uri=self.source_uri)
+
+
+class ACBSShrinkWrap(object):
+    def __init__(self, cursor: int, timings: List[Tuple[str, float]], packages: List[ACBSPackageInfo], no_deps: bool):
+        self.cursor = cursor
+        self.timings = timings
+        self.packages = packages
+        # spec states
+        self.sps: List[str] = []
+        self.no_deps = no_deps
+        self.version = __version__
