@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
+from acbs import __version__
+
 
 class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
@@ -26,7 +28,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="acbs",
-    version="0.1.20200625",
+    version="0.1.{}".format(__version__),
     author="liushuyu",
     author_email="liushuyu@aosc.io",
     description="AOSC CI Building System",
