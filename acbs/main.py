@@ -114,6 +114,10 @@ class BuildCore(object):
         logging.debug('Queue: {}'.format(packages))
         logging.info('Packages to be built: {}'.format(
             print_package_names(packages, 5)))
+        self.build_sequential(build_timings, packages)
+        print_build_timings(build_timings)
+
+    def build_sequential(self, build_timings, packages):
         # build process
         for task in packages:
             logging.info('Building {}...'.format(task.name))
@@ -155,13 +159,12 @@ class BuildCore(object):
                     print_build_timings(build_timings)
                 raise RuntimeError('Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
             build_timings.append((task.name, time.monotonic() - start))
-        print_build_timings(build_timings)
 
-    def acbs_except_hdr(self, type, value, tb):
+    def acbs_except_hdr(self, type_, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
         if self.debug:
-            sys.__excepthook__(type, value, tb)
+            sys.__excepthook__(type_, value, tb)
         else:
             print()
             logging.fatal('Oops! \033[93m%s\033[0m: \033[93m%s\033[0m' % (
-                str(type.__name__), str(value)))
+                str(type_.__name__), str(value)))
