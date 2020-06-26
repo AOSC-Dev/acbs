@@ -48,7 +48,7 @@ def main() -> None:
         print(result)
         sys.exit(0)
     if args.state_file:
-        do_resume_checkpoint(args.state_file)
+        do_resume_checkpoint(args.state_file[0], args)
         sys.exit(0)
     if args.packages:
         # the rest of the arguments are passed to the build process

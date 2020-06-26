@@ -14,17 +14,22 @@ def do_load_checkpoint(name: str) -> ACBSShrinkWrap:
         return pickle.load(f)
 
 
-def do_resume_checkpoint(filename: str):
+def do_resume_checkpoint(filename: str, args):
     def resume_build():
         logging.debug('Queue: {}'.format(resumed_packages))
         logging.info('Packages to be resumed: {}'.format(
             print_package_names(resumed_packages, 5)))
         build_timings = state.timings.copy()
-        builder.build_sequential(build_timings, resumed_packages)
+        try:
+            builder.build_sequential(build_timings, resumed_packages)
+        except Exception as ex:
+            # failed again?
+            logging.exception(ex)
+            builder.save_checkpoint(build_timings, resumed_packages)
         print_build_timings(build_timings)
 
     state = do_load_checkpoint(filename)
-    builder = BuildCore({})
+    builder = BuildCore(args)
     logging.info('Resuming from {}'.format(filename))
     if state.version != __version__:
         logging.warning(
@@ -53,6 +58,10 @@ def do_resume_checkpoint(filename: str):
             new_cursor = index
         resumed_packages.extend(find_package(p.name, builder.tree_dir))
         # index doesn't matter now, since changes have been detected
+    resumed_packages = resumed_packages[new_cursor:]
+    # clear the build directory of the first package
+    if resumed_packages[0]:
+        resumed_packages[0].build_location = ''
     if new_cursor != (state.cursor - 1):
         logging.warning(
             'Senario mismatch detected! Dependency resolution will be re-attempted.')

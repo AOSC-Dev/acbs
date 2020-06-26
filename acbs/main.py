@@ -78,7 +78,6 @@ class BuildCore(object):
     def build(self) -> None:
         packages = []
         build_timings: List[Tuple[str, float]] = []
-        error = False
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
         for i in self.build_queue:
@@ -97,14 +96,18 @@ class BuildCore(object):
             self.build_sequential(build_timings, packages)
         except Exception as ex:
             logging.exception(ex)
-            logging.info('ACBS is trying to save your build status...')
-            shrink_wrap = ACBSShrinkWrap(self.package_cursor, build_timings, packages, self.no_deps)
-            filename = do_shrink_wrap(shrink_wrap)
-            logging.info('... saved to {}'.format(filename))
-            raise RuntimeError('Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
+            self.save_checkpoint(build_timings, packages)
         print_build_timings(build_timings)
 
+    def save_checkpoint(self, build_timings, packages):
+        logging.info('ACBS is trying to save your build status...')
+        shrink_wrap = ACBSShrinkWrap(self.package_cursor, build_timings, packages, self.no_deps)
+        filename = do_shrink_wrap(shrink_wrap)
+        logging.info('... saved to {}'.format(filename))
+        raise RuntimeError('Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
+
     def resolve_deps(self, packages):
+        error = False
         if not self.no_deps:
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
