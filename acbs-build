@@ -13,6 +13,7 @@ import acbs
 from acbs.const import TMP_DIR
 from acbs.main import BuildCore
 from acbs.query import acbs_query
+from acbs.checkpoint import do_resume_checkpoint
 
 
 def main() -> None:
@@ -34,6 +35,8 @@ def main() -> None:
                         action='store_true', dest='no_deps')
     parser.add_argument('-g', '--get',
                         help='Only download source packages without building', action="store_true")
+    parser.add_argument('-r', '--resume', nargs=1, dest='state_file',
+                        help='Resume a previous build attempt')
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
@@ -43,6 +46,9 @@ def main() -> None:
         if not result:
             sys.exit(1)
         print(result)
+        sys.exit(0)
+    if args.state_file:
+        do_resume_checkpoint(args.state_file)
         sys.exit(0)
     if args.packages:
         # the rest of the arguments are passed to the build process

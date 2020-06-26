@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 from acbs import __version__
+from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap
 from acbs.const import CONF_DIR, DUMP_DIR, TMP_DIR, LOG_DIR
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
@@ -27,6 +28,7 @@ class BuildCore(object):
         self.tree = args.acbs_tree or 'default'
         self.build_queue = args.packages
         self.tree_dir = ''
+        self.package_cursor = 0
         # static vars
         self.conf_dir = CONF_DIR
         self.dump_dir = DUMP_DIR
@@ -85,6 +87,24 @@ class BuildCore(object):
             if not package:
                 raise RuntimeError('Could not find package {}'.format(i))
             packages.extend(package)
+        resolved = self.resolve_deps(packages)
+        logging.info(
+            'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
+        logging.debug('Queue: {}'.format(packages))
+        logging.info('Packages to be built: {}'.format(
+            print_package_names(packages, 5)))
+        try:
+            self.build_sequential(build_timings, packages)
+        except Exception as ex:
+            logging.exception(ex)
+            logging.info('ACBS is trying to save your build status...')
+            shrink_wrap = ACBSShrinkWrap(self.package_cursor, build_timings, packages, self.no_deps)
+            filename = do_shrink_wrap(shrink_wrap)
+            logging.info('... saved to {}'.format(filename))
+            raise RuntimeError('Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
+        print_build_timings(build_timings)
+
+    def resolve_deps(self, packages):
         if not self.no_deps:
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
@@ -109,18 +129,14 @@ class BuildCore(object):
             raise RuntimeError(
                 'Dependencies NOT resolved. Couldn\'t continue!')
         check_package_groups(packages)
-        logging.info(
-            'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
-        logging.debug('Queue: {}'.format(packages))
-        logging.info('Packages to be built: {}'.format(
-            print_package_names(packages, 5)))
-        self.build_sequential(build_timings, packages)
-        print_build_timings(build_timings)
+        return resolved
 
     def build_sequential(self, build_timings, packages):
         # build process
         for task in packages:
-            logging.info('Building {}...'.format(task.name))
+            self.package_cursor += 1
+            logging.info('Building {} ({}/{})...'.format(task.name,
+                                                         self.package_cursor, len(packages)))
             source_name = task.name
             if task.base_slug:
                 source_name = os.path.basename(task.base_slug)
@@ -157,7 +173,8 @@ class BuildCore(object):
                 # early printing of build summary before exploding
                 if build_timings:
                     print_build_timings(build_timings)
-                raise RuntimeError('Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
+                raise RuntimeError(
+                    'Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
             build_timings.append((task.name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
