@@ -1,16 +1,17 @@
-import logging
-import shutil
-import re
-import tempfile
-import subprocess
-import os
-import time
-import signal
 import datetime
+import logging
+import os
+import re
+import shutil
+import signal
+import subprocess
+import tempfile
+import time
+from typing import List, Optional, Sequence, Tuple
 
-from typing import Optional, List, Tuple, Sequence
-from acbs.const import ANSI_RST, ANSI_BROWN, ANSI_LT_CYAN, ANSI_GREEN, ANSI_RED, ANSI_YELLOW
 from acbs.base import ACBSPackageInfo
+from acbs.const import (ANSI_BROWN, ANSI_GREEN, ANSI_LT_CYAN, ANSI_RED,
+                        ANSI_RST, ANSI_YELLOW)
 
 build_logging = False
 
@@ -65,18 +66,18 @@ def get_arch_name() -> Optional[str]:
     import platform
     uname_var = platform.machine() or platform.processor()
     return {
-            'x86_64': 'amd64',
-            'i486': 'i486',
-            'i686': 'i686',
-            'armv7l': 'armel',
-            'armv8l': 'armel',
-            'aarch64': 'arm64',
-            'ppc': 'powerpc',
-            'ppc64': 'ppc64',
-            'ppc64le': 'ppc64el',
-            'riscv64': 'riscv64',
-            'mips64': 'mips64r2el'
-        }.get(uname_var) or uname_var
+        'x86_64': 'amd64',
+        'i486': 'i486',
+        'i686': 'i686',
+        'armv7l': 'armel',
+        'armv8l': 'armel',
+        'aarch64': 'arm64',
+        'ppc': 'powerpc',
+        'ppc64': 'ppc64',
+        'ppc64le': 'ppc64el',
+        'riscv64': 'riscv64',
+        'mips64': 'mips64r2el'
+    }.get(uname_var) or uname_var
 
 
 def full_line_banner(msg: str, char='-') -> str:
@@ -220,5 +221,6 @@ class ACBSLogFormatter(logging.Formatter):
         }
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
-            record.msg = '[{}]: \033[1m{}\033[0m'.format(lvl_map[record.levelname], record.msg)
+            record.msg = '[{}]: \033[1m{}\033[0m'.format(
+                lvl_map[record.levelname], record.msg)
         return super(ACBSLogFormatter, self).format(record)

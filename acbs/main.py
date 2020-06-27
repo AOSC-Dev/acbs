@@ -9,14 +9,15 @@ from typing import List, Tuple
 
 from acbs import __version__
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap
-from acbs.const import CONF_DIR, DUMP_DIR, TMP_DIR, LOG_DIR
+from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
-from acbs.find import find_package, check_package_groups
-from acbs.parser import get_tree_by_name, get_deps_graph
+from acbs.find import check_package_groups, find_package
+from acbs.parser import get_deps_graph, get_tree_by_name
 from acbs.pm import install_from_repo
-from acbs.utils import invoke_autobuild, guess_subdir, full_line_banner, print_package_names, make_build_dir, \
-    print_build_timings, has_stamp, ACBSLogFormatter
+from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
+                        has_stamp, invoke_autobuild, make_build_dir,
+                        print_build_timings, print_package_names)
 
 
 class BuildCore(object):
@@ -101,10 +102,12 @@ class BuildCore(object):
 
     def save_checkpoint(self, build_timings, packages):
         logging.info('ACBS is trying to save your build status...')
-        shrink_wrap = ACBSShrinkWrap(self.package_cursor, build_timings, packages, self.no_deps)
+        shrink_wrap = ACBSShrinkWrap(
+            self.package_cursor, build_timings, packages, self.no_deps)
         filename = do_shrink_wrap(shrink_wrap, self.tree_dir)
         logging.info('... saved to {}'.format(filename))
-        raise RuntimeError('Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
+        raise RuntimeError(
+            'Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
 
     def resolve_deps(self, packages):
         error = False

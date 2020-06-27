@@ -2,7 +2,7 @@ import configparser
 import logging
 import os
 from collections import OrderedDict
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
@@ -63,7 +63,8 @@ def parse_package(location: str) -> ACBSPackageInfo:
     deps: str = (var.get('PKGDEP') or '') if deps_arch is None else deps_arch
     builddeps_arch: Optional[str] = var.get('BUILDDEP__{arch}'.format(
         arch=arch.upper()))
-    builddeps: str = var.get('BUILDDEP') if builddeps_arch is None else builddeps_arch
+    builddeps: str = var.get(
+        'BUILDDEP') if builddeps_arch is None else builddeps_arch
     deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
     acbs_source_info = parse_package_url(spec_var)

@@ -1,8 +1,8 @@
-import subprocess
 import logging
 import os
 import shutil
-from typing import Callable, Optional, Tuple, Dict
+import subprocess
+from typing import Callable, Dict, Optional, Tuple
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib
@@ -29,7 +29,8 @@ def fetch_source(info: ACBSSourceInfo, source_location: str, package_name: str) 
             logging.exception(ex)
             logging.warning('Retrying ({}/5)...'.format(retry))
             continue
-    raise RuntimeError('Unable to fetch source files, failed 5 times in a row.')
+    raise RuntimeError(
+        'Unable to fetch source files, failed 5 times in a row.')
 
 
 def process_source(info: ACBSPackageInfo, source_name: str) -> None:
@@ -95,7 +96,8 @@ def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
         subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
     else:
         logging.info('Updating repository...')
-        subprocess.check_call(['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+        subprocess.check_call(
+            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
     info.source_location = full_path
     return info
 

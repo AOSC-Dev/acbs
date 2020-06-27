@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple
 
 from acbs import __version__
 
+
 class ACBSSourceInfo(object):
     def __init__(self, type: str, url: str, version: str, revision=None, branch=None, depth=None) -> None:
         self.type = type

@@ -1,15 +1,14 @@
-from typing import List, Tuple, IO, cast
-from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
-from acbs.const import DPKG_DIR
-from acbs import __version__
-
-import pickle
-import time
+import hashlib
+import io
 import logging
 import os
-import hashlib
+import pickle
 import tarfile
-import io
+import time
+from typing import IO, List, Tuple, cast
+
+from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
+from acbs.const import DPKG_DIR
 
 
 class Hasher(io.IOBase):
@@ -46,7 +45,7 @@ def checkpoint_to_group(packages: List[ACBSPackageInfo], path: str) -> str:
     if not os.path.isdir(groups):
         os.makedirs(groups)
     filename = 'acbs-{}'.format(int(time.time()))
-    with open(groups, filename, 'wt') as f:
+    with open(os.path.join(groups, filename), 'wt') as f:
         f.write(checkpoint_text(packages))
     return filename
 
