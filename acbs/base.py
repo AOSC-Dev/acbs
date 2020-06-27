@@ -43,5 +43,6 @@ class ACBSShrinkWrap(object):
         self.packages = packages
         # spec states
         self.sps: List[str] = []
+        self.dpkg_state: str = ''
         self.no_deps = no_deps
         self.version = __version__

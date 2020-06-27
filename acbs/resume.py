@@ -5,8 +5,35 @@ from acbs import __version__
 from acbs.base import ACBSShrinkWrap, ACBSPackageInfo
 from acbs.main import BuildCore
 from acbs.find import find_package
-from acbs.utils import print_package_names, print_build_timings
-from acbs.checkpoint import checkpoint_spec
+from acbs.utils import print_package_names, print_build_timings, make_build_dir
+from acbs.checkpoint import checkpoint_spec, checkpoint_dpkg, checkpoint_to_group
+from acbs.const import TMP_DIR
+from acbs.pm import check_if_installed
+from typing import List, Dict
+
+
+def reassign_build_dir(packages: List[ACBSPackageInfo]):
+    groups: Dict[str, str] = {}
+    for package in packages:
+        if package.base_slug:
+            directory = groups.get(package.base_slug)
+            if not directory:
+                directory = make_build_dir(TMP_DIR)
+                groups[package.base_slug] = directory
+            package.build_location = directory
+            continue
+        package.build_location = ''
+    return
+
+
+def check_dpkg_state(state: ACBSShrinkWrap, packages: List[ACBSPackageInfo]) -> bool:
+    if checkpoint_dpkg() == state.dpkg_state:
+        return True
+    logging.warning('DPKG state change detected. Re-checking dependencies...')
+    for package in packages:
+        if not check_if_installed(package.name):
+            return False
+    return True
 
 
 def do_load_checkpoint(name: str) -> ACBSShrinkWrap:
@@ -58,10 +85,14 @@ def do_resume_checkpoint(filename: str, args):
             new_cursor = index
         resumed_packages.extend(find_package(p.name, builder.tree_dir))
         # index doesn't matter now, since changes have been detected
+    if not check_dpkg_state(state, resumed_packages[:new_cursor]):
+        name = checkpoint_to_group(
+            resumed_packages[new_cursor:], builder.tree_dir)
+        raise RuntimeError(
+            'DPKG state mismatch. Unable to resume.\nACBS has created a new temporary group {} for you to continue.'.format(name))
     resumed_packages = resumed_packages[new_cursor:]
     # clear the build directory of the first package
-    if resumed_packages[0]:
-        resumed_packages[0].build_location = ''
+    reassign_build_dir(resumed_packages)
     if new_cursor != (state.cursor - 1):
         logging.warning(
             'Senario mismatch detected! Dependency resolution will be re-attempted.')

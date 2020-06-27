@@ -1,5 +1,6 @@
-from typing import List, Tuple
+from typing import List, Tuple, IO, cast
 from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
+from acbs.const import DPKG_DIR
 from acbs import __version__
 
 import pickle
@@ -7,22 +8,55 @@ import time
 import logging
 import os
 import hashlib
+import tarfile
+import io
+
+
+class Hasher(io.IOBase):
+    def __init__(self):
+        self.hash_obj = hashlib.new("sha256")
+
+    def write(self, data):
+        self.hash_obj.update(data)
+
+    def hexdigest(self):
+        return self.hash_obj.hexdigest()
 
 
 def checkpoint_spec(package: ACBSPackageInfo) -> str:
-    hash_obj = hashlib.new("sha256")
-    with open(os.path.join(package.script_location, '..', 'spec'), 'rb') as f:
-        hash_obj.update(f.read())
-    with open(os.path.join(package.script_location, 'defines'), 'rb') as f:
-        hash_obj.update(f.read())
-    return hash_obj.hexdigest()
+    f = cast(IO[bytes], Hasher())
+    with tarfile.open(mode='w|', fileobj=f) as tar:
+        tar.add(os.path.join(package.script_location, '..'))
+    return f.hexdigest()  # type: ignore
 
 
-def do_shrink_wrap(data: ACBSShrinkWrap) -> str:
+def checkpoint_dpkg() -> str:
+    hasher = hashlib.new("sha256")
+    with open(os.path.join(DPKG_DIR, 'status'), 'rb') as f:
+        hasher.update(f.read())
+    return hasher.hexdigest()
+
+
+def checkpoint_text(packages: List[ACBSPackageInfo]) -> str:
+    return '\n'.join([package.name for package in packages])
+
+
+def checkpoint_to_group(packages: List[ACBSPackageInfo], path: str) -> str:
+    groups = os.path.join(path, 'groups')
+    if not os.path.isdir(groups):
+        os.makedirs(groups)
+    filename = 'acbs-{}'.format(int(time.time()))
+    with open(groups, filename, 'wt') as f:
+        f.write(checkpoint_text(packages))
+    return filename
+
+
+def do_shrink_wrap(data: ACBSShrinkWrap, path: str) -> str:
     # stamp the spec files
     for package in data.packages:
         data.sps.append(checkpoint_spec(package))
-    filename = '{}.acbs-ckpt'.format(int(time.time()))
+    data.dpkg_state = checkpoint_dpkg()
+    filename = os.path.join(path, '{}.acbs-ckpt'.format(int(time.time())))
     with open(filename, 'wb') as f:
         pickle.dump(data, f)
     return filename

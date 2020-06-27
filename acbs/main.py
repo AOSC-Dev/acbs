@@ -102,7 +102,7 @@ class BuildCore(object):
     def save_checkpoint(self, build_timings, packages):
         logging.info('ACBS is trying to save your build status...')
         shrink_wrap = ACBSShrinkWrap(self.package_cursor, build_timings, packages, self.no_deps)
-        filename = do_shrink_wrap(shrink_wrap)
+        filename = do_shrink_wrap(shrink_wrap, self.tree_dir)
         logging.info('... saved to {}'.format(filename))
         raise RuntimeError('Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
 
