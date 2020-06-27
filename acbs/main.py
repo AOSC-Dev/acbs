@@ -124,7 +124,7 @@ class BuildCore(object):
         packages.clear()  # clear package list for the search results
         # here we will check if there is any loop in the dependency graph
         for dep in resolved:
-            if len(dep) > 1:
+            if len(dep) > 1 or dep[0].name in dep[0].deps:
                 # this is a SCC, aka a loop
                 logging.error('Found a loop in the dependency graph: {}'.format(
                     print_package_names(dep)))

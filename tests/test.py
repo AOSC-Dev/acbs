@@ -7,10 +7,23 @@ import acbs.pm
 
 from acbs.utils import make_build_dir, guess_extension_name
 from acbs.const import TMP_DIR
+from acbs.deps import tarjan_search
+from acbs.parser import get_deps_graph
 
 
 def fake_pm(package):
     return package
+
+
+def check_scc(resolved):
+    error = False
+    for dep in resolved:
+        if len(dep) > 1 or dep[0].name in dep[0].deps:
+            # this is a SCC, aka a loop
+            error = True
+        elif not error:
+            continue
+    return error
 
 
 def find_package_generic(name: str):
@@ -40,6 +53,15 @@ class TestParser(unittest.TestCase):
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-17'])
         self.assertEqual(package.source_uri.version, '1')
         self.assertEqual(package.source_uri.type, 'none')
+
+    def test_deps_loop(self):
+        acbs.parser.arch = 'arch'
+        acbs.parser.filter_dependencies = fake_pm
+        package = acbs.parser.parse_package(
+            './tests/fixtures/test-3/autobuild')
+        packages = tarjan_search(get_deps_graph([package]), './tests')
+        error = check_scc(packages)
+        self.assertEqual(error, True)
 
 
 class TestSearching(unittest.TestCase):
