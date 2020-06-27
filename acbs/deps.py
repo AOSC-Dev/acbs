@@ -1,4 +1,3 @@
-import sys
 from collections import OrderedDict, defaultdict, deque
 from typing import List, Dict, Deque
 

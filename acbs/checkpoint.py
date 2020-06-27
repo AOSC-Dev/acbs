@@ -1,11 +1,10 @@
 import hashlib
 import io
-import logging
 import os
 import pickle
 import tarfile
 import time
-from typing import IO, List, Tuple, cast
+from typing import IO, List, cast
 
 from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
 from acbs.const import DPKG_DIR
