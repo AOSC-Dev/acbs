@@ -6,8 +6,8 @@ _acbs_comp_package() {
     if [[ -z "$tree" || ! -d "$tree" ]]; then
         return
     fi
-    GROUPS="$(find "$tree/groups/" -maxdepth 1 -mindepth 1 -type f -printf 'groups/%f\n')"
-    COMPREPLY=($(compgen -W "$GROUPS" -- "${1}"))
+    local PGROUPS="$(find "$tree/groups/" -maxdepth 1 -mindepth 1 -type f -printf 'groups/%f\n')"
+    COMPREPLY=($(compgen -W "$PGROUPS" -- "${1}"))
     if [[ "$1" == *'/'* ]]; then
         return
     fi
@@ -20,13 +20,15 @@ _acbs()
     _init_completion || return
 
     if [[ $cur == -* ]]; then
-        COMPREPLY=($(compgen -W '-v --version -d --debug -t --tree -q --query -c --clear -k --skip-deps -g --get' -- "$cur"))
+        COMPREPLY=($(compgen -W '-v --version -d --debug -t --tree -q --query -c --clear -k --skip-deps -g --get -r --resume' -- "$cur"))
     elif [[ $prev == "-t" || $prev == "--tree" ]]; then
         forest="$(acbs-build -q 'path:conf' 2>/dev/null)/forest.conf"
         if [[ "$?" -ne "0" ]]; then
             return
         fi
         COMPREPLY=($(gawk 'match($0,/\[(.*)\]/,m) {print m[1]}' "$forest"))
+    elif [[ $prev == "-r" || $prev == "--resume" ]]; then
+        COMPREPLY=($(compgen -f -- "$cur"))
     else
         _acbs_comp_package "$cur"
     fi

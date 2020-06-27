@@ -27,6 +27,7 @@ flags=(
     '(-c --clear)'{-c,--clear}'[Clear build directory]'
     '(-k --skip-deps)'{-k,--skip-deps}'[Skip dependency resolution]'
     '(-g --get)'{-g,--get}'[Only download source packages without building]'
+    '(-r --resume)'{-r,--resume}'[Resume a previous build attempt]:file:'
     '(- 1 *)'{-h,--help}'[Show this help]'
     '*:: :->subcmd'
 )
