@@ -161,8 +161,8 @@ class BuildCore(object):
                     process_source(task, source_name)
                     Path(os.path.join(task.build_location, '.acbs-stamp')).touch()
                 build_dir = task.build_location
-            if task.source_uri.subdir:
-                build_dir = os.path.join(build_dir, task.source_uri.subdir)
+            if task.subdir:
+                build_dir = os.path.join(build_dir, task.subdir)
             else:
                 subdir = guess_subdir(build_dir)
                 if not subdir:

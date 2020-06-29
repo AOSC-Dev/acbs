@@ -7,7 +7,6 @@ class ACBSSourceInfo(object):
     def __init__(self, type: str, url: str, revision=None, branch=None, depth=None) -> None:
         self.type = type
         self.url = url
-        self.subdir: Optional[str] = None
         self.revision: Optional[str] = revision
         self.branch: Optional[str] = branch
         self.depth: Optional[int] = depth
@@ -30,6 +29,7 @@ class ACBSPackageInfo(object):
         self.group_seq = 0  # group sequence number
         self.source_uri = source_uri
         self.version = ''
+        self.subdir: Optional[str] = None
         # script location (autobuild directory)
         self.script_location = location
 

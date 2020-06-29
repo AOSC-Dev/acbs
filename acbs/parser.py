@@ -77,9 +77,6 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
 
 def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
     acbs_source_info = ACBSSourceInfo('none', '', '')
-    subdir = var.get('SUBDIR')
-    if subdir:
-        acbs_source_info.subdir = subdir
     if var.get('DUMMYSRC') in ['y', 'yes', '1']:
         return acbs_source_info
     url = var.get('SRCTBL')
@@ -139,6 +136,9 @@ def parse_package(location: str) -> ACBSPackageInfo:
     version = spec_var.get('VER')
     if version:
         result.version = version
+    subdir = spec_var.get('SUBDIR')
+    if subdir:
+        result.subdir = subdir
 
     return filter_dependencies(result)
 
