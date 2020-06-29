@@ -14,8 +14,17 @@ processor_signature = Callable[[ACBSPackageInfo, int, str], None]
 pair_signature = Tuple[fetcher_signature, processor_signature]
 
 
-def fetch_source(info: ACBSSourceInfo, source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
+def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
     logging.info('Fetching required source files...')
+    count = 0
+    for i in info:
+        count += 1
+        logging.info('Fetching source ({}/{})...'.format(count, len(info)))
+        fetch_source_inner(i, source_location, package_name)
+    return None
+
+
+def fetch_source_inner(info: ACBSSourceInfo, source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
     type_ = info.type
     retry = 0
     fetcher: Optional[pair_signature] = handlers.get(type_.upper())
