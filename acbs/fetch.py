@@ -229,5 +229,6 @@ handlers: Dict[str, pair_signature] = {
     'BZR': (bzr_fetch, bzr_processor),
     'HG': (hg_fetch, hg_processor),
     'TARBALL': (tarball_fetch, tarball_processor),
+    'FILE': (tarball_fetch, dummy_processor),
     'NONE': (dummy_fetch, dummy_processor),
 }
