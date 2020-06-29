@@ -28,7 +28,10 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
         schema = url_split[0].lower()
         url_plain = url_split[1]
     acbs_source_info.type = 'tarball' if schema == 'tbl' else schema
-    acbs_source_info.chksum = checksum
+    chksum_ = checksum.split('::', 1)
+    if len(chksum_) != 2 and checksum != 'SKIP':
+        raise ValueError('Malformed checksum: {}'.format(checksum))
+    acbs_source_info.chksum = (chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
     acbs_source_info.url = url_plain
     if acbs_source_info.type not in ['tarball', 'file']:
         acbs_source_info = parse_vcs_trailing(url_plain, acbs_source_info)

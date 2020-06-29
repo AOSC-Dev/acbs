@@ -6,6 +6,8 @@ def check_hash_hashlib(chksum_tuple: Tuple[str, str], target_file: str) -> None:
     hash_type, hash_value = chksum_tuple
     hash_type = hash_type.lower()
     hash_value = hash_value.lower()
+    if hash_type == 'none':
+        return
     if hash_type not in hashlib.algorithms_available:
         raise NotImplementedError(
             'Unsupported hash type %s! Currently supported: %s' % (

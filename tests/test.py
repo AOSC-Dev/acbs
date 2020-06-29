@@ -64,24 +64,24 @@ class TestParser(unittest.TestCase):
         self.assertEqual(error, True)
 
     def test_parse_url(self):
-        info = parse_url_schema('tbl::https://example.com', '123')
+        info = parse_url_schema('tbl::https://example.com', 'sha256::123')
         self.assertEqual(info.type, 'tarball')
         self.assertEqual(info.url, 'https://example.com')
-        self.assertEqual(info.chksum, '123')
+        self.assertEqual(info.chksum, ('sha256', '123'))
         info = parse_url_schema('git://github.com/AOSC-Dev/acbs', 'SKIP')
         self.assertEqual(info.type, 'git')
         self.assertEqual(info.url, 'git://github.com/AOSC-Dev/acbs')
-        self.assertEqual(info.chksum, 'SKIP')
+        self.assertEqual(info.chksum, ('none', ''))
         info = parse_url_schema('git://github.com/AOSC-Dev/acbs#commit=abcdef', 'SKIP')
         self.assertEqual(info.type, 'git')
         self.assertEqual(info.url, 'git://github.com/AOSC-Dev/acbs')
         self.assertEqual(info.revision, 'abcdef')
-        self.assertEqual(info.chksum, 'SKIP')
+        self.assertEqual(info.chksum, ('none', ''))
         info = parse_url_schema('git::https://github.com/AOSC-Dev/acbs#title#commit=a2e5eff', 'SKIP')
         self.assertEqual(info.type, 'git')
         self.assertEqual(info.url, 'https://github.com/AOSC-Dev/acbs#title')
         self.assertEqual(info.revision, 'a2e5eff')
-        self.assertEqual(info.chksum, 'SKIP')
+        self.assertEqual(info.chksum, ('none', ''))
 
     def test_parse_new_spec(self):
         acbs.parser.arch = 'none'
