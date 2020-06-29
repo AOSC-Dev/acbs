@@ -48,7 +48,8 @@ def process_source(info: ACBSPackageInfo, source_name: str) -> None:
         type_ = source_uri.type
         fetcher: Optional[pair_signature] = handlers.get(type_.upper())
         if not fetcher or not callable(fetcher[1]):
-            raise NotImplementedError('Unsupported source type: {}'.format(type_))
+            raise NotImplementedError(
+                'Unsupported source type: {}'.format(type_))
         fetcher[1](info, idx, source_name)
         idx += 1
     return
@@ -92,8 +93,9 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
     extension = guess_extension_name(server_filename)
     # this name is used in the build directory (will be seen by the build scripts)
     # the name will be, e.g. 'acbs-0.1.0.tar.gz'
-    facade_name = '{name}-{version}{extension}'.format(
-        name=source_name, version=package.version, extension=extension)
+    facade_name = '{name}-{version}{index}{extension}'.format(
+        name=source_name, version=package.version, extension=extension,
+        index=('' if index == 0 else ('-%s' % index)))
     os.symlink(info.source_location, os.path.join(
         package.build_location, facade_name))
     # decompress
