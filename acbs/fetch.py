@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, List
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib
@@ -10,7 +10,7 @@ from acbs.utils import guess_extension_name
 
 fetcher_signature = Callable[[ACBSSourceInfo,
                               str, str], Optional[ACBSSourceInfo]]
-processor_signature = Callable[[ACBSPackageInfo, str], None]
+processor_signature = Callable[[ACBSPackageInfo, int, str], None]
 pair_signature = Tuple[fetcher_signature, processor_signature]
 
 
@@ -34,11 +34,15 @@ def fetch_source(info: ACBSSourceInfo, source_location: str, package_name: str) 
 
 
 def process_source(info: ACBSPackageInfo, source_name: str) -> None:
-    type_ = info.source_uri.type
-    fetcher: Optional[pair_signature] = handlers.get(type_.upper())
-    if not fetcher or not callable(fetcher[1]):
-        raise NotImplementedError('Unsupported source type: {}'.format(type_))
-    return fetcher[1](info, source_name)
+    idx = 0
+    for source_uri in info.source_uri:
+        type_ = source_uri.type
+        fetcher: Optional[pair_signature] = handlers.get(type_.upper())
+        if not fetcher or not callable(fetcher[1]):
+            raise NotImplementedError('Unsupported source type: {}'.format(type_))
+        fetcher[1](info, idx, source_name)
+        idx += 1
+    return
 
 
 # Fetchers implementations
@@ -70,8 +74,8 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
     return None
 
 
-def tarball_processor(package: ACBSPackageInfo, source_name: str) -> None:
-    info = package.source_uri
+def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the source file?')
     check_hash_hashlib(info.chksum, info.source_location)
@@ -80,7 +84,7 @@ def tarball_processor(package: ACBSPackageInfo, source_name: str) -> None:
     # this name is used in the build directory (will be seen by the build scripts)
     # the name will be, e.g. 'acbs-0.1.0.tar.gz'
     facade_name = '{name}-{version}{extension}'.format(
-        name=source_name, version=package.source_uri.version, extension=extension)
+        name=source_name, version=package.version, extension=extension)
     os.symlink(info.source_location, os.path.join(
         package.build_location, facade_name))
     # decompress
@@ -102,8 +106,8 @@ def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
     return info
 
 
-def git_processor(package: ACBSPackageInfo, source_name: str) -> None:
-    info = package.source_uri
+def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
             'Please specify a specific git commit for this package. (GITCO not defined)')
@@ -144,8 +148,8 @@ def svn_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
     return info
 
 
-def svn_processor(package: ACBSPackageInfo, source_name: str) -> None:
-    info = package.source_uri
+def svn_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the subversion repository?')
     checkout_location = os.path.join(package.build_location, source_name)
@@ -165,8 +169,8 @@ def hg_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[
     return info
 
 
-def hg_processor(package: ACBSPackageInfo, source_name: str) -> None:
-    info = package.source_uri
+def hg_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
             'Please specify a specific hg commit for this package. (HGCO not defined)')
@@ -188,7 +192,7 @@ def dummy_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Option
     return None
 
 
-def dummy_processor(package: ACBSPackageInfo, source_name: str) -> None:
+def dummy_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
     return None
 
 

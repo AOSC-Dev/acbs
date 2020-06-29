@@ -8,7 +8,7 @@ import acbs.pm
 from acbs.utils import make_build_dir, guess_extension_name
 from acbs.const import TMP_DIR
 from acbs.deps import tarjan_search
-from acbs.parser import get_deps_graph
+from acbs.parser import get_deps_graph, parse_url_schema
 
 
 def fake_pm(package):
@@ -42,8 +42,8 @@ class TestParser(unittest.TestCase):
         package = acbs.parser.parse_package(
             './tests/fixtures/test-1/autobuild')
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-4'])
-        self.assertEqual(package.source_uri.version, '1')
-        self.assertEqual(package.source_uri.type, 'none')
+        self.assertEqual(package.version, '1')
+        self.assertEqual(package.source_uri[0].type, 'none')
 
     def test_parse_arch(self):
         acbs.parser.arch = 'arch'
@@ -51,8 +51,8 @@ class TestParser(unittest.TestCase):
         package = acbs.parser.parse_package(
             './tests/fixtures/test-1/autobuild')
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-17'])
-        self.assertEqual(package.source_uri.version, '1')
-        self.assertEqual(package.source_uri.type, 'none')
+        self.assertEqual(package.version, '1')
+        self.assertEqual(package.source_uri[0].type, 'none')
 
     def test_deps_loop(self):
         acbs.parser.arch = 'arch'
@@ -62,6 +62,36 @@ class TestParser(unittest.TestCase):
         packages = tarjan_search(get_deps_graph([package]), './tests')
         error = check_scc(packages)
         self.assertEqual(error, True)
+
+    def test_parse_url(self):
+        info = parse_url_schema('tbl::https://example.com', '123')
+        self.assertEqual(info.type, 'tarball')
+        self.assertEqual(info.url, 'https://example.com')
+        self.assertEqual(info.chksum, '123')
+        info = parse_url_schema('git://github.com/AOSC-Dev/acbs', 'SKIP')
+        self.assertEqual(info.type, 'git')
+        self.assertEqual(info.url, 'git://github.com/AOSC-Dev/acbs')
+        self.assertEqual(info.chksum, 'SKIP')
+        info = parse_url_schema('git://github.com/AOSC-Dev/acbs#commit=abcdef', 'SKIP')
+        self.assertEqual(info.type, 'git')
+        self.assertEqual(info.url, 'git://github.com/AOSC-Dev/acbs')
+        self.assertEqual(info.revision, 'abcdef')
+        self.assertEqual(info.chksum, 'SKIP')
+        info = parse_url_schema('git::https://github.com/AOSC-Dev/acbs#title#commit=a2e5eff', 'SKIP')
+        self.assertEqual(info.type, 'git')
+        self.assertEqual(info.url, 'https://github.com/AOSC-Dev/acbs#title')
+        self.assertEqual(info.revision, 'a2e5eff')
+        self.assertEqual(info.chksum, 'SKIP')
+
+    def test_parse_new_spec(self):
+        acbs.parser.arch = 'none'
+        acbs.parser.filter_dependencies = fake_pm
+        package = acbs.parser.parse_package(
+            './tests/fixtures/test-4/autobuild')
+        self.assertEqual(package.deps, ['test-4'])
+        self.assertEqual(package.version, '1')
+        self.assertEqual(package.source_uri[0].type, 'git')
+        self.assertEqual(package.source_uri[1].type, 'git')
 
 
 class TestSearching(unittest.TestCase):

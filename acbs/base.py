@@ -4,11 +4,10 @@ from acbs import __version__
 
 
 class ACBSSourceInfo(object):
-    def __init__(self, type: str, url: str, version: str, revision=None, branch=None, depth=None) -> None:
+    def __init__(self, type: str, url: str, revision=None, branch=None, depth=None) -> None:
         self.type = type
         self.url = url
         self.subdir: Optional[str] = None
-        self.version = version
         self.revision: Optional[str] = revision
         self.branch: Optional[str] = branch
         self.depth: Optional[int] = depth
@@ -21,7 +20,7 @@ class ACBSSourceInfo(object):
 
 
 class ACBSPackageInfo(object):
-    def __init__(self, name: str, deps: List[str], location: str, source_uri: ACBSSourceInfo) -> None:
+    def __init__(self, name: str, deps: List[str], location: str, source_uri: List[ACBSSourceInfo]) -> None:
         self.name = name
         self.rel = '0'
         self.deps = deps
@@ -30,6 +29,7 @@ class ACBSPackageInfo(object):
         self.base_slug = ''  # group slug (like extra-devel/llvm), if any
         self.group_seq = 0  # group sequence number
         self.source_uri = source_uri
+        self.version = ''
         # script location (autobuild directory)
         self.script_location = location
 

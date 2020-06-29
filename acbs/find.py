@@ -9,7 +9,7 @@ from acbs.utils import make_build_dir
 def check_package_group(name: str, search_path: str, entry_path: str) -> Optional[List[ACBSPackageInfo]]:
     # is this a package group?
     if os.path.basename(entry_path) == os.path.basename(name) and os.path.isfile(os.path.join(search_path, entry_path, 'spec')):
-        stub = ACBSPackageInfo(name, [], '', ACBSSourceInfo('none', '', ''))
+        stub = ACBSPackageInfo(name, [], '', [ACBSSourceInfo('none', '', '')])
         stub.base_slug = entry_path
         return expand_package_group(stub, search_path)
     with os.scandir(os.path.join(search_path, entry_path)) as group:

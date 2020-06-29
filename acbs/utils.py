@@ -165,7 +165,7 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     acbs_helper = os.path.join(task.build_location, '.acbs-script')
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\n[ -f \'{}\' ] && source \'{}\' && abinfo "Injected ACBS definitions"\n'.format(
-            task.rel, task.source_uri.version, acbs_helper, acbs_helper))
+            task.rel, task.version, acbs_helper, acbs_helper))
     os.chdir(build_dir)
     if build_logging:
         start_build_capture(build_dir)

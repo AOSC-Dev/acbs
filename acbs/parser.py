@@ -1,20 +1,79 @@
 import configparser
 import logging
 import os
+import re
 from collections import OrderedDict
 from typing import Dict, List, Optional
 
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import get_arch_name
+from acbs.utils import get_arch_name, tarball_pattern
 
 
-def parse_package_url(var: Dict[str, str]) -> ACBSSourceInfo:
+def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     acbs_source_info = ACBSSourceInfo('none', '', '')
-    version = var.get('VER')
-    if version:
-        acbs_source_info.version = version
+    url_split = url.split('::', 1)
+    schema = ''
+    url_plain = ''
+    if len(url_split) < 2:
+        url_plain = url
+        if re.match(tarball_pattern, url_plain):
+            schema = 'tarball'
+        elif url_plain.endswith('.git') or url_plain.startswith('git://'):
+            schema = 'git'
+        else:
+            raise ValueError('Unable to deduce soutce type for {}.'.format(url_plain))
+    else:
+        schema = url_split[0].lower()
+        url_plain = url_split[1]
+    acbs_source_info.type = 'tarball' if schema == 'tbl' else schema
+    acbs_source_info.chksum = checksum
+    acbs_source_info.url = url_plain
+    if acbs_source_info.type not in ['tarball', 'file']:
+        acbs_source_info = parse_vcs_trailing(url_plain, acbs_source_info)
+    return acbs_source_info
+
+
+def parse_vcs_trailing(url_plain: str, acbs_source_info: ACBSSourceInfo):
+    extensions = None
+    hash_pos = -1
+    for i in range(len(url_plain) - 1, -1, -1):
+        if url_plain[i] == '#':
+            extensions = url_plain[i+1:]
+            hash_pos = i
+            break
+    if extensions:
+        splitted = extensions.split('=', 1)
+        if len(splitted) > 1 and splitted[0] in ['branch', 'commit']:
+            acbs_source_info.url = url_plain[:hash_pos]
+            if splitted[0] == 'branch':
+                acbs_source_info.branch = splitted[1]
+            elif splitted[0] == 'commit':
+                acbs_source_info.revision = splitted[1]
+    return acbs_source_info
+
+
+def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
+    acbs_source_info: List[ACBSSourceInfo] = []
+    sources = var.get('SRCS')
+    checksums = var.get('CHKSUMS')
+    if sources is None:
+        logging.warning('Using legacy source directives')
+        return [parse_package_url_legacy(var)]
+    if checksums is None:
+        raise ValueError('Missing checksums. You can using `SKIP` for VCS sources.')
+    sources_list = sources.strip().split()
+    checksums_list = checksums.strip().split()
+    if len(sources_list) != len(checksums_list):
+        raise ValueError('Sources array and checksums array must have the same length.')
+    for s, c in zip(sources_list, checksums_list):
+        acbs_source_info.append(parse_url_schema(s, c))
+    return acbs_source_info
+
+
+def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
+    acbs_source_info = ACBSSourceInfo('none', '', '')
     subdir = var.get('SUBDIR')
     if subdir:
         acbs_source_info.subdir = subdir
@@ -74,6 +133,9 @@ def parse_package(location: str) -> ACBSPackageInfo:
         name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
     release = spec_var.get('REL') or '0'
     result.rel = release
+    version = spec_var.get('VER')
+    if version:
+        result.version = version
 
     return filter_dependencies(result)
 
