@@ -18,12 +18,12 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     url_plain = ''
     if len(url_split) < 2:
         url_plain = url
-        if re.match(tarball_pattern, url_plain):
+        if re.search(tarball_pattern, url_plain):
             schema = 'tarball'
         elif url_plain.endswith('.git') or url_plain.startswith('git://'):
             schema = 'git'
         else:
-            raise ValueError('Unable to deduce soutce type for {}.'.format(url_plain))
+            raise ValueError('Unable to deduce source type for {}.'.format(url_plain))
     else:
         schema = url_split[0].lower()
         url_plain = url_split[1]
