@@ -84,7 +84,7 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
     return None
 
 
-def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: str, decompress=True) -> None:
     info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the source file?')
@@ -98,11 +98,21 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
         index=('' if index == 0 else ('-%s' % index)))
     os.symlink(info.source_location, os.path.join(
         package.build_location, facade_name))
+    if not decompress:
+        return
     # decompress
     logging.info('Extracting {}...'.format(facade_name))
     subprocess.check_call(['bsdtar', '-xf', facade_name],
                           cwd=package.build_location)
     return
+
+
+def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    return tarball_processor_innner(package, index, source_name)
+
+
+def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    return tarball_processor_innner(package, index, source_name)
 
 
 def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
@@ -240,6 +250,6 @@ handlers: Dict[str, pair_signature] = {
     'BZR': (bzr_fetch, bzr_processor),
     'HG': (hg_fetch, hg_processor),
     'TARBALL': (tarball_fetch, tarball_processor),
-    'FILE': (tarball_fetch, dummy_processor),
+    'FILE': (tarball_fetch, blob_processor),
     'NONE': (dummy_fetch, dummy_processor),
 }
