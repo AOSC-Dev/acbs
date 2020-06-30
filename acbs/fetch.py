@@ -228,8 +228,8 @@ def bzr_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
     return info
 
 
-def bzr_processor(package: ACBSPackageInfo, source_name: str) -> None:
-    info = package.source_uri
+def bzr_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
             'Please specify a specific bzr revision for this package. (BZRCO not defined)')
