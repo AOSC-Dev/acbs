@@ -54,7 +54,10 @@ def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
         packages = content.splitlines()
         results = []
         for p in packages:
-            found = find_package_inner(p.strip(), search_path)
+            p = p.strip()
+            if not p:
+                continue
+            found = find_package_inner(p, search_path)
             if not found:
                 raise RuntimeError(
                     'Package {} requested in {} was not found.'.format(p, name))
