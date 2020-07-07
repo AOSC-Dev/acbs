@@ -30,5 +30,6 @@ complete -c acbs-build -s q -l query -d 'Do a simple ACBS query'
 complete -c acbs-build -s c -l clear -d 'Clear build directory'
 complete -c acbs-build -s k -l skip-deps -d 'Skip dependency resolution'
 complete -c acbs-build -s g -l get -d 'Only download source packages without building'
-complete -c acbs-build -s r -l resume -d 'Resume a previous build attempt' -a "(__fish_complete_path)"
+complete -c acbs-build -n "__fish_contains_opt -s g get" -s w -l write -d 'Write spec changes back'
+complete -c acbs-build -s r -l resume -d 'Resume a previous build attempt' -a "(__fish_complete_suffix acbs-ckpt)"
 complete -c acbs-build -a "(__acbs_complete_package)"
