@@ -246,7 +246,7 @@ def write_checksums(spec: str, checksums: str):
     if re.search(chksum_pattern, content):
         content = re.sub(chksum_pattern, checksums, content)
     else:
-        content = content.rstrip() + "\n" + checksums
+        content = content.rstrip() + "\n" + checksums + "\n"
     with open(spec, 'wt') as f:
         f.write(content)
     return
