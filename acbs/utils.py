@@ -244,7 +244,7 @@ def write_checksums(spec: str, checksums: str):
     with open(spec, 'rt') as f:
         content = f.read()
     if re.search(chksum_pattern, content):
-        content = re.sub(chksum_pattern, content, checksums)
+        content = re.sub(chksum_pattern, checksums, content)
     else:
         content = content.rstrip() + "\n" + checksums
     with open(spec, 'wt') as f:
