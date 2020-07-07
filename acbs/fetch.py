@@ -12,6 +12,7 @@ fetcher_signature = Callable[[ACBSSourceInfo,
                               str, str], Optional[ACBSSourceInfo]]
 processor_signature = Callable[[ACBSPackageInfo, int, str], None]
 pair_signature = Tuple[fetcher_signature, processor_signature]
+generate_mode = False
 
 
 def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
@@ -62,6 +63,8 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
         filename = ''
         if info.chksum[1]:
             filename = info.chksum[1]
+        elif generate_mode:
+            filename = hash_url(info.url)
         else:
             raise ValueError('No checksum found. Please specify the checksum!')
         full_path = os.path.join(source_location, filename)

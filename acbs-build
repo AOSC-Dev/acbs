@@ -28,6 +28,9 @@ def main() -> None:
                         help='Specify which abbs-tree to use')
     parser.add_argument('-q', '--query', nargs=1, dest='acbs_query',
                         help='Do a simple ACBS query')
+    parser.add_argument('-w', '--write', dest='acbs_write',
+                        help='Write spec changes back (Need to be specified with -g)',
+                        action="store_true")
     parser.add_argument('packages', nargs='*', help='Packages to be built')
     parser.add_argument('-c', '--clear', help='Clear build directory',
                         action='store_true', dest='clear_dir')

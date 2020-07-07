@@ -9,7 +9,8 @@ import tempfile
 import time
 from typing import List, Optional, Sequence, Tuple
 
-from acbs.base import ACBSPackageInfo
+from acbs.base import ACBSPackageInfo, ACBSSourceInfo
+from acbs.crypto import check_hash_hashlib_inner
 from acbs.const import (ANSI_BROWN, ANSI_GREEN, ANSI_LT_CYAN, ANSI_RED,
                         ANSI_RST, ANSI_YELLOW)
 
@@ -21,6 +22,7 @@ try:
 except ImportError:
     pass
 
+chksum_pattern = r"CHKSUM(?:S)?=['\"].*?['\"]"
 tarball_pattern = r'\.(tar\..+|cpio\..+)'
 SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
                 if v.startswith('SIG') and not v.startswith('SIG_'))
@@ -204,6 +206,49 @@ def print_build_timings(timings: List[Tuple[str, float]]):
         formatted_timings.append((timing[0], human_time(timing[1])))
     print(full_line_banner('Build Summary'))
     print(format_column(formatted_timings))
+
+
+def is_spec_legacy(spec: str) -> bool:
+    with open(spec, 'rt') as f:
+        content = f.read()
+    return content.index('SRCS=') >= 0
+
+
+def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
+    def calculate_checksum(o: ACBSSourceInfo):
+        if not o.source_location:
+            raise ValueError('source_location is None.')
+        csum = check_hash_hashlib_inner('sha256', o.source_location)
+        if not csum:
+            raise ValueError(
+                'Unable to calculate checksum for {}'.format(o.source_location))
+        o.chksum = ('sha256', csum)
+        return
+
+    if legacy and info[0].type == 'tarball':
+        if not info[0].chksum:
+            calculate_checksum(info[0])
+        return 'CHKSUM=\'{}\''.format('::'.join(info[0].chksum))
+    output = 'CHKSUMS=\'{}\''
+    sums = []
+    formatter = ' ' if len(info) < 3 else '\\\n        '
+    for i in info:
+        if i.type == 'tarball':
+            if i.chksum[0] == 'none':
+                calculate_checksum(i)
+            sums.append('::'.join(i.chksum))
+        else:
+            sums.append('SKIP')
+    return output.format(formatter.join(sums))
+
+
+def write_checksums(spec: str, checksums: str):
+    with open(spec, 'rt') as f:
+        content = f.read()
+    content = re.sub(chksum_pattern, spec, checksums)
+    with open(spec, 'wt') as f:
+        f.write(content)
+    return
 
 
 class ACBSLogFormatter(logging.Formatter):

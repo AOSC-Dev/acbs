@@ -11,13 +11,14 @@ from acbs import __version__
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap
 from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import tarjan_search
-from acbs.fetch import fetch_source, process_source
+from acbs.fetch import fetch_source, process_source, generate_mode
 from acbs.find import check_package_groups, find_package
 from acbs.parser import get_deps_graph, get_tree_by_name
 from acbs.pm import install_from_repo
 from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
-                        print_build_timings, print_package_names)
+                        print_build_timings, print_package_names, write_checksums,
+                        generate_checksums, is_spec_legacy)
 
 
 class BuildCore(object):
@@ -28,6 +29,7 @@ class BuildCore(object):
         self.dl_only = args.get
         self.tree = args.acbs_tree or 'default'
         self.build_queue = args.packages
+        self.generate = args.acbs_write
         self.tree_dir = ''
         self.package_cursor = 0
         # static vars
@@ -93,6 +95,7 @@ class BuildCore(object):
         logging.debug('Queue: {}'.format(packages))
         logging.info('Packages to be built: {}'.format(
             print_package_names(packages, 5)))
+        generate_mode = self.generate
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
@@ -149,6 +152,12 @@ class BuildCore(object):
             if not has_stamp(task.build_location):
                 fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
+                if self.generate:
+                    spec_location = os.path.join(task.script_location, '..', 'spec')
+                    is_legacy = is_spec_legacy(spec_location)
+                    checksum = generate_checksums(task.source_uri, is_legacy)
+                    write_checksums(spec_location, checksum)
+                    logging.info('Updated checksum for {}'.format(task.name))
                 build_timings.append((task.name, -1))
                 continue
             if not task.build_location:
