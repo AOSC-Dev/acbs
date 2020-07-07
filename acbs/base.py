@@ -11,8 +11,10 @@ class ACBSSourceInfo(object):
         self.branch: Optional[str] = branch
         self.depth: Optional[int] = depth
         self.chksum: Tuple[str, str] = ('', '')
+        self.source_name: Optional[str] = ''
         # where the source file/folder is located (on local filesystem)
         self.source_location: Optional[str] = None
+        self.enabled: bool = True
 
     def __repr__(self) -> str:
         return '<ACBSSourceInfo {type}: {url}:{branch}@{revision} integrity: {checksum}>'.format(type=self.type, url=self.url, branch=self.branch, revision=self.revision, checksum=self.chksum)

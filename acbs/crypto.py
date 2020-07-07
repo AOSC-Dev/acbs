@@ -18,6 +18,12 @@ def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> None:
     return target_hash
 
 
+def hash_url(url: str) -> str:
+    hash_obj = hashlib.new('sha256')
+    hash_obj.update(url.encode('utf-8'))
+    return hash_obj.hexdigest()
+
+
 def check_hash_hashlib(chksum_tuple: Tuple[str, str], target_file: str) -> None:
     hash_type, hash_value = chksum_tuple
     hash_type = hash_type.lower()

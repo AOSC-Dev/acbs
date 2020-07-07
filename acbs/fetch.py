@@ -5,7 +5,7 @@ import subprocess
 from typing import Callable, Dict, Optional, Tuple, List
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
-from acbs.crypto import check_hash_hashlib
+from acbs.crypto import check_hash_hashlib, hash_url
 from acbs.utils import guess_extension_name
 
 fetcher_signature = Callable[[ACBSSourceInfo,
@@ -20,7 +20,8 @@ def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name:
     for i in info:
         count += 1
         logging.info('Fetching source ({}/{})...'.format(count, len(info)))
-        fetch_source_inner(i, source_location, package_name)
+        url_hash = hash_url(i.url)
+        fetch_source_inner(i, source_location, url_hash)
     return None
 
 
@@ -93,7 +94,7 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
     extension = guess_extension_name(server_filename)
     # this name is used in the build directory (will be seen by the build scripts)
     # the name will be, e.g. 'acbs-0.1.0.tar.gz'
-    facade_name = '{name}-{version}{index}{extension}'.format(
+    facade_name = info.source_name or '{name}-{version}{index}{extension}'.format(
         name=source_name, version=package.version, extension=extension,
         index=('' if index == 0 else ('-%s' % index)))
     os.symlink(info.source_location, os.path.join(
@@ -134,7 +135,7 @@ def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
             'Please specify a specific git commit for this package. (GITCO not defined)')
     if not info.source_location:
         raise ValueError('Where is the git repository?')
-    checkout_location = os.path.join(package.build_location, source_name)
+    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     os.mkdir(checkout_location)
     logging.info('Checking out git repository at {}'.format(info.revision))
     subprocess.check_call(
@@ -173,7 +174,7 @@ def svn_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the subversion repository?')
-    checkout_location = os.path.join(package.build_location, source_name)
+    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     logging.info('Copying subversion repository...')
     shutil.copytree(info.source_location, checkout_location)
     return
@@ -197,7 +198,7 @@ def hg_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None
             'Please specify a specific hg commit for this package. (HGCO not defined)')
     if not info.source_location:
         raise ValueError('Where is the hg repository?')
-    checkout_location = os.path.join(package.build_location, source_name)
+    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     logging.info('Copying hg repository...')
     shutil.copytree(info.source_location, checkout_location)
     logging.info('Checking out hg repository at {}'.format(info.revision))
@@ -235,7 +236,7 @@ def bzr_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
             'Please specify a specific bzr revision for this package. (BZRCO not defined)')
     if not info.source_location:
         raise ValueError('Where is the bzr repository?')
-    checkout_location = os.path.join(package.build_location, source_name)
+    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     logging.info('Copying bzr repository...')
     shutil.copytree(info.source_location, checkout_location)
     logging.info('Checking out bzr repository at {}'.format(info.revision))

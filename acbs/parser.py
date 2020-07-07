@@ -13,7 +13,7 @@ from acbs.utils import get_arch_name, tarball_pattern
 
 def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     acbs_source_info = ACBSSourceInfo('none', '', '')
-    url_split = url.split('::', 1)
+    url_split = url.split('::', 2)
     schema = ''
     url_plain = ''
     if len(url_split) < 2:
@@ -24,36 +24,35 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
             schema = 'git'
         else:
             raise ValueError('Unable to deduce source type for {}.'.format(url_plain))
-    else:
+    elif len(url_split) < 3:
         schema = url_split[0].lower()
         url_plain = url_split[1]
+    else:
+        schema, options, url_plain = url_split
+        schema = schema.lower()
+        acbs_source_info = parse_fetch_options(options, acbs_source_info)
     acbs_source_info.type = 'tarball' if schema == 'tbl' else schema
     chksum_ = checksum.split('::', 1)
     if len(chksum_) != 2 and checksum != 'SKIP':
         raise ValueError('Malformed checksum: {}'.format(checksum))
     acbs_source_info.chksum = (chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
     acbs_source_info.url = url_plain
-    if acbs_source_info.type not in ['tarball', 'file']:
-        acbs_source_info = parse_vcs_trailing(url_plain, acbs_source_info)
     return acbs_source_info
 
 
-def parse_vcs_trailing(url_plain: str, acbs_source_info: ACBSSourceInfo):
-    extensions = None
-    hash_pos = -1
-    for i in range(len(url_plain) - 1, -1, -1):
-        if url_plain[i] == '#':
-            extensions = url_plain[i+1:]
-            hash_pos = i
-            break
-    if extensions:
-        splitted = extensions.split('=', 1)
-        if len(splitted) > 1 and splitted[0] in ['branch', 'commit']:
-            acbs_source_info.url = url_plain[:hash_pos]
-            if splitted[0] == 'branch':
-                acbs_source_info.branch = splitted[1]
-            elif splitted[0] == 'commit':
-                acbs_source_info.revision = splitted[1]
+def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
+    options = options.split(';')
+    for option in options:
+        k, v = option.split('=')
+        if k == 'branch':
+            acbs_source_info.branch = v.strip()
+        elif k == 'rename':
+            acbs_source_info.source_name = v.strip()
+        elif k == 'commit':
+            acbs_source_info.revision = v.strip()
+        # TODO: conditional checks
+        # elif k == 'condition':
+        #    acbs_source_info.enabled = False
     return acbs_source_info
 
 
@@ -65,7 +64,7 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
         logging.warning('Using legacy source directives')
         return [parse_package_url_legacy(var)]
     if checksums is None:
-        raise ValueError('Missing checksums. You can using `SKIP` for VCS sources.')
+        raise ValueError('Missing checksums. You can use `SKIP` for VCS sources.')
     sources_list = sources.strip().split()
     checksums_list = checksums.strip().split()
     if len(sources_list) != len(checksums_list):
