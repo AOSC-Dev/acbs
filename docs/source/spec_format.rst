@@ -47,10 +47,22 @@ Defines files are expected to exist in ``:/`` (root of the top project folder).
 * ``<VCS_NAME>COMMIT``  If set, indicates required commit/revision of the repository for the package.
 * ``SUBDIR`` If set, ``acbs`` will change to specified directory after finishing preparing the source files. (For a list of supported hashing algorithms, see :doc:`appendix`)
 
-Upcoming, drafted, not yet implemented in current version:
+Multiple source files:
 
-* ``SRCS`` Expected format: ``<VCS_NAME_1>::<URI_1> <VCS_NAME_2>::<URI_2> ...`` See the footnote below for more information [1]_
+* ``SRCS`` Expected format: ``<VCS_NAME_1>::<OPTIONS_1>::<URI_1> <VCS_NAME_2>::<URI_2> ...`` See footnote [1]_ for details about particular behavior.
 * ``CHKSUMS`` Expected format: ``<ALGO_NAME_1>::<HASH_VALUE_1> <ALGO_NAME_2>::<HASH_VALUE_2> ...`` If set, ``acbs`` will check the checksum of the source files against this value not available if the source is from VCS. [2]_
+
+Details about the ``SRCS`` format:
+
+* Each source specification in the array accepts one, two or three parameters:
+    #. One parameter only: ``<URL>``
+    #. Two parameters: ``<VCS_NAME>::<URL>``
+    #. Three parameters: ``<VCS_NAME>::<OPTIONS>::<URL>``
+
+* Currently supported options:
+    * ``branch``: Name of the branch
+    * ``commit``: Commit hash
+    * ``rename``: Rename the source file (including extension name if any)
 
 .. _Autobuild3: https://wiki.aosc.io/en/dev-sys-defines
 .. [1] Example: ``SRCS='git::git://github.com/AOSC-Dev/acbs git::https://github.com/AOSC-Dev/acbs'`` This will make ``acbs`` to download two sets of source files
