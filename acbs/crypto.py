@@ -1,11 +1,11 @@
 import hashlib
-from typing import Tuple
+from typing import Tuple, Optional
 
 
-def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> None:
+def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> Optional[str]:
     hash_type = chksum_type.lower()
     if hash_type == 'none':
-        return
+        return None
     if hash_type not in hashlib.algorithms_available:
         raise NotImplementedError(
             'Unsupported hash type %s! Currently supported: %s' % (

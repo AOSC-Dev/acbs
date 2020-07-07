@@ -41,8 +41,8 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
 
 
 def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
-    options = options.split(';')
-    for option in options:
+    options_split = options.split(';')
+    for option in options_split:
         k, v = option.split('=')
         if k == 'branch':
             acbs_source_info.branch = v.strip()
