@@ -211,7 +211,7 @@ def print_build_timings(timings: List[Tuple[str, float]]):
 def is_spec_legacy(spec: str) -> bool:
     with open(spec, 'rt') as f:
         content = f.read()
-    return content.index('SRCS=') >= 0
+    return content.find('SRCS=') >= 0
 
 
 def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
@@ -223,11 +223,11 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
             raise ValueError(
                 'Unable to calculate checksum for {}'.format(o.source_location))
         o.chksum = ('sha256', csum)
-        return
+        return o
 
     if legacy and info[0].type == 'tarball':
         if not info[0].chksum:
-            calculate_checksum(info[0])
+            info[0] = calculate_checksum(info[0])
         return 'CHKSUM=\'{}\''.format('::'.join(info[0].chksum))
     output = 'CHKSUMS=\'{}\''
     sums = []
@@ -235,7 +235,7 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
     for i in info:
         if i.type == 'tarball':
             if i.chksum[0] == 'none':
-                calculate_checksum(i)
+                i = calculate_checksum(i)
             sums.append('::'.join(i.chksum))
         else:
             sums.append('SKIP')
@@ -245,7 +245,10 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
 def write_checksums(spec: str, checksums: str):
     with open(spec, 'rt') as f:
         content = f.read()
-    content = re.sub(chksum_pattern, spec, checksums)
+    if re.search(chksum_pattern, content):
+        content = re.sub(chksum_pattern, content, checksums)
+    else:
+        content = content.rstrip() + "\n" + checksums
     with open(spec, 'wt') as f:
         f.write(content)
     return

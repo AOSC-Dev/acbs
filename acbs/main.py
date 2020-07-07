@@ -7,11 +7,13 @@ import traceback
 from pathlib import Path
 from typing import List, Tuple
 
+import acbs.fetch
+
 from acbs import __version__
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap
 from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import tarjan_search
-from acbs.fetch import fetch_source, process_source, generate_mode
+from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
 from acbs.parser import get_deps_graph, get_tree_by_name
 from acbs.pm import install_from_repo
@@ -95,7 +97,7 @@ class BuildCore(object):
         logging.debug('Queue: {}'.format(packages))
         logging.info('Packages to be built: {}'.format(
             print_package_names(packages, 5)))
-        generate_mode = self.generate
+        acbs.fetch.generate_mode = self.generate
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
