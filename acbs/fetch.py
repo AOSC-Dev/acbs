@@ -115,7 +115,7 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
 
 
 def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
-    return tarball_processor_innner(package, index, source_name)
+    return tarball_processor_innner(package, index, source_name, False)
 
 
 def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
