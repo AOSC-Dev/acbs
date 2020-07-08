@@ -10,6 +10,8 @@ from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
 from acbs.utils import get_arch_name, tarball_pattern
 
+generate_mode = False
+
 
 def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     acbs_source_info = ACBSSourceInfo('none', '', '')
@@ -64,12 +66,12 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
     if sources is None:
         logging.warning('Using legacy source directives')
         return [parse_package_url_legacy(var)]
-    if checksums is None:
+    if checksums is None and not generate_mode:
         raise ValueError(
             'Missing checksums. You can use `SKIP` for VCS sources.')
     sources_list = sources.strip().split()
-    checksums_list = checksums.strip().split()
-    if len(sources_list) != len(checksums_list):
+    checksums_list = checksums.strip().split() if checksums else []
+    if len(sources_list) != len(checksums_list) and not generate_mode:
         raise ValueError(
             'Sources array and checksums array must have the same length.')
     for s, c in zip(sources_list, checksums_list):

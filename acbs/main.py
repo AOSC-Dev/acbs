@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import acbs.fetch
+import acbs.parser
 
 from acbs import __version__
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap
@@ -98,6 +99,7 @@ class BuildCore(object):
         logging.info('Packages to be built: {}'.format(
             print_package_names(packages, 5)))
         acbs.fetch.generate_mode = self.generate
+        acbs.parser.generate_mode = self.generate
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:

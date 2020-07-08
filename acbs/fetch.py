@@ -63,12 +63,8 @@ def process_source(info: ACBSPackageInfo, source_name: str) -> None:
 # Fetchers implementations
 def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     if source_location:
-        filename = ''
-        if info.chksum[1]:
-            filename = info.chksum[1]
-        elif generate_mode:
-            filename = hash_url(info.url)
-        else:
+        filename = hash_url(info.url)
+        if not info.chksum[1] and not generate_mode:
             raise ValueError('No checksum found. Please specify the checksum!')
         full_path = os.path.join(source_location, filename)
         flag_path = os.path.join(source_location, '{}.dl'.format(filename))
