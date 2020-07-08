@@ -50,9 +50,8 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             acbs_source_info.source_name = v.strip()
         elif k == 'commit':
             acbs_source_info.revision = v.strip()
-        # TODO: conditional checks
-        # elif k == 'condition':
-        #    acbs_source_info.enabled = False
+        elif k == 'arch':
+            acbs_source_info.enabled = v.strip().lower() == arch
     return acbs_source_info
 
 
