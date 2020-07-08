@@ -70,8 +70,8 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
         raise ValueError(
             'Missing checksums. You can use `SKIP` for VCS sources.')
     sources_list = sources.strip().split()
-    checksums_list = checksums.strip().split() if checksums else []
-    if len(sources_list) != len(checksums_list) and not generate_mode:
+    checksums_list = checksums.strip().split() if checksums else ['::'] * len(sources_list)
+    if len(sources_list) != len(checksums_list):
         raise ValueError(
             'Sources array and checksums array must have the same length.')
     for s, c in zip(sources_list, checksums_list):
