@@ -250,11 +250,40 @@ def bzr_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     return None
 
 
+def fossil_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+    full_path = os.path.join(source_location, name + '.fossil')
+    if not os.path.exists(full_path):
+        subprocess.check_call(['fossil', 'clone', info.url, full_path])
+    else:
+        logging.info('Updating repository...')
+        subprocess.check_call(['fossil', 'pull', '-R', full_path])
+    info.source_location = full_path
+    return info
+
+
+def fossil_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
+    info = package.source_uri[index]
+    if not info.revision:
+        raise ValueError(
+            'Please specify a specific fossil commit for this package. (not defined)')
+    if not info.source_location:
+        raise ValueError('Where is the fossil repository?')
+    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
+    os.mkdir(checkout_location)
+    logging.info('Opening up the fossil repository...')
+    subprocess.check_call(
+        ['fossil', 'open', info.source_location], cwd=checkout_location)
+    logging.info('Checking out fossil repository at {}'.format(info.revision))
+    subprocess.check_call(['fossil', 'update', info.revision], cwd=checkout_location)
+    return None
+
+
 handlers: Dict[str, pair_signature] = {
     'GIT': (git_fetch, git_processor),
     'SVN': (svn_fetch, svn_processor),
     'BZR': (bzr_fetch, bzr_processor),
     'HG': (hg_fetch, hg_processor),
+    'FOSSIL': (fossil_fetch, fossil_processor),
     'TARBALL': (tarball_fetch, tarball_processor),
     'FILE': (tarball_fetch, blob_processor),
     'NONE': (dummy_fetch, dummy_processor),
