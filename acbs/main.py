@@ -84,6 +84,8 @@ class BuildCore(object):
     def build(self) -> None:
         packages = []
         build_timings: List[Tuple[str, float]] = []
+        acbs.fetch.generate_mode = self.generate
+        acbs.parser.generate_mode = self.generate
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
         for i in self.build_queue:
@@ -98,8 +100,6 @@ class BuildCore(object):
         logging.debug('Queue: {}'.format(packages))
         logging.info('Packages to be built: {}'.format(
             print_package_names(packages, 5)))
-        acbs.fetch.generate_mode = self.generate
-        acbs.parser.generate_mode = self.generate
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:

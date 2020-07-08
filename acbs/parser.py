@@ -64,7 +64,7 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
     checksums = var.get('CHKSUMS__{arch}'.format(
         arch=arch.upper())) or var.get('CHKSUMS')
     if sources is None:
-        logging.warning('Using legacy source directives')
+        logging.debug('Using legacy source directives')
         return [parse_package_url_legacy(var)]
     if checksums is None and not generate_mode:
         raise ValueError(
