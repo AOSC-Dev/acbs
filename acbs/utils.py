@@ -243,8 +243,8 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
 def write_checksums(spec: str, checksums: str):
     with open(spec, 'rt') as f:
         content = f.read()
-    if re.search(chksum_pattern, content):
-        content = re.sub(chksum_pattern, checksums, content)
+    if re.search(chksum_pattern, content, re.MULTILINE | re.DOTALL):
+        content = re.sub(chksum_pattern, checksums, content, flags=re.MULTILINE | re.DOTALL)
     else:
         content = content.rstrip() + "\n" + checksums + "\n"
     with open(spec, 'wt') as f:
