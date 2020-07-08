@@ -23,7 +23,8 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
         elif url_plain.endswith('.git') or url_plain.startswith('git://'):
             schema = 'git'
         else:
-            raise ValueError('Unable to deduce source type for {}.'.format(url_plain))
+            raise ValueError(
+                'Unable to deduce source type for {}.'.format(url_plain))
     elif len(url_split) < 3:
         schema = url_split[0].lower()
         url_plain = url_split[1]
@@ -35,7 +36,8 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     chksum_ = checksum.split('::', 1)
     if len(chksum_) != 2 and checksum != 'SKIP':
         raise ValueError('Malformed checksum: {}'.format(checksum))
-    acbs_source_info.chksum = (chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
+    acbs_source_info.chksum = (
+        chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
     acbs_source_info.url = url_plain
     return acbs_source_info
 
@@ -50,24 +52,26 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             acbs_source_info.source_name = v.strip()
         elif k == 'commit':
             acbs_source_info.revision = v.strip()
-        elif k == 'arch':
-            acbs_source_info.enabled = v.strip().lower() == arch
     return acbs_source_info
 
 
 def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
     acbs_source_info: List[ACBSSourceInfo] = []
-    sources = var.get('SRCS')
-    checksums = var.get('CHKSUMS')
+    sources = var.get('SRCS__{arch}'.format(
+        arch=arch.upper())) or var.get('SRCS')
+    checksums = var.get('CHKSUMS__{arch}'.format(
+        arch=arch.upper())) or var.get('CHKSUMS')
     if sources is None:
         logging.warning('Using legacy source directives')
         return [parse_package_url_legacy(var)]
     if checksums is None:
-        raise ValueError('Missing checksums. You can use `SKIP` for VCS sources.')
+        raise ValueError(
+            'Missing checksums. You can use `SKIP` for VCS sources.')
     sources_list = sources.strip().split()
     checksums_list = checksums.strip().split()
     if len(sources_list) != len(checksums_list):
-        raise ValueError('Sources array and checksums array must have the same length.')
+        raise ValueError(
+            'Sources array and checksums array must have the same length.')
     for s, c in zip(sources_list, checksums_list):
         acbs_source_info.append(parse_url_schema(s, c))
     return acbs_source_info

@@ -21,7 +21,8 @@ def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name:
     for i in info:
         count += 1
         logging.info('Fetching source ({}/{})...'.format(count, len(info)))
-        if not i.enabled:
+        # in generate mode, we need to fetch all the sources
+        if not i.enabled and not generate_mode:
             logging.info('Source {} skipped.'.format(count))
         url_hash = hash_url(i.url)
         fetch_source_inner(i, source_location, url_hash)
