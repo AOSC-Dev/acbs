@@ -30,7 +30,7 @@ class BuildCore(object):
         self.debug = args.debug
         self.no_deps = args.no_deps
         self.dl_only = args.get
-        self.tree = args.acbs_tree or 'default'
+        self.tree = 'default'
         self.build_queue = args.packages
         self.generate = args.acbs_write
         self.tree_dir = ''
@@ -40,6 +40,9 @@ class BuildCore(object):
         self.dump_dir = DUMP_DIR
         self.tmp_dir = TMP_DIR
         self.log_dir = LOG_DIR
+
+        if args.acbs_tree:
+            self.tree = args.acbs_tree[0]
         self.init()
 
     def init(self) -> None:
