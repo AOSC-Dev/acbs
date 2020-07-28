@@ -24,6 +24,8 @@ except ImportError:
 
 chksum_pattern = r"CHKSUM(?:S)?=['\"].*?['\"]"
 tarball_pattern = r'\.(tar\..+|cpio\..+)'
+aarch32_pattern = r'armv.l'
+armhf_pattern = '/lib/ld-linux-armhf.so.3'
 SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
                 if v.startswith('SIG') and not v.startswith('SIG_'))
 
@@ -67,19 +69,25 @@ def get_arch_name() -> Optional[str]:
     """
     import platform
     uname_var = platform.machine() or platform.processor()
-    return {
+    uname_tr = {
         'x86_64': 'amd64',
         'i486': 'i486',
         'i686': 'i686',
-        'armv7l': 'armel',
-        'armv8l': 'armel',
         'aarch64': 'arm64',
         'ppc': 'powerpc',
         'ppc64': 'ppc64',
         'ppc64le': 'ppc64el',
         'riscv64': 'riscv64',
         'mips64': 'mips64r2el'
-    }.get(uname_var) or uname_var
+    }.get(uname_var)
+    if uname_tr:
+        return uname_tr
+    # ARM shenanigans
+    if re.match(aarch32_pattern, uname_var):
+        if os.path.exists(armhf_pattern):
+            return 'armhf'
+        return 'armel'
+    return None
 
 
 def full_line_banner(msg: str, char='-') -> str:
