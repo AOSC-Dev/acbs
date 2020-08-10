@@ -67,26 +67,11 @@ def get_arch_name() -> Optional[str]:
 
     :returns: architecture name
     """
-    import platform
-    uname_var = platform.machine() or platform.processor()
-    uname_tr = {
-        'x86_64': 'amd64',
-        'i486': 'i486',
-        'i686': 'i686',
-        'aarch64': 'arm64',
-        'ppc': 'powerpc',
-        'ppc64': 'ppc64',
-        'ppc64le': 'ppc64el',
-        'riscv64': 'riscv64',
-        'mips64': 'mips64r2el'
-    }.get(uname_var)
-    if uname_tr:
-        return uname_tr
-    # ARM shenanigans
-    if re.match(aarch32_pattern, uname_var):
-        if os.path.exists(armhf_pattern):
-            return 'armhf'
-        return 'armel'
+    try:
+        output = subprocess.check_output(['dpkg', '--print-architecture'])
+        return output.decode('utf-8').strip()
+    except Exception:
+        return None
     return None
 
 
