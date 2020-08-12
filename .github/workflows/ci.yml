@@ -32,7 +32,7 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --exclude='build,.mypy_cache,venv,dist' --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run unittests
-      run: python -m unittest discover ./tests/
+      run: ARCH=amd64 python -m unittest discover ./tests/
     - name: Install native dependencies
       run: sudo apt-get install -y libapt-pkg-dev
     - name: Test building

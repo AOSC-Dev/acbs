@@ -44,14 +44,17 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
             raise ValueError(
                 'Package {name} not found'.format(name=vert))
         if isinstance(package, list):
-            current_package = package[0]
-            pool[current_package.name] = current_package
-            for s in package[1:]:
-                packages_list.append(s.name)
+            for s in package:
+                if vert == s.name:
+                    current_package = s
+                    pool[s.name] = s
+                    continue
                 pool[s.name] = s
+                packages_list.append(s.name)
         else:
             current_package = package
             pool[vert] = current_package
+    assert current_package is not None
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:
