@@ -197,7 +197,8 @@ class BuildCore(object):
                     print_build_timings(build_timings)
                 raise RuntimeError(
                     'Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
-            build_timings.append((task.name, time.monotonic() - start))
+            task_name = '{} ({} @ {})'.format(task.name, task.bin_arch, task.version)
+            build_timings.append((task_name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))

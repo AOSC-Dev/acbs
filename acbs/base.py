@@ -32,6 +32,7 @@ class ACBSPackageInfo(object):
         self.source_uri = source_uri
         self.version = ''
         self.subdir: Optional[str] = None
+        self.bin_arch = ''
         # script location (autobuild directory)
         self.script_location = location
 
