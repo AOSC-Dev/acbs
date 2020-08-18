@@ -73,7 +73,9 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
     checksums_list = checksums.strip().split() if checksums else ['::'] * len(sources_list)
     if len(sources_list) != len(checksums_list):
         raise ValueError(
-            'Sources array and checksums array must have the same length.')
+            'Sources array and checksums array must have the same length (Sources: %s, Checksums: %s).' % 
+            (len(sources_list), len(checksums_list))
+        )
     for s, c in zip(sources_list, checksums_list):
         acbs_source_info.append(parse_url_schema(s, c))
     return acbs_source_info
