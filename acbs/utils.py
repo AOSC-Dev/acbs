@@ -218,14 +218,14 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
         o.chksum = ('sha256', csum)
         return o
 
-    if legacy and info[0].type == 'tarball':
+    if legacy and info[0].type in ('tarball', 'file'):
         info[0] = calculate_checksum(info[0])
         return 'CHKSUM=\'{}\''.format('::'.join(info[0].chksum))
     output = 'CHKSUMS=\'{}\''
     sums = []
     formatter = ' ' if len(info) < 3 else ' \\\n         '
     for i in info:
-        if i.type == 'tarball':
+        if i.type in ('tarball', 'file'):
             i = calculate_checksum(i)
             sums.append('::'.join(i.chksum))
         else:
