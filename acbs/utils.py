@@ -220,7 +220,7 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
 
     if legacy and info[0].type == 'tarball':
         info[0] = calculate_checksum(info[0])
-        return 'CHKSUM=\'{}\''.format('::'.join(info[0].chksum))
+        return 'CHKSUM=\"{}\"'.format('::'.join(info[0].chksum))
     output = 'CHKSUMS=\"{}\"'
     sums = []
     formatter = ' ' if len(info) < 3 else ' \\\n         '
