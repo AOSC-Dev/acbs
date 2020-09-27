@@ -64,6 +64,13 @@ Details about the ``SRCS`` format:
     * ``commit``: Commit hash
     * ``rename``: Rename the source file (including extension name if any)
 
-.. _Autobuild3: https://wiki.aosc.io/en/dev-sys-defines
-.. [1] Example: ``SRCS='git::git://github.com/AOSC-Dev/acbs git::https://github.com/AOSC-Dev/acbs'`` This will make ``acbs`` to download two sets of source files
-.. [2] Example: ``CHKSUMS='sha1::a9c55882c935300bec93e209f1ec8a21f75638b7 sha256::4ccdbbd95d4aef058502c8ee07b1abb490f5ef4a4d6ff711440facd0b8eded33'`` This will make ``acbs`` to check two sets of source files
+To specify multiple options, you can join the options with semicolons (``;``) like this:
+::
+
+  SRCS="tbl::rename=lmms-git;commit=94363be::https://github.com/LMMS/lmms"
+
+The snippet above will make ``acbs`` rename the source directory to ``lmms-git`` and checkout the commit ``94363be``.
+
+.. _Autobuild3: https://wiki.aosc.io/developer/packaging/autobuild3-manual/#the-defines-file
+.. [1] Example: ``SRCS="git::git://github.com/AOSC-Dev/acbs git::https://github.com/AOSC-Dev/acbs"`` This will make ``acbs`` to download two sets of source files
+.. [2] Example: ``CHKSUMS="sha1::a9c55882c935300bec93e209f1ec8a21f75638b7 sha256::4ccdbbd95d4aef058502c8ee07b1abb490f5ef4a4d6ff711440facd0b8eded33"`` This will make ``acbs`` to check two sets of source files
