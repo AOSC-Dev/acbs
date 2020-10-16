@@ -13,6 +13,7 @@ from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib_inner
 from acbs.const import (ANSI_BROWN, ANSI_GREEN, ANSI_LT_CYAN, ANSI_RED,
                         ANSI_RST, ANSI_YELLOW)
+from acbs import __version__
 
 build_logging = False
 
@@ -151,6 +152,16 @@ def start_build_capture(build_dir: str):
             raise RuntimeError('autobuild3 did not exit successfully.')
 
 
+def generate_metadata(task: ACBSPackageInfo) -> str:
+    tree_commit = 'unknown'
+    try:
+        tree_commit = subprocess.check_output(
+            ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8')
+    except subprocess.CalledProcessError as ex:
+        logging.warning('Could not determine tree commit: {}'.format(ex))
+    return 'X-AOSC-ACBS-Version: {}\nX-AOSC-Commit: {}\n'.format(__version__, tree_commit)
+
+
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     dst_dir = os.path.join(build_dir, 'autobuild')
     if os.path.exists(dst_dir) and task.group_seq > 1:
@@ -161,6 +172,8 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
             task.rel, task.version, acbs_helper, acbs_helper))
+    with open(os.path.join(build_dir, 'autobuild', 'extra-dpkg-control'), 'wt') as f:
+        f.write(generate_metadata(task))
     os.chdir(build_dir)
     if build_logging:
         start_build_capture(build_dir)
@@ -237,7 +250,8 @@ def write_checksums(spec: str, checksums: str):
     with open(spec, 'rt') as f:
         content = f.read()
     if re.search(chksum_pattern, content, re.MULTILINE | re.DOTALL):
-        content = re.sub(chksum_pattern, checksums, content, flags=re.MULTILINE | re.DOTALL)
+        content = re.sub(chksum_pattern, checksums, content,
+                         flags=re.MULTILINE | re.DOTALL)
     else:
         content = content.rstrip() + "\n" + checksums + "\n"
     with open(spec, 'wt') as f:
