@@ -159,7 +159,7 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
             ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8')
     except subprocess.CalledProcessError as ex:
         logging.warning('Could not determine tree commit: {}'.format(ex))
-    return 'X-AOSC-ACBS-Version: {}\nX-AOSC-Commit: {}\n'.format(__version__, tree_commit)
+    return 'X-AOSC-ACBS-Version: {}\nX-AOSC-Commit: {}'.format(__version__, tree_commit)
 
 
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
