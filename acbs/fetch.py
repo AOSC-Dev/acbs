@@ -91,7 +91,7 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
     info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the source file?')
-    logging.info('Computing %s checksum of %s...' % (info.chksum, info.source_location))
+    logging.info('Computing %s checksum for %s...' % (info.chksum, info.source_location))
     check_hash_hashlib(info.chksum, info.source_location)
     server_filename = os.path.basename(info.url)
     extension = guess_extension_name(server_filename)
