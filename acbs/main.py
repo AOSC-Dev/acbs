@@ -160,7 +160,8 @@ class BuildCore(object):
                 fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
                 if self.generate:
-                    spec_location = os.path.join(task.script_location, '..', 'spec')
+                    spec_location = os.path.join(
+                        task.script_location, '..', 'spec')
                     is_legacy = is_spec_legacy(spec_location)
                     checksum = generate_checksums(task.source_uri, is_legacy)
                     write_checksums(spec_location, checksum)
@@ -197,7 +198,8 @@ class BuildCore(object):
                     print_build_timings(build_timings)
                 raise RuntimeError(
                     'Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
-            task_name = '{} ({} @ {})'.format(task.name, task.bin_arch, task.version)
+            task_name = '{} ({} @ {}-{})'.format(task.name,
+                                                 task.bin_arch, task.version, task.rel)
             build_timings.append((task_name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
