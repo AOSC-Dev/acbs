@@ -10,7 +10,6 @@ def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> Optional[str
         raise NotImplementedError(
             'Unsupported hash type %s! Currently supported: %s' % (
                 hash_type, ' '.join(sorted(hashlib.algorithms_available))))
-    logging.info('Computing %s of %s...' % (chksum_type, target_file))
     hash_obj = hashlib.new(hash_type)
     with open(target_file, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
