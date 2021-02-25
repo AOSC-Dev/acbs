@@ -54,6 +54,17 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             acbs_source_info.source_name = v.strip()
         elif k == 'commit':
             acbs_source_info.revision = v.strip()
+        elif k == 'copy-repo':
+            acbs_source_info.copy_repo = v.strip() == 'true'
+        elif k == 'submodule':
+            translated = {
+                'false': 0,
+                'true': 1,
+                'recursive': 2,
+            }.get(v.strip())
+            if not translated:
+                raise ValueError(f'Invalid submodule directive: {v}')
+            acbs_source_info.submodule = translated
     return acbs_source_info
 
 

@@ -144,12 +144,25 @@ def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     subprocess.check_call(
         ['git', '--git-dir', info.source_location, '--work-tree', checkout_location,
          'checkout', '-f', info.revision or ''])
-    logging.info('Fetching submodules (if any)...')
-    subprocess.check_call(
-        [
-            'git', '--git-dir', info.source_location, '--work-tree', checkout_location,
-            'submodule', 'update', '--init', '--recursive'
-        ], cwd=checkout_location)
+    if info.submodule > 0:
+        logging.info('Fetching submodules (if any)...')
+        params = [
+                'git', '--git-dir', info.source_location, '--work-tree', checkout_location,
+                'submodule', 'update', '--init'
+            ]
+        if info.submodule == 2:
+            params.append('--recursive')
+        subprocess.check_call(params, cwd=checkout_location)
+    if info.copy_repo:
+        logging.info('Copying git folder...')
+        shutil.copytree(info.source_location, os.path.join(checkout_location, '.git'))
+        with open(os.path.join(checkout_location, '.git', 'config'), 'r+') as f:
+            content = f.read()
+            content = content.replace('bare = true', 'bare = false')
+            f.seek(0)
+            f.write(content)
+            f.truncate()
+        return None
     with open(os.path.join(package.build_location, '.acbs-script'), 'wt') as f:
         f.write(
             'ACBS_SRC=\'%s\';acbs_copy_git(){ abinfo \'Copying git folder...\'; cp -ar "${ACBS_SRC}" .git/; sed -i \'s|bare = true|bare = false|\' \'.git/config\'; }' % (info.source_location))
@@ -207,6 +220,9 @@ def hg_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None
     logging.info(f'Checking out hg repository at {info.revision}')
     subprocess.check_call(
         ['hg', 'update', '-C', '-r', info.revision, '-R', checkout_location])
+    if info.copy_repo:
+        logging.info('Copying hg repository ...')
+        shutil.copytree(info.source_location, os.path.join(checkout_location, '.hg'))
     return None
 
 
