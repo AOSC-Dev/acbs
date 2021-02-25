@@ -129,8 +129,8 @@ def has_stamp(path: str) -> bool:
 
 def start_build_capture(build_dir: str):
     with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=build_dir, delete=False) as f:
-        logging.info('Build log: %s' % f.name)
-        header = '!!ACBS Build Log\n!!Build start: %s\n' % time.ctime()
+        logging.info(f'Build log: {f.name}')
+        header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n' 
         f.write(header.encode())
         process = pexpect.spawn('autobuild', logfile=f)
         term_size = shutil.get_terminal_size()
@@ -144,9 +144,9 @@ def start_build_capture(build_dir: str):
         exit_status = process.exitstatus
         signal_status = process.signalstatus
         if signal_status:
-            footer = '\n!!Build killed with %s' % SIGNAMES[signal_status]
+            footer = f'\n!!Build killed with {SIGNAMES[signal_status]}'
         else:
-            footer = '\n!!Build exited with %s' % exit_status
+            footer = f'\n!!Build exited with {exit_status}'
         f.write(footer.encode())
         if signal_status or exit_status:
             raise RuntimeError('autobuild3 did not exit successfully.')
@@ -158,8 +158,8 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
         tree_commit = subprocess.check_output(
             ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8')
     except subprocess.CalledProcessError as ex:
-        logging.warning('Could not determine tree commit: {}'.format(ex))
-    return 'X-AOSC-ACBS-Version: {}\nX-AOSC-Commit: {}'.format(__version__, tree_commit)
+        logging.warning(f'Could not determine tree commit: {ex}')
+    return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}'
 
 
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
@@ -193,7 +193,7 @@ def human_time(full_seconds: float) -> str:
     out_str_tmp = '{}'.format(
         datetime.timedelta(seconds=full_seconds))
     out_str = out_str_tmp.replace(
-        ':', ('{}:{}'.format(ANSI_GREEN, ANSI_RST)))
+        ':', (f'{ANSI_GREEN}:{ANSI_RST}'))
     return out_str
 
 
@@ -227,7 +227,7 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
         csum = check_hash_hashlib_inner('sha256', o.source_location)
         if not csum:
             raise ValueError(
-                'Unable to calculate checksum for {}'.format(o.source_location))
+                f'Unable to calculate checksum for {o.source_location}')
         o.chksum = ('sha256', csum)
         return o
 
@@ -266,14 +266,13 @@ class ACBSLogFormatter(logging.Formatter):
 
     def format(self, record):
         lvl_map = {
-            'WARNING': '{}WARN{}'.format(ANSI_BROWN, ANSI_RST),
-            'INFO': '{}INFO{}'.format(ANSI_LT_CYAN, ANSI_RST),
-            'DEBUG': '{}DEBUG{}'.format(ANSI_GREEN, ANSI_RST),
-            'ERROR': '{}ERROR{}'.format(ANSI_RED, ANSI_RST),
-            'CRITICAL': '{}CRIT{}'.format(ANSI_YELLOW, ANSI_RST)
+            'WARNING': f'{ANSI_BROWN}WARN{ANSI_RST}',
+            'INFO': f'{ANSI_LT_CYAN}INFO{ANSI_RST}',
+            'DEBUG': f'{ANSI_GREEN}DEBUG{ANSI_RST}',
+            'ERROR': f'{ANSI_RED}ERROR{ANSI_RST}',
+            'CRITICAL': f'{ANSI_YELLOW}CRIT{ANSI_RST}'
         }
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
-            record.msg = '[{}]: \033[1m{}\033[0m'.format(
-                lvl_map[record.levelname], record.msg)
+            record.msg = f'[{lvl_map[record.levelname]}]: \033[1m{record.msg}\033[0m'
         return super(ACBSLogFormatter, self).format(record)

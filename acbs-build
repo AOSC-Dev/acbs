@@ -21,7 +21,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',
-                        help='Show the version and exit', action="version", version='ACBS version {}'.format(acbs.__version__))
+                        help='Show the version and exit', action="version", version=f'ACBS version {acbs.__version__}')
     parser.add_argument(
         '-d', '--debug', help='Increase verbosity to ease debugging process', action="store_true")
     parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
@@ -102,8 +102,7 @@ def clear_tmp(tmp_dir: str) -> None:
 
 
 def help_msg(acbs_version: str) -> str:
-    help_msg = '''ACBS - AOSC CI Build System\nVersion: {}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''.format(
-        acbs_version)
+    help_msg = f'''ACBS - AOSC CI Build System\nVersion: {acbs_version}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''
     return help_msg
 
 

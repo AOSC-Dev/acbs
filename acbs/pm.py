@@ -39,7 +39,7 @@ def escape_package_name(name: str) -> str:
 def escape_package_name_install(name: str) -> str:
     escaped = escape_package_name(name)
     if escaped.endswith('+') or escaped.endswith('-'):
-        return '{}+'.format(escaped)
+        return f'{escaped}+'
     return escaped
 
 

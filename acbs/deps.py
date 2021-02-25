@@ -42,7 +42,7 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
         package = pool.get(vert) or find_package(vert, search_path)
         if not package:
             raise ValueError(
-                'Package {name} not found'.format(name=vert))
+                f'Package {vert} not found')
         if isinstance(package, list):
             for s in package:
                 if vert == s.name:

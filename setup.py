@@ -28,7 +28,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="acbs",
-    version="0.1.{}".format(__version__),
+    version=f"0.1.{__version__}",
     author="liushuyu",
     author_email="liushuyu@aosc.io",
     description="AOSC CI Building System",

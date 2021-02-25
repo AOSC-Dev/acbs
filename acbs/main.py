@@ -99,10 +99,9 @@ class BuildCore(object):
             packages.extend(package)
         resolved = self.resolve_deps(packages)
         logging.info(
-            'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
-        logging.debug('Queue: {}'.format(packages))
-        logging.info('Packages to be built: {}'.format(
-            print_package_names(packages, 5)))
+            f'Dependencies resolved, {len(resolved)} packages in the queue')
+        logging.debug(f'Queue: {packages}')
+        logging.info(f'Packages to be built: {print_package_names(packages, 5)}')
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
@@ -115,7 +114,7 @@ class BuildCore(object):
         shrink_wrap = ACBSShrinkWrap(
             self.package_cursor, build_timings, packages, self.no_deps)
         filename = do_shrink_wrap(shrink_wrap, self.tree_dir)
-        logging.info('... saved to {}'.format(filename))
+        logging.info(f'... saved to {filename}')
         raise RuntimeError(
             'Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
 

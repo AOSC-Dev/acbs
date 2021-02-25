@@ -20,10 +20,10 @@ def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name:
     count = 0
     for i in info:
         count += 1
-        logging.info('Fetching source ({}/{})...'.format(count, len(info)))
+        logging.info(f'Fetching source ({count}/{len(info)})...')
         # in generate mode, we need to fetch all the sources
         if not i.enabled and not generate_mode:
-            logging.info('Source {} skipped.'.format(count))
+            logging.info(f'Source {count} skipped.')
         url_hash = hash_url(i.url)
         fetch_source_inner(i, source_location, url_hash)
     return None
@@ -34,14 +34,14 @@ def fetch_source_inner(info: ACBSSourceInfo, source_location: str, package_name:
     retry = 0
     fetcher: Optional[pair_signature] = handlers.get(type_.upper())
     if not fetcher or not callable(fetcher[0]):
-        raise NotImplementedError('Unsupported source type: {}'.format(type_))
+        raise NotImplementedError(f'Unsupported source type: {type_}')
     while retry < 5:
         retry += 1
         try:
             return fetcher[0](info, source_location, package_name)
         except Exception as ex:
             logging.exception(ex)
-            logging.warning('Retrying ({}/5)...'.format(retry))
+            logging.warning(f'Retrying ({retry}/5)...')
             continue
     raise RuntimeError(
         'Unable to fetch source files, failed 5 times in a row.')
@@ -54,7 +54,7 @@ def process_source(info: ACBSPackageInfo, source_name: str) -> None:
         fetcher: Optional[pair_signature] = handlers.get(type_.upper())
         if not fetcher or not callable(fetcher[1]):
             raise NotImplementedError(
-                'Unsupported source type: {}'.format(type_))
+                f'Unsupported source type: {type_}')
         fetcher[1](info, idx, source_name)
         idx += 1
     return
@@ -67,7 +67,7 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
         if not info.chksum[1] and not generate_mode:
             raise ValueError('No checksum found. Please specify the checksum!')
         full_path = os.path.join(source_location, filename)
-        flag_path = os.path.join(source_location, '{}.dl'.format(filename))
+        flag_path = os.path.join(source_location, f'{filename}.dl')
         if os.path.exists(full_path) and not os.path.exists(flag_path):
             info.source_location = full_path
             return info
@@ -105,7 +105,7 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
     if not decompress:
         return
     # decompress
-    logging.info('Extracting {}...'.format(facade_name))
+    logging.info(f'Extracting {facade_name}...')
     subprocess.check_call(['bsdtar', '-xf', facade_name],
                           cwd=package.build_location)
     return
@@ -140,7 +140,7 @@ def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
         raise ValueError('Where is the git repository?')
     checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     os.mkdir(checkout_location)
-    logging.info('Checking out git repository at {}'.format(info.revision))
+    logging.info(f'Checking out git repository at {info.revision}')
     subprocess.check_call(
         ['git', '--git-dir', info.source_location, '--work-tree', checkout_location,
          'checkout', '-f', info.revision or ''])
@@ -162,7 +162,7 @@ def svn_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
         raise ValueError(
             'Please specify a svn revision for this package. (SVNCO not defined)')
     logging.info(
-        'Checking out subversion repository at r{}'.format(info.revision))
+        f'Checking out subversion repository at r{info.revision}')
     if not os.path.exists(full_path):
         subprocess.check_call(
             ['svn', 'co', '--force', '-r', info.revision, info.url, full_path])
@@ -204,7 +204,7 @@ def hg_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None
     checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     logging.info('Copying hg repository...')
     shutil.copytree(info.source_location, checkout_location)
-    logging.info('Checking out hg repository at {}'.format(info.revision))
+    logging.info(f'Checking out hg repository at {info.revision}')
     subprocess.check_call(
         ['hg', 'update', '-C', '-r', info.revision, '-R', checkout_location])
     return None
@@ -242,7 +242,7 @@ def bzr_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     checkout_location = os.path.join(package.build_location, info.source_name or source_name)
     logging.info('Copying bzr repository...')
     shutil.copytree(info.source_location, checkout_location)
-    logging.info('Checking out bzr repository at {}'.format(info.revision))
+    logging.info(f'Checking out bzr repository at {info.revision}')
     subprocess.check_call(
         ['bzr', 'co', '-r', info.revision], cwd=checkout_location)
     return None
@@ -271,7 +271,7 @@ def fossil_processor(package: ACBSPackageInfo, index: int, source_name: str) -> 
     logging.info('Opening up the fossil repository...')
     subprocess.check_call(
         ['fossil', 'open', info.source_location], cwd=checkout_location)
-    logging.info('Checking out fossil repository at {}'.format(info.revision))
+    logging.info(f'Checking out fossil repository at {info.revision}')
     subprocess.check_call(['fossil', 'update', info.revision], cwd=checkout_location)
     return None
 
