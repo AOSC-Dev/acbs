@@ -162,6 +162,13 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
     return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}'
 
 
+def check_artifact(name: str, build_dir: str):
+    for f in os.listdir(build_dir):
+        if f.endswith('.deb') and f.startswith(name):
+            return
+    raise RuntimeError('STOP! Autobuild3 malfunction detected! Returned zero status with no artifact.')
+
+
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     dst_dir = os.path.join(build_dir, 'autobuild')
     if os.path.exists(dst_dir) and task.group_seq > 1:

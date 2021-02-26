@@ -21,7 +21,7 @@ from acbs.pm import install_from_repo
 from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
                         print_build_timings, print_package_names, write_checksums,
-                        generate_checksums, is_spec_legacy)
+                        generate_checksums, is_spec_legacy, check_artifact)
 
 
 class BuildCore(object):
@@ -191,6 +191,7 @@ class BuildCore(object):
             start = time.monotonic()
             try:
                 invoke_autobuild(task, build_dir)
+                check_artifact(task.name, build_dir)
             except Exception:
                 # early printing of build summary before exploding
                 if build_timings:
