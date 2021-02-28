@@ -62,7 +62,7 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
                 'true': 1,
                 'recursive': 2,
             }.get(v.strip())
-            if not translated:
+            if translated is None:
                 raise ValueError(f'Invalid submodule directive: {v}')
             acbs_source_info.submodule = translated
     return acbs_source_info
