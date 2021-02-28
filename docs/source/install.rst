@@ -10,7 +10,8 @@ all the `mandatory dependencies`_ listed below. You may want to create a configu
 file before using ACBS, although this is not a must, but it is highly recommended though.
 
 You can use package manager to install it if you are running AOSC OS:
-::
+
+.. code-block:: bash
 
   sudo apt install acbs
 
@@ -54,7 +55,7 @@ The configuration file located in ``/etc/acbs/forest.conf`` is a INI-like file.
 
 A bare-minimum configuration example is shown below:
 
-::
+.. code-block:: ini
 
   [default]
   location = /usr/lib/acbs/repo
@@ -62,7 +63,7 @@ A bare-minimum configuration example is shown below:
 
 If you are feeling smart, variable substitutions are also supported:
 
-::
+.. code-block:: ini
 
   [vars]
   base = /mnt
