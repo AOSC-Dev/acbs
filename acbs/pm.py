@@ -47,10 +47,12 @@ def fix_pm_states(escaped: List[str]):
     count = 0
     while count < 3:
         try:
+            subprocess.check_call(['dpkg', '--configure', '-a'])
             subprocess.check_call(['apt-get', 'install', '-yf'])
-            command = ['apt-get', 'install', '-y']
-            command.extend(escaped)
-            subprocess.check_call(command)
+            if escaped:
+                command = ['apt-get', 'install', '-y']
+                command.extend(escaped)
+                subprocess.check_call(command)
             return
         except subprocess.CalledProcessError:
             count += 1
@@ -63,6 +65,25 @@ def check_if_installed(name: str) -> bool:
     cached = installed_cache.get(name)
     if cached is not None:
         return cached
+    if use_native_bindings:
+        logging.debug('... using libapt-pkg')
+        result = apt_check_if_available(name)
+        if result == 0:
+            installed_cache[name] = True
+            return True
+        elif result == 1:
+            installed_cache[name] = False
+            available_cache[name] = True
+            return False
+        elif result == 2:
+            installed_cache[name] = False
+            available_cache[name] = False
+            return False
+        elif result == -4:
+            fix_pm_states([])
+            return check_if_installed(name)
+        else:
+            raise RuntimeError(f'libapt-pkg binding returned error: {result}')
     try:
         subprocess.check_output(['dpkg', '-s', name], stderr=subprocess.STDOUT)
         installed_cache[name] = True

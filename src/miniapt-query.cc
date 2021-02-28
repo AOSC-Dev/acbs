@@ -39,13 +39,17 @@ int check_available(const char *name)
     APT::CacheSetHelper helper(true, GlobalError::NOTICE);
     const char *list[2] = {name, NULL};
     APT::PackageList pkgset = APT::PackageList::FromCommandLine(cachefile, list, helper);
+    // returns 0: installed; 1: not installed, available; 2: not installed, not available
     for (APT::PackageList::const_iterator Pkg = pkgset.begin(); Pkg != pkgset.end(); ++Pkg)
     {
+        if (Pkg->CurrentVer != 0) {
+            return 0;
+        }
         if (depCache->GetCandidateVersion(Pkg)) {
             if (depCache->MarkInstall(Pkg, true, 0, true)) {
                 return 1;
             }
         }
     }
-    return 0;
+    return 2;
 }
