@@ -33,6 +33,7 @@ Mandatory:
 
 Optional:
   - libmagic: Python module to detect file type.
+  - libapt-pkg: Query package information.
   - libarchive-c: Python module to handle archives.
   - pycrypto: Python module to verify file checksums.
   - ptyprocess, pexpect: Build logging.
@@ -70,13 +71,11 @@ Usage
 -----
 
 ```
-usage: acbs-build.py [-h] [-v] [-d] [-t ACBS_TREE] [-c] [-s]
-                     [packages [packages ...]]
+usage: acbs-build [-h] [-v] [-d] [-t ACBS_TREE] [-q ACBS_QUERY] [-w] [-c] [-k] [-g] [-r STATE_FILE] [packages [packages ...]]
 
 ACBS - AOSC CI Build System
-Version: (README)
-A small alternative system to port abbs to CI environment to prevent from
-irregular bash failures
+Version: 20210227
+A small alternative system to port abbs to CI environment to prevent from irregular bash failures
 
 positional arguments:
   packages              Packages to be built
@@ -87,6 +86,12 @@ optional arguments:
   -d, --debug           Increase verbosity to ease debugging process
   -t ACBS_TREE, --tree ACBS_TREE
                         Specify which abbs-tree to use
+  -q ACBS_QUERY, --query ACBS_QUERY
+                        Do a simple ACBS query
+  -w, --write           Write spec changes back (Need to be specified with -g)
   -c, --clear           Clear build directory
-  -s, --system-log      Pass logs to system log collector
+  -k, --skip-deps       Skip dependency resolution
+  -g, --get             Only download source packages without building
+  -r STATE_FILE, --resume STATE_FILE
+                        Resume a previous build attempt
 ```

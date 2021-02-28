@@ -63,6 +63,13 @@ Details about the ``SRCS`` format:
     * ``branch``: Name of the branch
     * ``commit``: Commit hash
     * ``rename``: Rename the source file (including extension name if any)
+    * ``submodule``: Automatically fetch submodules in the repository.
+      * ``true``: Fetch submodules but not recursively (submodules in the submodules are not fetched).
+      * ``false``: Do not fetch submodules.
+      * ``recursive``: Fetch submodules recursively (default).
+    * ``repo-copy``: Automatically copy the VCS repository to the build directory.
+      * ``true``: Copy the VCS repository prior to the building process, replaces ``acbs_copy_git``.
+      * ``false``: Do not copy the VCS repository. However you can still use ``acbs_copy_git``.
 
 To specify multiple options, you can join the options with semicolons (``;``) like this:
 ::
