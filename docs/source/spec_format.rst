@@ -36,21 +36,18 @@ Defines files are expected to exist in ``:/`` (root of the top project folder).
 
 ``spec`` file SHOULD ONLY contain ONE of the following variables:
 
+* ``SRCS`` Expected format: ``<VCS_NAME_1>::<OPTIONS_1>::<URI_1> <VCS_NAME_2>::<URI_2> ...`` See footnote [1]_ for details about particular behavior.
 * ``DUMMYSRC`` (Bool)   If set to 1, indicates this package does not require source files or source files processing cannot be handled well by current version of ``acbs``.
-* ``SRCTBL``   (String) If set, indicates this package requires "zipped" or archived source files.
-* ``<VCS_NAME>SRC``     If set, indicates required source files for this package are in a version controlled repository. (For a list of supported VCS systems, see :doc:`appendix`)
-* ``CHKSUM`` Expected format: ``<ALGO_NAME>::<HASH_VALUE>`` If set, ``acbs`` will check the checksum of the source file against this value can be omitted if the source is from VCS.
 
 ``spec`` file may also contain the following variables:
 
-* ``<VCS_NAME>BRCH``    If set, indicates required branch of the repository for the package.
-* ``<VCS_NAME>COMMIT``  If set, indicates required commit/revision of the repository for the package.
-* ``SUBDIR`` If set, ``acbs`` will change to specified directory after finishing preparing the source files. (For a list of supported hashing algorithms, see :doc:`appendix`)
-
-Multiple source files:
-
-* ``SRCS`` Expected format: ``<VCS_NAME_1>::<OPTIONS_1>::<URI_1> <VCS_NAME_2>::<URI_2> ...`` See footnote [1]_ for details about particular behavior.
 * ``CHKSUMS`` Expected format: ``<ALGO_NAME_1>::<HASH_VALUE_1> <ALGO_NAME_2>::<HASH_VALUE_2> ...`` If set, ``acbs`` will check the checksum of the source files against this value not available if the source is from VCS. [2]_
+* ``SUBDIR`` If set, ``acbs`` will change to specified directory after finishing preparing the source files. (For a list of supported hashing algorithms, see :doc:`appendix`)
+* ``SRCTBL``   (String) **[Deprecated]** If set, indicates this package requires "zipped" or archived source files.
+* ``<VCS_NAME>SRC``     **[Deprecated]** If set, indicates required source files for this package are in a version controlled repository. (For a list of supported VCS systems, see :doc:`appendix`)
+* ``<VCS_NAME>BRCH``    **[Deprecated]** If set, indicates required branch of the repository for the package.
+* ``<VCS_NAME>COMMIT``  **[Deprecated]** If set, indicates required commit/revision of the repository for the package.
+* ``CHKSUM`` **[Deprecated]** Expected format: ``<ALGO_NAME>::<HASH_VALUE>`` If set, ``acbs`` will check the checksum of the source file against this value can be omitted if the source is from VCS.
 
 Details about the ``SRCS`` format:
 
