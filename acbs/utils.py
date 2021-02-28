@@ -130,7 +130,7 @@ def has_stamp(path: str) -> bool:
 def start_build_capture(build_dir: str):
     with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=build_dir, delete=False) as f:
         logging.info(f'Build log: {f.name}')
-        header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n' 
+        header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n'
         f.write(header.encode())
         process = pexpect.spawn('autobuild', logfile=f)
         term_size = shutil.get_terminal_size()
