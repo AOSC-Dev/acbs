@@ -47,7 +47,7 @@ def fix_pm_states(escaped: List[str]):
     count = 0
     while count < 3:
         try:
-            subprocess.check_call(['dpkg', '--configure', '-a'])
+            subprocess.call(['dpkg', '--configure', '-a'])
             subprocess.check_call(['apt-get', 'install', '-yf'])
             if escaped:
                 command = ['apt-get', 'install', '-y']
