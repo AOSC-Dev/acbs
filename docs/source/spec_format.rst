@@ -26,7 +26,7 @@ Consult Autobuild3_ for more information.
 
 spec
 -----------
-Defines files are expected to exist in ``:/`` (root of the top project folder).
+Specification (spec) files are expected to exist in ``:/`` (root of the top project folder).
 ``defines`` files are solely processed by ``acbs`` to fetch source files and control
 ``acbs`` how to transfer controls to ``autobuild``.
 
@@ -75,10 +75,23 @@ To specify multiple options, you can join the options with semicolons (``;``) li
 
 .. code-block:: bash
 
-  SRCS="tbl::rename=lmms-git;commit=94363be::https://github.com/LMMS/lmms"
+  SRCS="git::rename=lmms-git;commit=94363be::https://github.com/LMMS/lmms"
 
 The snippet above will make ``acbs`` rename the source directory to ``lmms-git`` and checkout the commit ``94363be``.
 
 .. _Autobuild3: https://wiki.aosc.io/developer/packaging/autobuild3-manual/#the-defines-file
-.. [1] Example: ``SRCS="git::git://github.com/AOSC-Dev/acbs git::https://github.com/AOSC-Dev/acbs"`` This will make ``acbs`` to download two sets of source files
-.. [2] Example: ``CHKSUMS="sha1::a9c55882c935300bec93e209f1ec8a21f75638b7 sha256::4ccdbbd95d4aef058502c8ee07b1abb490f5ef4a4d6ff711440facd0b8eded33"`` This will make ``acbs`` to check two sets of source files
+.. [1] Example: 
+
+  .. code-block:: bash
+
+    SRCS="git::git://github.com/AOSC-Dev/acbs git::https://github.com/AOSC-Dev/acbs"
+    
+  This will make ``acbs`` to download two sets of source files
+
+.. [2] Example: 
+
+  .. code-block:: bash
+
+    CHKSUMS="sha1::a9c55882c935300bec93e209f1ec8a21f75638b7 sha256::4ccdbbd95d4aef058502c8ee07b1abb490f5ef4a4d6ff711440facd0b8eded33"
+
+  This will make ``acbs`` to check two sets of source files
