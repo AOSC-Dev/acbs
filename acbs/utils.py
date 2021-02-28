@@ -166,6 +166,7 @@ def check_artifact(name: str, build_dir: str):
     for f in os.listdir(build_dir):
         if f.endswith('.deb') and f.startswith(name):
             return
+    logging.error(f'{ANSI_RED}Autobuild malfunction! Emergency drop!{ANSI_RST}')
     raise RuntimeError('STOP! Autobuild3 malfunction detected! Returned zero status with no artifact.')
 
 
