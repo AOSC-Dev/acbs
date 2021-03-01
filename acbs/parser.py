@@ -156,6 +156,9 @@ def parse_package(location: str) -> ACBSPackageInfo:
     subdir = spec_var.get('SUBDIR')
     if subdir:
         result.subdir = subdir
+    epoch = spec_var.get('EPOCH')
+    if epoch:
+        result.epoch = epoch
 
     return filter_dependencies(result)
 

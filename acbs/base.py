@@ -35,6 +35,7 @@ class ACBSPackageInfo(object):
         self.group_seq = 0  # group sequence number
         self.source_uri = source_uri
         self.version = ''
+        self.epoch = ''
         self.subdir: Optional[str] = None
         self.bin_arch = ''
         # script location (autobuild directory)

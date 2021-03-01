@@ -180,6 +180,8 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
             task.rel, task.version, acbs_helper, acbs_helper))
+        if task.epoch:
+            f.write(f'PKGEPOCH=\'{task.epoch}\'')
     with open(os.path.join(build_dir, 'autobuild', 'extra-dpkg-control'), 'wt') as f:
         f.write(generate_metadata(task))
     os.chdir(build_dir)
