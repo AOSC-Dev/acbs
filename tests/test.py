@@ -5,7 +5,7 @@ import acbs.parser
 import acbs.find
 import acbs.pm
 
-from acbs.utils import make_build_dir, guess_extension_name
+from acbs.utils import make_build_dir, guess_extension_name, fail_arch_regex
 from acbs.const import TMP_DIR
 from acbs.deps import tarjan_search
 from acbs.parser import get_deps_graph, parse_url_schema
@@ -62,6 +62,13 @@ class TestParser(unittest.TestCase):
         packages = tarjan_search(get_deps_graph([package]), './tests')
         error = check_scc(packages)
         self.assertEqual(error, True)
+
+    def test_fail_arch(self):
+        import re
+        self.assertEqual(re.compile("^(?!amd64)"), fail_arch_regex("!amd64"))
+        self.assertEqual(re.compile("^amd64"), fail_arch_regex("amd64"))
+        self.assertEqual(re.compile("^(amd64|arm64)"), fail_arch_regex("(amd64|arm64)"))
+        self.assertEqual(re.compile("^(?!amd64|arm64)"), fail_arch_regex("!(amd64|arm64)"))
 
     def test_parse_url(self):
         info = parse_url_schema('tbl::https://example.com', 'sha256::123')

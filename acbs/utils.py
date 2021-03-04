@@ -25,8 +25,6 @@ except ImportError:
 
 chksum_pattern = r"CHKSUM(?:S)?=['\"].*?['\"]"
 tarball_pattern = r'\.(tar\..+|cpio\..+)'
-aarch32_pattern = r'armv.l'
-armhf_pattern = '/lib/ld-linux-armhf.so.3'
 SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
                 if v.startswith('SIG') and not v.startswith('SIG_'))
 
@@ -163,6 +161,12 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
 
 
 def check_artifact(name: str, build_dir: str):
+    """
+    Check if the artifact exists
+
+    :param name: name of the package
+    :param build_dir: path to the build directory
+    """
     for f in os.listdir(build_dir):
         if f.endswith('.deb') and f.startswith(name):
             return
@@ -217,6 +221,11 @@ def format_column(data: Sequence[Tuple[str, ...]]) -> str:
 
 
 def print_build_timings(timings: List[Tuple[str, float]]):
+    """
+    Print the build statistics
+
+    :param timings: List of timing data
+    """
     formatted_timings: List[Tuple[str, str]] = []
     for timing in timings:
         formatted_timings.append((timing[0], human_time(timing[1])))
@@ -267,6 +276,31 @@ def write_checksums(spec: str, checksums: str):
     with open(spec, 'wt') as f:
         f.write(content)
     return
+
+
+def fail_arch_regex(expr: str) -> re.Pattern:
+    regex = '^'
+    negated = False
+    sup_bracket = False
+    if len(expr) < 3:
+        raise ValueError('Pattern too short.')
+    for i, c in enumerate(expr):
+        if i == 0 and c == '!':
+            negated = True
+            if expr[1] != '(':
+                regex += '('
+                sup_bracket = True
+            continue
+        if negated:
+            if c == '(':
+                regex += '(?!'
+                continue
+            elif i == 1 and sup_bracket:
+                regex += '?!'
+        regex += c
+    if sup_bracket:
+        regex += ')'
+    return re.compile(regex)
 
 
 class ACBSLogFormatter(logging.Formatter):

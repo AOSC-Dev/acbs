@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import get_arch_name, tarball_pattern
+from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
 
 generate_mode = False
 
@@ -81,7 +81,8 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
         raise ValueError(
             'Missing checksums. You can use `SKIP` for VCS sources.')
     sources_list = sources.strip().split()
-    checksums_list = checksums.strip().split() if checksums else ['::'] * len(sources_list)
+    checksums_list = checksums.strip().split() if checksums else [
+        '::'] * len(sources_list)
     if len(sources_list) != len(checksums_list):
         raise ValueError(
             f'Sources array and checksums array must have the same length (Sources: {len(sources_list)}, Checksums: {len(checksums_list)}).'
@@ -144,13 +145,19 @@ def parse_package(location: str) -> ACBSPackageInfo:
     # architecture specific dependencies
     acbs_source_info = parse_package_url(spec_var)
     if not deps:
-        return ACBSPackageInfo(name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
-    result = ACBSPackageInfo(
-        name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
+        result = ACBSPackageInfo(
+            name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
+    else:
+        result = ACBSPackageInfo(
+            name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
     result.bin_arch = var.get('ABHOST') or arch
+    fail_arch = var.get('FAIL_ARCH')
     release = spec_var.get('REL') or '0'
     result.rel = release
     version = spec_var.get('VER')
+    if fail_arch and fail_arch_regex(fail_arch).match(arch):
+        raise RuntimeError(
+            f'`{result.name}` is not buildable on `{arch}` (FAIL_ARCH).')
     if version:
         result.version = version
     subdir = spec_var.get('SUBDIR')
