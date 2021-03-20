@@ -16,7 +16,7 @@ from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
-from acbs.parser import get_deps_graph, get_tree_by_name
+from acbs.parser import get_deps_graph, get_tree_by_name, arch
 from acbs.pm import install_from_repo
 from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
@@ -101,7 +101,8 @@ class BuildCore(object):
         logging.info(
             f'Dependencies resolved, {len(resolved)} packages in the queue')
         logging.debug(f'Queue: {packages}')
-        logging.info(f'Packages to be built: {print_package_names(packages, 5)}')
+        logging.info(
+            f'Packages to be built: {print_package_names(packages, 5)}')
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
@@ -153,6 +154,9 @@ class BuildCore(object):
             logging.info('Building {} ({}/{})...'.format(task.name,
                                                          self.package_cursor, len(packages)))
             source_name = task.name
+            if task.fail_arch.match(arch):
+                raise RuntimeError(
+                    f'`{task.name}` is not buildable on `{arch}` (FAIL_ARCH).')
             if task.base_slug:
                 source_name = os.path.basename(task.base_slug)
             if not has_stamp(task.build_location):

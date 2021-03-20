@@ -1,3 +1,5 @@
+import re
+
 from typing import List, Optional, Tuple
 
 from acbs import __version__
@@ -19,6 +21,8 @@ class ACBSSourceInfo(object):
         self.copy_repo: bool = False
         # this is a tristate: 0 - off; 1 - on (non-recursive); 2 - recursive
         self.submodule: int = 2
+        # fail_arch regex
+        self.fail_arch: Optional[re.Pattern] = None
 
     def __repr__(self) -> str:
         return '<ACBSSourceInfo {type}: {url}:{branch}@{revision} integrity: {checksum}>'.format(type=self.type, url=self.url, branch=self.branch, revision=self.revision, checksum=self.chksum)

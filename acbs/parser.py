@@ -155,9 +155,8 @@ def parse_package(location: str) -> ACBSPackageInfo:
     release = spec_var.get('REL') or '0'
     result.rel = release
     version = spec_var.get('VER')
-    if fail_arch and fail_arch_regex(fail_arch).match(arch):
-        raise RuntimeError(
-            f'`{result.name}` is not buildable on `{arch}` (FAIL_ARCH).')
+    if fail_arch:
+        result.fail_arch = fail_arch_regex(fail_arch)
     if version:
         result.version = version
     subdir = spec_var.get('SUBDIR')
