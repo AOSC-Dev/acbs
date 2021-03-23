@@ -154,7 +154,7 @@ class BuildCore(object):
             logging.info('Building {} ({}/{})...'.format(task.name,
                                                          self.package_cursor, len(packages)))
             source_name = task.name
-            if task.fail_arch.match(arch):
+            if task.fail_arch and task.fail_arch.match(arch):
                 raise RuntimeError(
                     f'`{task.name}` is not buildable on `{arch}` (FAIL_ARCH).')
             if task.base_slug:
