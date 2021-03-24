@@ -132,7 +132,10 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'font_family': 'sans-serif',
+    'head_font_family': 'Georgia, serif',
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
