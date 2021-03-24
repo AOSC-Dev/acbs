@@ -1,0 +1,4 @@
+[submodule "gh-pages"]
+	path = docs/build/dirhtml
+	url = ./
+	branch = gh-pages
