@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""
+ACBS-init: Tool to create an ACBS directory
+"""
+
+import os
+import sys
+import shutil
+import shlex
+import readline
+import functools
+import glob
+import argparse
+import acbs
+import re
+
+from typing import Dict, Union, List, Callable
+from acbs.const import CONF_DIR
+from acbs.parser import get_tree_by_name
+
+tree_dir: str = None
+sections: List[str] = None
+packages: List[str] = None
+section_re = re.compile(r'([^/]+)/([^/]+)')
+
+
+class Raw(str):
+    """String class for no escaping."""
+
+    def __new__(cls, content):
+        return super().__new__(cls, content)
+
+    def __repr__(self):
+        return f"{type(self).__name__}({super().__repr__()})"
+
+
+def shell_escape(s: Union[str, Raw]) -> str:
+    if isinstance(s, Raw):
+        return s
+    else:
+        return shlex.quote(s)
+
+
+def dump_dict_to_shell(d: Dict[str, Union[str, Raw]]) -> str:
+    return (f"{k}={shell_escape(v)}" for k, v in d.items()).join("\n")
+
+
+def make_readline_completer(f: Callable[str, List[str]]) -> Callable[[str, int], str]:
+    ff = functools.lru_cache(f, max_size=4)
+
+    def retval(text: str, state: int) -> str:
+        try:
+            return ff(text)[state]
+        except IndexError:
+            return None
+
+
+@make_readline_completer
+def complete_section(text: str) -> List[str]:
+    global tree_dir
+    global sections
+    if sections is None:
+        sections = [
+            os.path.basename(p[:-1]) for p in glob.glob(f"{tree_dir}/?*-?*/")
+        ]
+    return [e for e in sections if e.startswith(text)]
+
+
+@make_readline_completer
+def complete_package(text: str) -> List[str]:
+    global tree_dir
+    global packages
+    if packages is None:
+        packages = [
+            os.path.basename(p[:-1]) for p in glob.glob(f"{tree_dir}/?*-?*/*/")
+        ]
+    
+    try:
+        head, tail = text.rsplit(maxsplit=1)
+    except:
+        head = ''
+        tail = text
+    
+    return [head + e for e in packages if e.startswith(tail)]
+
+
+def boolize(s: str, default: bool) -> bool:
+    s = s.lower()
+    if s.startswith('y'):
+        return True
+    elif s.startswith('n'):
+        return False
+    else:
+        return default
+
+
+def main(argv: List[str]) -> int:
+    global tree_dir
+    parser = argparse.ArgumentParser(
+        description=help_msg(acbs.__version__),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        help="Show the version and exit",
+        action="version",
+        version=f"ACBS version {acbs.__version__}",
+    )
+    parser.add_argument(
+        "-t",
+        "--tree",
+        nargs=1,
+        dest="tree",
+        help="Specify which abbs-tree to use",
+        default="default",
+    )
+    args = parser.parse_args(argv[1:])
+    tree_dir = get_tree_by_name(os.path.join(CONF_DIR, 'forest.conf'), args.tree)
+    spec: Dict[str, Union[str, Raw]] = {}
+    defines: Dict[str, str] = {}
+
+    readline.parse_and_bind("tab: complete")
+    print("I am not a wizard!")
+
+    readline.set_completer()
+    defines["PKGNAME"] = input("Name: ")
+    readline.set_completer(complete_section)
+    section = input("Section: ")
+    defines["PKGSEC"] = section_re.fullmatch(section).group(2)
+    location = f"{section}/{defines["PKGNAME"]}"
+    print(f"Gotcha, {location}.")
+    pkg = f"{tree_dir}/{location}"
+    os.mkdir(pkg)
+
+    readline.set_completer()
+    spec["VER"] = input("Version: ")
+    isdummy = boolize(input("Use DUMMYSRC? y/N: "), False)
+    if isdummy:
+        spec["DUMMYSRC"] = '1'
+    else:
+        # TODO: Actually handle the inner contents
+        spec["SRCS"] = Raw(input("SRCS? "))
+        # TODO: Actually acbs.fetch and make hash
+        # QUESTION: How the heck does the hash alignment thing work?
+
+    readline.set_completer(complete_package)
+    defines["PKGDEP"] = input("PKGDEP: ")
+    defines["BUILDDEP"] = input("BUILDDEP: ")
+
+    # Write.
+    with open(f"{pkg}/spec", "w") as f:
+        f.write(dump_dict_to_shell(spec))
+    
+    os.mkdir(f"{pkg}/autobuild")
+    with open(f"{pkg}/defines", "w") as f:
+        f.write(dump_dict_to_shell(defines))
+
+    return 0
+
+def help_msg(acbs_version: str) -> str:
+    help_msg = (
+        f"""ACBS-init: Tool to create an ACBS directory\nVersion: {acbs_version}"""
+    )
+    return help_msg
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
