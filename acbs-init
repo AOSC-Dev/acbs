@@ -36,7 +36,7 @@ class Raw(str):
 
 def shell_escape(s: Union[str, Raw]) -> str:
     if isinstance(s, Raw):
-        return s
+        return f'"s"'
     else:
         return shlex.quote(s)
 
@@ -94,6 +94,10 @@ def boolize(s: str, default: bool) -> bool:
         return default
 
 
+def ask_for_srcs() -> str:
+    raise NotImplementedError("Noob mode is not yet available.")
+
+
 def main(argv: List[str]) -> int:
     global tree_dir
     parser = argparse.ArgumentParser(
@@ -110,10 +114,13 @@ def main(argv: List[str]) -> int:
     parser.add_argument(
         "-t",
         "--tree",
-        nargs=1,
-        dest="tree",
         help="Specify which abbs-tree to use",
         default="default",
+    )
+    parser.add_argument(
+        "--noob-srcs",
+        action=argparse.BooleanOptionalAction,
+        help="Use the SRCS wizard",
     )
     args = parser.parse_args(argv[1:])
     tree_dir = get_tree_by_name(os.path.join(CONF_DIR, 'forest.conf'), args.tree)
@@ -139,10 +146,13 @@ def main(argv: List[str]) -> int:
     if isdummy:
         spec["DUMMYSRC"] = '1'
     else:
-        # TODO: Actually handle the inner contents
-        spec["SRCS"] = Raw(input("SRCS? "))
-        # TODO: Actually acbs.fetch and make hash
-        # QUESTION: How the heck does the hash alignment thing work?
+        # TODO: make noob src work
+        if args.noob_srcs:
+            spec["SRCS"] = ask_for_srcs()
+        else:
+            spec["SRCS"] = Raw(input("SRCS? "))
+        # TODO: Offer to run acbs-build -w or just do the checksum here?
+
 
     readline.set_completer(complete_package)
     defines["PKGDEP"] = input("PKGDEP: ")
