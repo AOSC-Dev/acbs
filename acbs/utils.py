@@ -10,7 +10,7 @@ import time
 from typing import List, Optional, Sequence, Tuple
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
-from acbs.crypto import check_hash_hashlib_inner
+from acbs.crypto import calculate_hash
 from acbs.const import (ANSI_BROWN, ANSI_GREEN, ANSI_LT_CYAN, ANSI_RED,
                         ANSI_RST, ANSI_YELLOW)
 from acbs import __version__
@@ -243,7 +243,7 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
     def calculate_checksum(o: ACBSSourceInfo):
         if not o.source_location:
             raise ValueError('source_location is None.')
-        csum = check_hash_hashlib_inner('sha256', o.source_location)
+        csum = calculate_hash('sha256', o.source_location)
         if not csum:
             raise ValueError(
                 f'Unable to calculate checksum for {o.source_location}')

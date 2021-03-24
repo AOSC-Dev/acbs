@@ -5,7 +5,7 @@ import subprocess
 from typing import Callable, Dict, Optional, Tuple, List
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
-from acbs.crypto import check_hash_hashlib, hash_url
+from acbs.crypto import check_hash, hash_url
 from acbs.utils import guess_extension_name
 
 fetcher_signature = Callable[[ACBSSourceInfo,
@@ -15,9 +15,12 @@ pair_signature = Tuple[fetcher_signature, processor_signature]
 generate_mode = False
 
 
-def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
+def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name: str) -> Optional[List[ACBSSourceInfo]]:
+    if not source_location:
+        raise RuntimeError('Not supposed to have no source location.')
     logging.info('Fetching required source files...')
     count = 0
+    ret = []
     for i in info:
         count += 1
         logging.info(f'Fetching source ({count}/{len(info)})...')
@@ -25,11 +28,15 @@ def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name:
         if not i.enabled and not generate_mode:
             logging.info(f'Source {count} skipped.')
         url_hash = hash_url(i.url)
-        fetch_source_inner(i, source_location, url_hash)
-    return None
+        result = fetch_source_inner(i, source_location, url_hash)
+        if result is None:
+            raise RuntimeError(
+                'Unable to fetch source files, failed 5 times in a row.')
+        ret.append(result)
+    return ret
 
 
-def fetch_source_inner(info: ACBSSourceInfo, source_location: str, package_name: str) -> Optional[ACBSSourceInfo]:
+def fetch_source_inner(info: ACBSSourceInfo, source_location: str, url_hash: str) -> Optional[ACBSSourceInfo]:
     type_ = info.type
     retry = 0
     fetcher: Optional[pair_signature] = handlers.get(type_.upper())
@@ -38,13 +45,12 @@ def fetch_source_inner(info: ACBSSourceInfo, source_location: str, package_name:
     while retry < 5:
         retry += 1
         try:
-            return fetcher[0](info, source_location, package_name)
+            return fetcher[0](info, source_location, url_hash)
         except Exception as ex:
             logging.exception(ex)
             logging.warning(f'Retrying ({retry}/5)...')
             continue
-    raise RuntimeError(
-        'Unable to fetch source files, failed 5 times in a row.')
+    return None
 
 
 def process_source(info: ACBSPackageInfo, source_name: str) -> None:
@@ -62,28 +68,26 @@ def process_source(info: ACBSPackageInfo, source_name: str) -> None:
 
 # Fetchers implementations
 def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
-    if source_location:
-        filename = hash_url(info.url)
-        if not info.chksum[1] and not generate_mode:
-            raise ValueError('No checksum found. Please specify the checksum!')
-        full_path = os.path.join(source_location, filename)
-        flag_path = os.path.join(source_location, f'{filename}.dl')
-        if os.path.exists(full_path) and not os.path.exists(flag_path):
-            info.source_location = full_path
-            return info
-        try:
-            # `touch ${flag_path}`, some servers may not support Range, so this is to ensure
-            # if the download has finished successfully, we don't overwrite the downloaded file
-            with open(flag_path, 'wb') as f:
-                f.write(b'')
-            subprocess.check_call(
-                ['wget', '-c', info.url, '-O', full_path])
-            info.source_location = full_path
-            os.unlink(flag_path)  # delete the flag
-            return info
-        except Exception:
-            raise AssertionError('Failed to fetch source with Wget!')
-        return None
+    filename = hash_url(info.url)
+    if not info.chksum[1] and not generate_mode:
+        raise ValueError('No checksum found. Please specify the checksum!')
+    full_path = os.path.join(source_location, filename)
+    flag_path = os.path.join(source_location, f'{filename}.dl')
+    if os.path.exists(full_path) and not os.path.exists(flag_path):
+        info.source_location = full_path
+        return info
+    try:
+        # `touch ${flag_path}`, some servers may not support Range, so this is to ensure
+        # if the download has finished successfully, we don't overwrite the downloaded file
+        with open(flag_path, 'wb') as f:
+            f.write(b'')
+        subprocess.check_call(
+            ['wget', '-c', info.url, '-O', full_path])
+        info.source_location = full_path
+        os.unlink(flag_path)  # delete the flag
+        return info
+    except Exception:
+        raise AssertionError('Failed to fetch source with Wget!')
     return None
 
 
@@ -92,7 +96,7 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
     if not info.source_location:
         raise ValueError('Where is the source file?')
     logging.info('Computing %s checksum for %s...' % (info.chksum, info.source_location))
-    check_hash_hashlib(info.chksum, info.source_location)
+    check_hash(info.chksum, info.source_location)
     server_filename = os.path.basename(info.url)
     extension = guess_extension_name(server_filename)
     # this name is used in the build directory (will be seen by the build scripts)
