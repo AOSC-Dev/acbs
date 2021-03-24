@@ -8,7 +8,9 @@ from acbs.parser import ACBSPackageInfo
 pool: Dict[str, ACBSPackageInfo] = {}
 
 
-def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: str) -> List[List[ACBSPackageInfo]]:
+def tarjan_search(
+    packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: str
+) -> List[List[ACBSPackageInfo]]:
     """This function describes a Tarjan's strongly connected components algorithm.
     The resulting list of ACBSPackageInfo are sorted topologically as a byproduct of the algorithm
     """
@@ -22,12 +24,32 @@ def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: st
     pool.update(packages)
     for i in packages_list:
         if index[i] == -1:  # recurse on each package that is not yet visited
-            strongly_connected(search_path, packages_list, results, packages,
-                               i, lowlink, index, stackstate, stack)
+            strongly_connected(
+                search_path,
+                packages_list,
+                results,
+                packages,
+                i,
+                lowlink,
+                index,
+                stackstate,
+                stack,
+            )
     return results
 
 
-def strongly_connected(search_path: str, packages_list: List[str], results: list, packages: 'OrderedDict[str, ACBSPackageInfo]', vert: str, lowlink: Dict[str, int], index: Dict[str, int], stackstate: Dict[str, bool], stack: Deque[str], depth=0):
+def strongly_connected(
+    search_path: str,
+    packages_list: List[str],
+    results: list,
+    packages: 'OrderedDict[str, ACBSPackageInfo]',
+    vert: str,
+    lowlink: Dict[str, int],
+    index: Dict[str, int],
+    stackstate: Dict[str, bool],
+    stack: Deque[str],
+    depth=0,
+):
     # update depth indices
     index[vert] = depth
     lowlink[vert] = depth
@@ -41,8 +63,7 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     if current_package is None:
         package = pool.get(vert) or find_package(vert, search_path)
         if not package:
-            raise ValueError(
-                f'Package {vert} not found')
+            raise ValueError(f'Package {vert} not found')
         if isinstance(package, list):
             for s in package:
                 if vert == s.name:
@@ -60,8 +81,18 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     for p in current_package.deps:
         if index[p] == -1:
             # recurse on unvisited packages
-            strongly_connected(search_path, packages_list, results, packages,
-                               p, lowlink, index, stackstate, stack, depth)
+            strongly_connected(
+                search_path,
+                packages_list,
+                results,
+                packages,
+                p,
+                lowlink,
+                index,
+                stackstate,
+                stack,
+                depth,
+            )
             lowlink[vert] = min(lowlink[p], lowlink[vert])
         # adjacent package is in the stack which means it is part of a loop
         elif stackstate[p] is True:

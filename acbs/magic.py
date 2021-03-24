@@ -35,7 +35,6 @@ MAGIC_NO_CHECK_BUILTIN = NO_CHECK_BUILTIN = 4173824
 
 
 class fakeMagic(object):
-
     def __init__(self):
         self.flags = []
         self.cmd_args = ['file', '-b']
@@ -46,13 +45,13 @@ class fakeMagic(object):
         return
 
     def add_cmds(self) -> None:
-        if (self.flags & MAGIC_MIME):
+        if self.flags & MAGIC_MIME:
             self.cmd_args.append('-i')
-        elif (self.flags & MAGIC_MIME_TYPE):
+        elif self.flags & MAGIC_MIME_TYPE:
             self.cmd_args.append('--mime-type')
-        elif (self.flags & MAGIC_SYMLINK):
+        elif self.flags & MAGIC_SYMLINK:
             self.cmd_args.append('-L')
-        elif (self.flags & MAGIC_COMPRESS):
+        elif self.flags & MAGIC_COMPRESS:
             self.cmd_args.append('-z')
 
     def load(self) -> None:

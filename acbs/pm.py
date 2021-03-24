@@ -10,7 +10,11 @@ available_cache: Dict[str, bool] = {}
 use_native_bindings: bool = True
 
 try:
-    from acbs.miniapt_query import apt_init_system, check_if_available as apt_check_if_available
+    from acbs.miniapt_query import (
+        apt_init_system,
+        check_if_available as apt_check_if_available,
+    )
+
     if not apt_init_system():
         raise ImportError('Initialization failure.')
 except ImportError:
@@ -104,10 +108,12 @@ def check_if_available(name: str) -> bool:
             return False
     try:
         subprocess.check_output(
-            ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
+            ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT
+        )
         logging.debug('Checking if %s can be installed' % name)
         subprocess.check_output(
-            ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT)
+            ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT
+        )
         available_cache[name] = True
         return True
     except subprocess.CalledProcessError:
@@ -126,6 +132,7 @@ def install_from_repo(packages: List[str]):
         subprocess.check_call(command)
     except subprocess.CalledProcessError:
         logging.warning(
-            'Failed to install dependencies, attempting to correct issues...')
+            'Failed to install dependencies, attempting to correct issues...'
+        )
         fix_pm_states(escaped)
     return

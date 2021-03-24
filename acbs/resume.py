@@ -44,8 +44,11 @@ def do_load_checkpoint(name: str) -> ACBSShrinkWrap:
 def do_resume_checkpoint(filename: str, args):
     def resume_build():
         logging.debug('Queue: {}'.format(resumed_packages))
-        logging.info('Packages to be resumed: {}'.format(
-            print_package_names(resumed_packages, 5)))
+        logging.info(
+            'Packages to be resumed: {}'.format(
+                print_package_names(resumed_packages, 5)
+            )
+        )
         build_timings = state.timings.copy()
         try:
             builder.build_sequential(build_timings, resumed_packages)
@@ -59,11 +62,10 @@ def do_resume_checkpoint(filename: str, args):
     builder = BuildCore(args)
     logging.info('Resuming from {}'.format(filename))
     if state.version != __version__:
-        logging.warning(
-            'The state was check-pointed with a different version of acbs!')
+        logging.warning('The state was check-pointed with a different version of acbs!')
         logging.warning('Undefined behavior might occur!')
     if state.no_deps:
-        leftover = state.packages[state.cursor-1:]
+        leftover = state.packages[state.cursor - 1 :]
         logging.warning('Resuming without dependency resolution.')
         logging.info('Resumed. {} packages to go.'.format(len(leftover)))
         builder.build_sequential(state.timings, leftover)
@@ -71,7 +73,8 @@ def do_resume_checkpoint(filename: str, args):
     logging.info('Validating status...')
     if len(state.packages) != len(state.sps):
         raise ValueError(
-            'Inconsistencies detected in the saved state! The file might be corrupted.')
+            'Inconsistencies detected in the saved state! The file might be corrupted.'
+        )
     resumed_packages = []
     new_cursor = state.cursor - 1
     index = 0
@@ -86,19 +89,23 @@ def do_resume_checkpoint(filename: str, args):
         resumed_packages.extend(find_package(p.name, builder.tree_dir))
         # index doesn't matter now, since changes have been detected
     if not check_dpkg_state(state, resumed_packages[:new_cursor]):
-        name = checkpoint_to_group(
-            resumed_packages[new_cursor:], builder.tree_dir)
+        name = checkpoint_to_group(resumed_packages[new_cursor:], builder.tree_dir)
         raise RuntimeError(
-            'DPKG state mismatch. Unable to resume.\nACBS has created a new temporary group {} for you to continue.'.format(name))
+            'DPKG state mismatch. Unable to resume.\nACBS has created a new temporary group {} for you to continue.'.format(
+                name
+            )
+        )
     resumed_packages = resumed_packages[new_cursor:]
     # clear the build directory of the first package
     reassign_build_dir(resumed_packages)
     if new_cursor != (state.cursor - 1):
         logging.warning(
-            'Senario mismatch detected! Dependency resolution will be re-attempted.')
+            'Senario mismatch detected! Dependency resolution will be re-attempted.'
+        )
         resolved = builder.resolve_deps(resumed_packages)
         logging.info(
-            'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
+            'Dependencies resolved, {} packages in the queue'.format(len(resolved))
+        )
         resume_build()
         return
     resume_build()

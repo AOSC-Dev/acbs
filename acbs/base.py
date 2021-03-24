@@ -6,7 +6,9 @@ from acbs import __version__
 
 
 class ACBSSourceInfo(object):
-    def __init__(self, type: str, url: str, revision=None, branch=None, depth=None) -> None:
+    def __init__(
+        self, type: str, url: str, revision=None, branch=None, depth=None
+    ) -> None:
         self.type = type
         self.url = url
         self.revision: Optional[str] = revision
@@ -23,11 +25,23 @@ class ACBSSourceInfo(object):
         self.submodule: int = 2
 
     def __repr__(self) -> str:
-        return '<ACBSSourceInfo {type}: {url}:{branch}@{revision} integrity: {checksum}>'.format(type=self.type, url=self.url, branch=self.branch, revision=self.revision, checksum=self.chksum)
+        return '<ACBSSourceInfo {type}: {url}:{branch}@{revision} integrity: {checksum}>'.format(
+            type=self.type,
+            url=self.url,
+            branch=self.branch,
+            revision=self.revision,
+            checksum=self.chksum,
+        )
 
 
 class ACBSPackageInfo(object):
-    def __init__(self, name: str, deps: List[str], location: str, source_uri: List[ACBSSourceInfo]) -> None:
+    def __init__(
+        self,
+        name: str,
+        deps: List[str],
+        location: str,
+        source_uri: List[ACBSSourceInfo],
+    ) -> None:
         self.name = name
         self.rel = '0'
         self.deps = deps
@@ -46,11 +60,19 @@ class ACBSPackageInfo(object):
         self.script_location = location
 
     def __repr__(self) -> str:
-        return '<ACBSPackageInfo {name}: - deps: {deps} - uri: {uri}>'.format(name=self.name, deps=self.deps, uri=self.source_uri)
+        return '<ACBSPackageInfo {name}: - deps: {deps} - uri: {uri}>'.format(
+            name=self.name, deps=self.deps, uri=self.source_uri
+        )
 
 
 class ACBSShrinkWrap(object):
-    def __init__(self, cursor: int, timings: List[Tuple[str, float]], packages: List[ACBSPackageInfo], no_deps: bool):
+    def __init__(
+        self,
+        cursor: int,
+        timings: List[Tuple[str, float]],
+        packages: List[ACBSPackageInfo],
+        no_deps: bool,
+    ):
         self.cursor = cursor
         self.timings = timings
         self.packages = packages

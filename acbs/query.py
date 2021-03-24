@@ -10,10 +10,7 @@ def acbs_query(input: str) -> Optional[str]:
     if not input:
         return None
     commands = input.split(':')
-    getter = {
-        'tree': acbs_query_tree,
-        'path': acbs_query_path
-    }.get(commands[0])
+    getter = {'tree': acbs_query_tree, 'path': acbs_query_path}.get(commands[0])
     if not callable(getter):
         return None
     return getter(commands)
@@ -31,9 +28,6 @@ def acbs_query_tree(commands: Sequence[str]) -> Optional[str]:
 def acbs_query_path(commands: Sequence[str]) -> Optional[str]:
     if len(commands) != 2:
         return None
-    return {
-        'conf': CONF_DIR,
-        'dump': DUMP_DIR,
-        'tmp': TMP_DIR,
-        'log': LOG_DIR
-    }.get(commands[1])
+    return {'conf': CONF_DIR, 'dump': DUMP_DIR, 'tmp': TMP_DIR, 'log': LOG_DIR}.get(
+        commands[1]
+    )

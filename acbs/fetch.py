@@ -8,14 +8,15 @@ from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash, hash_url
 from acbs.utils import guess_extension_name
 
-fetcher_signature = Callable[[ACBSSourceInfo,
-                              str, str], Optional[ACBSSourceInfo]]
+fetcher_signature = Callable[[ACBSSourceInfo, str, str], Optional[ACBSSourceInfo]]
 processor_signature = Callable[[ACBSPackageInfo, int, str], None]
 pair_signature = Tuple[fetcher_signature, processor_signature]
 generate_mode = False
 
 
-def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name: str) -> Optional[List[ACBSSourceInfo]]:
+def fetch_source(
+    info: List[ACBSSourceInfo], source_location: str, package_name: str
+) -> Optional[List[ACBSSourceInfo]]:
     if not source_location:
         raise RuntimeError('Not supposed to have no source location.')
     logging.info('Fetching required source files...')
@@ -30,13 +31,14 @@ def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name:
         url_hash = hash_url(i.url)
         result = fetch_source_inner(i, source_location, url_hash)
         if result is None:
-            raise RuntimeError(
-                'Unable to fetch source files, failed 5 times in a row.')
+            raise RuntimeError('Unable to fetch source files, failed 5 times in a row.')
         ret.append(result)
     return ret
 
 
-def fetch_source_inner(info: ACBSSourceInfo, source_location: str, url_hash: str) -> Optional[ACBSSourceInfo]:
+def fetch_source_inner(
+    info: ACBSSourceInfo, source_location: str, url_hash: str
+) -> Optional[ACBSSourceInfo]:
     type_ = info.type
     retry = 0
     fetcher: Optional[pair_signature] = handlers.get(type_.upper())
@@ -59,15 +61,16 @@ def process_source(info: ACBSPackageInfo, source_name: str) -> None:
         type_ = source_uri.type
         fetcher: Optional[pair_signature] = handlers.get(type_.upper())
         if not fetcher or not callable(fetcher[1]):
-            raise NotImplementedError(
-                f'Unsupported source type: {type_}')
+            raise NotImplementedError(f'Unsupported source type: {type_}')
         fetcher[1](info, idx, source_name)
         idx += 1
     return
 
 
 # Fetchers implementations
-def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def tarball_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     filename = hash_url(info.url)
     if not info.chksum[1] and not generate_mode:
         raise ValueError('No checksum found. Please specify the checksum!')
@@ -81,8 +84,7 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
         # if the download has finished successfully, we don't overwrite the downloaded file
         with open(flag_path, 'wb') as f:
             f.write(b'')
-        subprocess.check_call(
-            ['wget', '-c', info.url, '-O', full_path])
+        subprocess.check_call(['wget', '-c', info.url, '-O', full_path])
         info.source_location = full_path
         os.unlink(flag_path)  # delete the flag
         return info
@@ -91,27 +93,32 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
     return None
 
 
-def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: str, decompress=True) -> None:
+def tarball_processor_innner(
+    package: ACBSPackageInfo, index: int, source_name: str, decompress=True
+) -> None:
     info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the source file?')
-    logging.info('Computing %s checksum for %s...' % (info.chksum, info.source_location))
+    logging.info(
+        'Computing %s checksum for %s...' % (info.chksum, info.source_location)
+    )
     check_hash(info.chksum, info.source_location)
     server_filename = os.path.basename(info.url)
     extension = guess_extension_name(server_filename)
     # this name is used in the build directory (will be seen by the build scripts)
     # the name will be, e.g. 'acbs-0.1.0.tar.gz'
     facade_name = info.source_name or '{name}-{version}{index}{extension}'.format(
-        name=source_name, version=package.version, extension=extension,
-        index=('' if index == 0 else ('-%s' % index)))
-    os.symlink(info.source_location, os.path.join(
-        package.build_location, facade_name))
+        name=source_name,
+        version=package.version,
+        extension=extension,
+        index=('' if index == 0 else ('-%s' % index)),
+    )
+    os.symlink(info.source_location, os.path.join(package.build_location, facade_name))
     if not decompress:
         return
     # decompress
     logging.info(f'Extracting {facade_name}...')
-    subprocess.check_call(['bsdtar', '-xf', facade_name],
-                          cwd=package.build_location)
+    subprocess.check_call(['bsdtar', '-xf', facade_name], cwd=package.build_location)
     return
 
 
@@ -123,14 +130,18 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
     return tarball_processor_innner(package, index, source_name, False)
 
 
-def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def git_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
         subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
     else:
         logging.info('Updating repository...')
         subprocess.check_call(
-            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'],
+            cwd=full_path,
+        )
     info.source_location = full_path
     return info
 
@@ -139,21 +150,39 @@ def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
-            'Please specify a specific git commit for this package. (GITCO not defined)')
+            'Please specify a specific git commit for this package. (GITCO not defined)'
+        )
     if not info.source_location:
         raise ValueError('Where is the git repository?')
-    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
+    checkout_location = os.path.join(
+        package.build_location, info.source_name or source_name
+    )
     os.mkdir(checkout_location)
     logging.info(f'Checking out git repository at {info.revision}')
     subprocess.check_call(
-        ['git', '--git-dir', info.source_location, '--work-tree', checkout_location,
-         'checkout', '-f', info.revision or ''])
+        [
+            'git',
+            '--git-dir',
+            info.source_location,
+            '--work-tree',
+            checkout_location,
+            'checkout',
+            '-f',
+            info.revision or '',
+        ]
+    )
     if info.submodule > 0:
         logging.info('Fetching submodules (if any)...')
         params = [
-                'git', '--git-dir', info.source_location, '--work-tree', checkout_location,
-                'submodule', 'update', '--init'
-            ]
+            'git',
+            '--git-dir',
+            info.source_location,
+            '--work-tree',
+            checkout_location,
+            'submodule',
+            'update',
+            '--init',
+        ]
         if info.submodule == 2:
             params.append('--recursive')
         subprocess.check_call(params, cwd=checkout_location)
@@ -169,23 +198,29 @@ def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
         return None
     with open(os.path.join(package.build_location, '.acbs-script'), 'wt') as f:
         f.write(
-            'ACBS_SRC=\'%s\';acbs_copy_git(){ abinfo \'Copying git folder...\'; cp -ar "${ACBS_SRC}" .git/; sed -i \'s|bare = true|bare = false|\' \'.git/config\'; }' % (info.source_location))
+            'ACBS_SRC=\'%s\';acbs_copy_git(){ abinfo \'Copying git folder...\'; cp -ar "${ACBS_SRC}" .git/; sed -i \'s|bare = true|bare = false|\' \'.git/config\'; }'
+            % (info.source_location)
+        )
     return None
 
 
-def svn_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def svn_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not info.revision:
         raise ValueError(
-            'Please specify a svn revision for this package. (SVNCO not defined)')
-    logging.info(
-        f'Checking out subversion repository at r{info.revision}')
+            'Please specify a svn revision for this package. (SVNCO not defined)'
+        )
+    logging.info(f'Checking out subversion repository at r{info.revision}')
     if not os.path.exists(full_path):
         subprocess.check_call(
-            ['svn', 'co', '--force', '-r', info.revision, info.url, full_path])
+            ['svn', 'co', '--force', '-r', info.revision, info.url, full_path]
+        )
     else:
         subprocess.check_call(
-            ['svn', 'up', '--force', '-r', info.revision], cwd=full_path)
+            ['svn', 'up', '--force', '-r', info.revision], cwd=full_path
+        )
     info.source_location = full_path
     return info
 
@@ -194,13 +229,17 @@ def svn_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     info = package.source_uri[index]
     if not info.source_location:
         raise ValueError('Where is the subversion repository?')
-    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
+    checkout_location = os.path.join(
+        package.build_location, info.source_name or source_name
+    )
     logging.info('Copying subversion repository...')
     shutil.copytree(info.source_location, checkout_location)
     return
 
 
-def hg_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def hg_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
         subprocess.check_call(['hg', 'clone', '-U', info.url, full_path])
@@ -215,22 +254,28 @@ def hg_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None
     info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
-            'Please specify a specific hg commit for this package. (HGCO not defined)')
+            'Please specify a specific hg commit for this package. (HGCO not defined)'
+        )
     if not info.source_location:
         raise ValueError('Where is the hg repository?')
-    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
+    checkout_location = os.path.join(
+        package.build_location, info.source_name or source_name
+    )
     logging.info('Copying hg repository...')
     shutil.copytree(info.source_location, checkout_location)
     logging.info(f'Checking out hg repository at {info.revision}')
     subprocess.check_call(
-        ['hg', 'update', '-C', '-r', info.revision, '-R', checkout_location])
+        ['hg', 'update', '-C', '-r', info.revision, '-R', checkout_location]
+    )
     if info.copy_repo:
         logging.info('Copying hg repository ...')
         shutil.copytree(info.source_location, os.path.join(checkout_location, '.hg'))
     return None
 
 
-def dummy_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def dummy_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     if source_location:
         logging.info('Not fetching any source as requested')
         return info
@@ -241,7 +286,9 @@ def dummy_processor(package: ACBSPackageInfo, index: int, source_name: str) -> N
     return None
 
 
-def bzr_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def bzr_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
         subprocess.check_call(['bzr', 'branch', '--no-tree', info.url, full_path])
@@ -256,19 +303,23 @@ def bzr_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
     info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
-            'Please specify a specific bzr revision for this package. (BZRCO not defined)')
+            'Please specify a specific bzr revision for this package. (BZRCO not defined)'
+        )
     if not info.source_location:
         raise ValueError('Where is the bzr repository?')
-    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
+    checkout_location = os.path.join(
+        package.build_location, info.source_name or source_name
+    )
     logging.info('Copying bzr repository...')
     shutil.copytree(info.source_location, checkout_location)
     logging.info(f'Checking out bzr repository at {info.revision}')
-    subprocess.check_call(
-        ['bzr', 'co', '-r', info.revision], cwd=checkout_location)
+    subprocess.check_call(['bzr', 'co', '-r', info.revision], cwd=checkout_location)
     return None
 
 
-def fossil_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def fossil_fetch(
+    info: ACBSSourceInfo, source_location: str, name: str
+) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name + '.fossil')
     if not os.path.exists(full_path):
         subprocess.check_call(['fossil', 'clone', info.url, full_path])
@@ -283,14 +334,18 @@ def fossil_processor(package: ACBSPackageInfo, index: int, source_name: str) -> 
     info = package.source_uri[index]
     if not info.revision:
         raise ValueError(
-            'Please specify a specific fossil commit for this package. (not defined)')
+            'Please specify a specific fossil commit for this package. (not defined)'
+        )
     if not info.source_location:
         raise ValueError('Where is the fossil repository?')
-    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
+    checkout_location = os.path.join(
+        package.build_location, info.source_name or source_name
+    )
     os.mkdir(checkout_location)
     logging.info('Opening up the fossil repository...')
     subprocess.check_call(
-        ['fossil', 'open', info.source_location], cwd=checkout_location)
+        ['fossil', 'open', info.source_location], cwd=checkout_location
+    )
     logging.info(f'Checking out fossil repository at {info.revision}')
     subprocess.check_call(['fossil', 'update', info.revision], cwd=checkout_location)
     return None

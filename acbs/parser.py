@@ -25,8 +25,7 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
         elif url_plain.endswith('.git') or url_plain.startswith('git://'):
             schema = 'git'
         else:
-            raise ValueError(
-                'Unable to deduce source type for {}.'.format(url_plain))
+            raise ValueError('Unable to deduce source type for {}.'.format(url_plain))
     elif len(url_split) < 3:
         schema = url_split[0].lower()
         url_plain = url_split[1]
@@ -39,7 +38,8 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     if len(chksum_) != 2 and checksum != 'SKIP':
         raise ValueError('Malformed checksum: {}'.format(checksum))
     acbs_source_info.chksum = (
-        chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
+        (chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
+    )
     acbs_source_info.url = url_plain
     return acbs_source_info
 
@@ -70,19 +70,19 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
 
 def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
     acbs_source_info: List[ACBSSourceInfo] = []
-    sources = var.get('SRCS__{arch}'.format(
-        arch=arch.upper())) or var.get('SRCS')
-    checksums = var.get('CHKSUMS__{arch}'.format(
-        arch=arch.upper())) or var.get('CHKSUMS')
+    sources = var.get('SRCS__{arch}'.format(arch=arch.upper())) or var.get('SRCS')
+    checksums = var.get('CHKSUMS__{arch}'.format(arch=arch.upper())) or var.get(
+        'CHKSUMS'
+    )
     if sources is None:
         logging.debug('Using legacy source directives')
         return [parse_package_url_legacy(var)]
     if checksums is None and not generate_mode:
-        raise ValueError(
-            'Missing checksums. You can use `SKIP` for VCS sources.')
+        raise ValueError('Missing checksums. You can use `SKIP` for VCS sources.')
     sources_list = sources.strip().split()
-    checksums_list = checksums.strip().split() if checksums else [
-        '::'] * len(sources_list)
+    checksums_list = (
+        checksums.strip().split() if checksums else ['::'] * len(sources_list)
+    )
     if len(sources_list) != len(checksums_list):
         raise ValueError(
             f'Sources array and checksums array must have the same length (Sources: {len(sources_list)}, Checksums: {len(checksums_list)}).'
@@ -114,14 +114,13 @@ def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
         if url:
             acbs_source_info.type = type_
             acbs_source_info.url = url
-            acbs_source_info.revision = var.get(
-                '{type_}CO'.format(type_=type_))
-            acbs_source_info.branch = var.get(
-                '{type_}BRANCH'.format(type_=type_))
+            acbs_source_info.revision = var.get('{type_}CO'.format(type_=type_))
+            acbs_source_info.branch = var.get('{type_}BRANCH'.format(type_=type_))
     # No sources specified?
     if acbs_source_info.type == 'none':
         raise ValueError(
-            'No sources specified, if this is intended, please set `DUMMYSRC=1`')
+            'No sources specified, if this is intended, please set `DUMMYSRC=1`'
+        )
     return acbs_source_info
 
 
@@ -133,23 +132,27 @@ def parse_package(location: str) -> ACBSPackageInfo:
         var = bashvar.eval_bashvar(f.read(), filename=defines_location)
     with open(spec_location, 'rt') as f:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
-    deps_arch: Optional[str] = var.get('PKGDEP__{arch}'.format(
-        arch=arch.upper()))
+    deps_arch: Optional[str] = var.get('PKGDEP__{arch}'.format(arch=arch.upper()))
     # determine whether this is an undefined value or an empty string
     deps: str = (var.get('PKGDEP') or '') if deps_arch is None else deps_arch
-    builddeps_arch: Optional[str] = var.get('BUILDDEP__{arch}'.format(
-        arch=arch.upper()))
-    builddeps: str = var.get(
-        'BUILDDEP') if builddeps_arch is None else builddeps_arch
+    builddeps_arch: Optional[str] = var.get(
+        'BUILDDEP__{arch}'.format(arch=arch.upper())
+    )
+    builddeps: str = var.get('BUILDDEP') if builddeps_arch is None else builddeps_arch
     deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
     acbs_source_info = parse_package_url(spec_var)
     if not deps:
         result = ACBSPackageInfo(
-            name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
+            name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info
+        )
     else:
         result = ACBSPackageInfo(
-            name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
+            name=var['PKGNAME'],
+            deps=deps.split(),
+            location=location,
+            source_uri=acbs_source_info,
+        )
     result.bin_arch = var.get('ABHOST') or arch
     fail_arch = var.get('FAIL_ARCH')
     release = spec_var.get('REL') or '0'
@@ -169,7 +172,9 @@ def parse_package(location: str) -> ACBSPackageInfo:
     return filter_dependencies(result)
 
 
-def get_deps_graph(packages: List[ACBSPackageInfo]) -> 'OrderedDict[str, ACBSPackageInfo]':
+def get_deps_graph(
+    packages: List[ACBSPackageInfo],
+) -> 'OrderedDict[str, ACBSPackageInfo]':
     'convert flattened list to adjacency list'
     result = {}
     for i in packages:
@@ -179,7 +184,8 @@ def get_deps_graph(packages: List[ACBSPackageInfo]) -> 'OrderedDict[str, ACBSPac
 
 def get_tree_by_name(filename: str, tree_name) -> str:
     acbs_config = configparser.ConfigParser(
-        interpolation=configparser.ExtendedInterpolation())
+        interpolation=configparser.ExtendedInterpolation()
+    )
     with open(filename, 'rt') as conf_file:
         try:
             acbs_config.read_file(conf_file)
@@ -188,18 +194,19 @@ def get_tree_by_name(filename: str, tree_name) -> str:
     try:
         tree_loc_dict = acbs_config[tree_name]
     except KeyError as ex:
-        err_message = 'Tree not found: {}, defined trees: {}'.format(tree_name,
-                                                                     ' '.join(acbs_config.sections()))
+        err_message = 'Tree not found: {}, defined trees: {}'.format(
+            tree_name, ' '.join(acbs_config.sections())
+        )
         raise ValueError(err_message) from ex
     try:
         tree_loc = tree_loc_dict['location']
     except KeyError as ex:
         raise KeyError(
-            'Malformed configuration file: missing `location` keyword') from ex
+            'Malformed configuration file: missing `location` keyword'
+        ) from ex
     return tree_loc
 
 
-arch = os.environ.get('CROSS') or os.environ.get(
-    'ARCH') or get_arch_name() or ''
+arch = os.environ.get('CROSS') or os.environ.get('ARCH') or get_arch_name() or ''
 if not arch:
     raise ValueError('Unable to determine architecture name')

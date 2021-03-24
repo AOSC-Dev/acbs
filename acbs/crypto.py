@@ -10,8 +10,9 @@ def calculate_hash(chksum_type: str, target_file: str) -> Optional[str]:
         return None
     if hash_type not in hashlib.algorithms_available:
         raise NotImplementedError(
-            'Unsupported hash type %s! Currently supported: %s' % (
-                hash_type, ' '.join(sorted(hashlib.algorithms_available))))
+            'Unsupported hash type %s! Currently supported: %s'
+            % (hash_type, ' '.join(sorted(hashlib.algorithms_available)))
+        )
     hash_obj = hashlib.new(hash_type)
     with open(target_file, 'rb') as f:
         for chunk in iter(lambda: f.read(CHUNKSIZE), b''):
@@ -32,5 +33,7 @@ def check_hash(chksum_tuple: Tuple[str, str], target_file: str) -> None:
     hash_value = hash_value.lower()
     target_hash = calculate_hash(hash_type, target_file)
     if hash_value != target_hash:
-        raise RuntimeError('Checksums mismatch of type %s at file %s:\nExpected: %s\nActual:   %s' % (
-            hash_type, target_file, hash_value, target_hash))
+        raise RuntimeError(
+            'Checksums mismatch of type %s at file %s:\nExpected: %s\nActual:   %s'
+            % (hash_type, target_file, hash_value, target_hash)
+        )

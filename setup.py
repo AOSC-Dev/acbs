@@ -8,7 +8,7 @@ class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
     The purpose of this class is to postpone importing pybind11
     until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
+    method can be invoked."""
 
     def __str__(self):
         try:
@@ -18,10 +18,16 @@ class get_pybind_include(object):
         return pybind11.get_include()
 
 
-ext_modules = [Extension(
-    'acbs.miniapt_query', sorted(['src/miniapt-query.cc']),
-    include_dirs=[get_pybind_include()], extra_link_args=['-lapt-pkg'], language='c++', optional=True
-)]
+ext_modules = [
+    Extension(
+        'acbs.miniapt_query',
+        sorted(['src/miniapt-query.cc']),
+        include_dirs=[get_pybind_include()],
+        extra_link_args=['-lapt-pkg'],
+        language='c++',
+        optional=True,
+    )
+]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -37,12 +43,8 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/AOSC-Dev/acbs",
     packages=find_packages(),
-    install_requires=[
-        "pyparsing>=2.4,<3"
-    ],
-    extras_require={
-        "Build logging": ["pexpect"]
-    },
+    install_requires=["pyparsing>=2.4,<3"],
+    extras_require={"Build logging": ["pexpect"]},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
@@ -54,5 +56,5 @@ setup(
     ext_modules=ext_modules,
     setup_requires=['pybind11>=2.5.0'],
     cmdclass={'build_ext': build_ext},
-    scripts=["acbs-build"]
+    scripts=["acbs-build"],
 )

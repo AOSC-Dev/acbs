@@ -18,14 +18,23 @@ from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
 from acbs.parser import get_deps_graph, get_tree_by_name, arch
 from acbs.pm import install_from_repo
-from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
-                        has_stamp, invoke_autobuild, make_build_dir,
-                        print_build_timings, print_package_names, write_checksums,
-                        generate_checksums, is_spec_legacy, check_artifact)
+from acbs.utils import (
+    ACBSLogFormatter,
+    full_line_banner,
+    guess_subdir,
+    has_stamp,
+    invoke_autobuild,
+    make_build_dir,
+    print_build_timings,
+    print_package_names,
+    write_checksums,
+    generate_checksums,
+    is_spec_legacy,
+    check_artifact,
+)
 
 
 class BuildCore(object):
-
     def __init__(self, args) -> None:
         self.debug = args.debug
         self.no_deps = args.no_deps
@@ -47,15 +56,13 @@ class BuildCore(object):
 
     def init(self) -> None:
         sys.excepthook = self.acbs_except_hdr
-        print(full_line_banner(
-            'Welcome to ACBS - {}'.format(__version__)))
+        print(full_line_banner('Welcome to ACBS - {}'.format(__version__)))
         if self.debug:
             log_verbosity = logging.DEBUG
         else:
             log_verbosity = logging.INFO
         try:
-            for directory in [self.dump_dir, self.tmp_dir, self.conf_dir,
-                              self.log_dir]:
+            for directory in [self.dump_dir, self.tmp_dir, self.conf_dir, self.log_dir]:
                 if not os.path.isdir(directory):
                     os.makedirs(directory)
         except Exception:
@@ -69,8 +76,9 @@ class BuildCore(object):
         else:
             raise Exception('forest.conf not found')
 
-    def __install_logger(self, str_verbosity=logging.INFO,
-                         file_verbosity=logging.DEBUG):
+    def __install_logger(
+        self, str_verbosity=logging.INFO, file_verbosity=logging.DEBUG
+    ):
         logger = logging.getLogger()
         logger.setLevel(0)  # Set to lowest to bypass the initial filter
         str_handler = logging.StreamHandler()
@@ -78,10 +86,15 @@ class BuildCore(object):
         str_handler.setFormatter(ACBSLogFormatter())
         logger.addHandler(str_handler)
         log_file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(self.log_dir, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=3)
+            os.path.join(self.log_dir, 'acbs-build.log'),
+            mode='a',
+            maxBytes=2e5,
+            backupCount=3,
+        )
         log_file_handler.setLevel(file_verbosity)
-        log_file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s:%(levelname)s:%(message)s'))
+        log_file_handler.setFormatter(
+            logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+        )
         logger.addHandler(log_file_handler)
 
     def build(self) -> None:
@@ -98,11 +111,9 @@ class BuildCore(object):
                 raise RuntimeError('Could not find package {}'.format(i))
             packages.extend(package)
         resolved = self.resolve_deps(packages)
-        logging.info(
-            f'Dependencies resolved, {len(resolved)} packages in the queue')
+        logging.info(f'Dependencies resolved, {len(resolved)} packages in the queue')
         logging.debug(f'Queue: {packages}')
-        logging.info(
-            f'Packages to be built: {print_package_names(packages, 5)}')
+        logging.info(f'Packages to be built: {print_package_names(packages, 5)}')
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
@@ -113,11 +124,15 @@ class BuildCore(object):
     def save_checkpoint(self, build_timings, packages):
         logging.info('ACBS is trying to save your build status...')
         shrink_wrap = ACBSShrinkWrap(
-            self.package_cursor, build_timings, packages, self.no_deps)
+            self.package_cursor, build_timings, packages, self.no_deps
+        )
         filename = do_shrink_wrap(shrink_wrap, '/tmp')
         logging.info(f'... saved to {filename}')
         raise RuntimeError(
-            'Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
+            'Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(
+                filename
+            )
+        )
 
     def resolve_deps(self, packages):
         error = False
@@ -136,14 +151,16 @@ class BuildCore(object):
         for dep in resolved:
             if len(dep) > 1 or dep[0].name in dep[0].deps:
                 # this is a SCC, aka a loop
-                logging.error('Found a loop in the dependency graph: {}'.format(
-                    print_package_names(dep)))
+                logging.error(
+                    'Found a loop in the dependency graph: {}'.format(
+                        print_package_names(dep)
+                    )
+                )
                 error = True
             elif not error:
                 packages.extend(dep)
         if error:
-            raise RuntimeError(
-                'Dependencies NOT resolved. Couldn\'t continue!')
+            raise RuntimeError('Dependencies NOT resolved. Couldn\'t continue!')
         check_package_groups(packages)
         return resolved
 
@@ -151,20 +168,23 @@ class BuildCore(object):
         # build process
         for task in packages:
             self.package_cursor += 1
-            logging.info('Building {} ({}/{})...'.format(task.name,
-                                                         self.package_cursor, len(packages)))
+            logging.info(
+                'Building {} ({}/{})...'.format(
+                    task.name, self.package_cursor, len(packages)
+                )
+            )
             source_name = task.name
             if task.fail_arch and task.fail_arch.match(arch):
                 raise RuntimeError(
-                    f'`{task.name}` is not buildable on `{arch}` (FAIL_ARCH).')
+                    f'`{task.name}` is not buildable on `{arch}` (FAIL_ARCH).'
+                )
             if task.base_slug:
                 source_name = os.path.basename(task.base_slug)
             if not has_stamp(task.build_location):
                 fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
                 if self.generate:
-                    spec_location = os.path.join(
-                        task.script_location, '..', 'spec')
+                    spec_location = os.path.join(task.script_location, '..', 'spec')
                     is_legacy = is_spec_legacy(spec_location)
                     checksum = generate_checksums(task.source_uri, is_legacy)
                     write_checksums(spec_location, checksum)
@@ -187,7 +207,8 @@ class BuildCore(object):
                 subdir = guess_subdir(build_dir)
                 if not subdir:
                     raise RuntimeError(
-                        'Could not determine sub-directory, please specify manually.')
+                        'Could not determine sub-directory, please specify manually.'
+                    )
                 build_dir = os.path.join(build_dir, subdir)
             if task.installables:
                 logging.info('Installing dependencies from repository...')
@@ -201,9 +222,13 @@ class BuildCore(object):
                 if build_timings:
                     print_build_timings(build_timings)
                 raise RuntimeError(
-                    'Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
-            task_name = '{} ({} @ {}-{})'.format(task.name,
-                                                 task.bin_arch, task.version, task.rel)
+                    'Error when building {}.\nBuild folder: {}'.format(
+                        task.name, build_dir
+                    )
+                )
+            task_name = '{} ({} @ {}-{})'.format(
+                task.name, task.bin_arch, task.version, task.rel
+            )
             build_timings.append((task_name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
@@ -212,5 +237,7 @@ class BuildCore(object):
             sys.__excepthook__(type_, value, tb)
         else:
             print()
-            logging.fatal('Oops! \033[93m%s\033[0m: \033[93m%s\033[0m' % (
-                str(type_.__name__), str(value)))
+            logging.fatal(
+                'Oops! \033[93m%s\033[0m: \033[93m%s\033[0m'
+                % (str(type_.__name__), str(value))
+            )

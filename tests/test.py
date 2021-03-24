@@ -29,8 +29,7 @@ def check_scc(resolved):
 def find_package_generic(name: str):
     acbs.parser.arch = 'none'
     acbs.parser.filter_dependencies = fake_pm
-    make_build_dir_mock = unittest.mock.Mock(
-        spec=make_build_dir, return_value='/tmp/')
+    make_build_dir_mock = unittest.mock.Mock(spec=make_build_dir, return_value='/tmp/')
     acbs.find.make_build_dir = make_build_dir_mock
     return acbs.find.find_package(name, './tests/'), make_build_dir_mock
 
@@ -39,8 +38,7 @@ class TestParser(unittest.TestCase):
     def test_parse_no_arch(self):
         acbs.parser.arch = 'none'
         acbs.parser.filter_dependencies = fake_pm
-        package = acbs.parser.parse_package(
-            './tests/fixtures/test-1/autobuild')
+        package = acbs.parser.parse_package('./tests/fixtures/test-1/autobuild')
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-4'])
         self.assertEqual(package.version, '1')
         self.assertEqual(package.source_uri[0].type, 'none')
@@ -48,8 +46,7 @@ class TestParser(unittest.TestCase):
     def test_parse_arch(self):
         acbs.parser.arch = 'arch'
         acbs.parser.filter_dependencies = fake_pm
-        package = acbs.parser.parse_package(
-            './tests/fixtures/test-1/autobuild')
+        package = acbs.parser.parse_package('./tests/fixtures/test-1/autobuild')
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-17'])
         self.assertEqual(package.version, '1')
         self.assertEqual(package.source_uri[0].type, 'none')
@@ -57,18 +54,20 @@ class TestParser(unittest.TestCase):
     def test_deps_loop(self):
         acbs.parser.arch = 'arch'
         acbs.parser.filter_dependencies = fake_pm
-        package = acbs.parser.parse_package(
-            './tests/fixtures/test-3/autobuild')
+        package = acbs.parser.parse_package('./tests/fixtures/test-3/autobuild')
         packages = tarjan_search(get_deps_graph([package]), './tests')
         error = check_scc(packages)
         self.assertEqual(error, True)
 
     def test_fail_arch(self):
         import re
+
         self.assertEqual(re.compile("^(?!amd64)"), fail_arch_regex("!amd64"))
         self.assertEqual(re.compile("^amd64"), fail_arch_regex("amd64"))
         self.assertEqual(re.compile("^(amd64|arm64)"), fail_arch_regex("(amd64|arm64)"))
-        self.assertEqual(re.compile("^(?!amd64|arm64)"), fail_arch_regex("!(amd64|arm64)"))
+        self.assertEqual(
+            re.compile("^(?!amd64|arm64)"), fail_arch_regex("!(amd64|arm64)")
+        )
 
     def test_parse_url(self):
         info = parse_url_schema('tbl::https://example.com', 'sha256::123')
@@ -83,12 +82,16 @@ class TestParser(unittest.TestCase):
         self.assertEqual(info.type, 'git')
         self.assertEqual(info.url, 'git://github.com/AOSC-Dev/acbs')
         self.assertEqual(info.chksum, ('none', ''))
-        info = parse_url_schema('git::commit=abcdef::git://github.com/AOSC-Dev/acbs', 'SKIP')
+        info = parse_url_schema(
+            'git::commit=abcdef::git://github.com/AOSC-Dev/acbs', 'SKIP'
+        )
         self.assertEqual(info.type, 'git')
         self.assertEqual(info.url, 'git://github.com/AOSC-Dev/acbs')
         self.assertEqual(info.revision, 'abcdef')
         self.assertEqual(info.chksum, ('none', ''))
-        info = parse_url_schema('git::commit=a2e5eff::https://github.com/AOSC-Dev/acbs#title', 'SKIP')
+        info = parse_url_schema(
+            'git::commit=a2e5eff::https://github.com/AOSC-Dev/acbs#title', 'SKIP'
+        )
         self.assertEqual(info.type, 'git')
         self.assertEqual(info.url, 'https://github.com/AOSC-Dev/acbs#title')
         self.assertEqual(info.revision, 'a2e5eff')
@@ -97,8 +100,7 @@ class TestParser(unittest.TestCase):
     def test_parse_new_spec(self):
         acbs.parser.arch = 'none'
         acbs.parser.filter_dependencies = fake_pm
-        package = acbs.parser.parse_package(
-            './tests/fixtures/test-4/autobuild')
+        package = acbs.parser.parse_package('./tests/fixtures/test-4/autobuild')
         self.assertEqual(package.deps, ['test-4'])
         self.assertEqual(package.version, '1')
         self.assertEqual(package.source_uri[0].type, 'git')

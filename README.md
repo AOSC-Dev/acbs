@@ -1,5 +1,6 @@
 ACBS
 ====
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **ACBS is still under heavy development, but is currently deployed for packaging
 for AOSC OS.**
