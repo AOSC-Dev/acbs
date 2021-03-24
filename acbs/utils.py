@@ -221,6 +221,7 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
 def human_time(full_seconds: float) -> str:
     """
     Convert time span (in seconds) to more friendly format
+
     :param seconds: Time span in seconds (decimal is acceptable)
     """
     if full_seconds < 0:

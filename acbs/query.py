@@ -17,6 +17,7 @@ def acbs_query(input: str) -> Optional[str]:
 
 
 def acbs_query_tree(commands: Sequence[str]) -> Optional[str]:
+    """Look for a tree."""
     if len(commands) != 2:
         return None
     try:
@@ -26,6 +27,7 @@ def acbs_query_tree(commands: Sequence[str]) -> Optional[str]:
 
 
 def acbs_query_path(commands: Sequence[str]) -> Optional[str]:
+    """Look for stuff."""
     if len(commands) != 2:
         return None
     return {'conf': CONF_DIR, 'dump': DUMP_DIR, 'tmp': TMP_DIR, 'log': LOG_DIR}.get(

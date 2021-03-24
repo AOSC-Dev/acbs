@@ -35,7 +35,13 @@ from acbs.utils import (
 
 
 class BuildCore(object):
+    """
+    Main driver for building.
+    """
     def __init__(self, args) -> None:
+        """
+        Constructs, but ALSO initiates the build.
+        """
         self.debug = args.debug
         self.no_deps = args.no_deps
         self.dl_only = args.get
@@ -45,6 +51,7 @@ class BuildCore(object):
         self.tree_dir = ''
         self.package_cursor = 0
         # static vars
+        # Okay, why not just use the uppercase stuff?
         self.conf_dir = CONF_DIR
         self.dump_dir = DUMP_DIR
         self.tmp_dir = TMP_DIR

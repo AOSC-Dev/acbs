@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-'''
+"""
 ACBS - AOSC CI Build System
 A small alternative system to port abbs to CI environment to prevent
 from irregular bash failures
-'''
+"""
 import os
 import sys
 import shutil
@@ -18,28 +18,64 @@ from acbs.resume import do_resume_checkpoint
 
 def main() -> None:
     tmp_loc = TMP_DIR
-    parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
-                                                          ), formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-v', '--version',
-                        help='Show the version and exit', action="version", version=f'ACBS version {acbs.__version__}')
+    parser = argparse.ArgumentParser(
+        description=help_msg(acbs.__version__),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
-        '-d', '--debug', help='Increase verbosity to ease debugging process', action="store_true")
-    parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
-                        help='Specify which abbs-tree to use')
-    parser.add_argument('-q', '--query', nargs=1, dest='acbs_query',
-                        help='Do a simple ACBS query')
-    parser.add_argument('-w', '--write', dest='acbs_write',
-                        help='Write spec changes back (Need to be specified with -g)',
-                        action="store_true")
-    parser.add_argument('packages', nargs='*', help='Packages to be built')
-    parser.add_argument('-c', '--clear', help='Clear build directory',
-                        action='store_true', dest='clear_dir')
-    parser.add_argument('-k', '--skip-deps', help='Skip dependency resolution',
-                        action='store_true', dest='no_deps')
-    parser.add_argument('-g', '--get',
-                        help='Only download source packages without building', action="store_true")
-    parser.add_argument('-r', '--resume', nargs=1, dest='state_file',
-                        help='Resume a previous build attempt')
+        "-v",
+        "--version",
+        help="Show the version and exit",
+        action="version",
+        version=f"ACBS version {acbs.__version__}",
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        help="Increase verbosity to ease debugging process",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-t", "--tree", nargs=1, dest="acbs_tree", help="Specify which abbs-tree to use"
+    )
+    parser.add_argument(
+        "-q", "--query", nargs=1, dest="acbs_query", help="Do a simple ACBS query"
+    )
+    parser.add_argument(
+        "-w",
+        "--write",
+        dest="acbs_write",
+        help="Write spec changes (new chksum) back (Need to be specified with -g)",
+        action="store_true",
+    )
+    parser.add_argument("packages", nargs="*", help="Packages to be built")
+    parser.add_argument(
+        "-c",
+        "--clear",
+        help="Clear build directory",
+        action="store_true",
+        dest="clear_dir",
+    )
+    parser.add_argument(
+        "-k",
+        "--skip-deps",
+        help="Skip dependency resolution",
+        action="store_true",
+        dest="no_deps",
+    )
+    parser.add_argument(
+        "-g",
+        "--get",
+        help="Only download source packages without building",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-r",
+        "--resume",
+        nargs=1,
+        dest="state_file",
+        help="Resume a previous build attempt",
+    )
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
@@ -68,26 +104,30 @@ def clear_tmp(tmp_dir: str) -> None:
 
     def show_progress():
         try:
-            print(hide_cursor, end='')
+            print(hide_cursor, end="")
             while not complete_status:
-                for bar in ['-', '\\', '|', '/']:
-                    print('\r[%s/%s] Clearing cache...%s' %
-                          (sub_dirs_deleted, sub_dirs_count, bar), end='')
+                for bar in ["-", "\\", "|", "/"]:
+                    print(
+                        "\r[%s/%s] Clearing cache...%s"
+                        % (sub_dirs_deleted, sub_dirs_count, bar),
+                        end="",
+                    )
                     sys.stdout.flush()
                     sleep(0.1)
-            print('\r[OK] Clearing cache...   %s\n' %
-                  (show_cursor), end='')
+            print("\r[OK] Clearing cache...   %s\n" % (show_cursor), end="")
         except Exception as ex:
-            print(show_cursor, end='')
+            print(show_cursor, end="")
             raise ex
+
     import threading
-    hide_cursor = '\033[?25l'
-    show_cursor = '\033[?25h'
+
+    hide_cursor = "\033[?25l"
+    show_cursor = "\033[?25h"
     sub_dirs = os.listdir(tmp_dir)
     sub_dirs_count = len(sub_dirs)
     if not sub_dirs_count:
-        print('Build directory clean, no need to clear...')
-        print(show_cursor, end='')
+        print("Build directory clean, no need to clear...")
+        print(show_cursor, end="")
         return
     sub_dirs_deleted = 0
     complete_status = False
@@ -102,9 +142,9 @@ def clear_tmp(tmp_dir: str) -> None:
 
 
 def help_msg(acbs_version: str) -> str:
-    help_msg = f'''ACBS - AOSC CI Build System\nVersion: {acbs_version}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures'''
+    help_msg = f"""ACBS - AOSC CI Build System\nVersion: {acbs_version}\nA small alternative system to port abbs to CI environment to prevent from irregular bash failures"""
     return help_msg
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

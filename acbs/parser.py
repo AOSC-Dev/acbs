@@ -2,6 +2,7 @@ import configparser
 import logging
 import os
 import re
+import warnings
 from collections import OrderedDict
 from typing import Dict, List, Optional
 
@@ -12,8 +13,14 @@ from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
 
 generate_mode = False
 
+def getarch(d: Dict[str, str], k: str, fallback=True) -> str:
+    return d.get(f'{k}__{arch.upper()}', d.get(k) if Fallbask else None)
+
 
 def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
+    """
+    Turn a pair of SRC and CHECKSUM specs into a SourceInfo.
+    """
     acbs_source_info = ACBSSourceInfo('none', '', '')
     url_split = url.split('::', 2)
     schema = ''
@@ -65,15 +72,18 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             if translated is None:
                 raise ValueError(f'Invalid submodule directive: {v}')
             acbs_source_info.submodule = translated
+        else:
+            warnings.warn(f"Unhandled option {option}", category=warnings.SyntaxWarning)
     return acbs_source_info
 
 
 def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
+    """
+    :param var: Bash variables in spec.
+    """
     acbs_source_info: List[ACBSSourceInfo] = []
-    sources = var.get('SRCS__{arch}'.format(arch=arch.upper())) or var.get('SRCS')
-    checksums = var.get('CHKSUMS__{arch}'.format(arch=arch.upper())) or var.get(
-        'CHKSUMS'
-    )
+    sources = getarch(var, 'SRCS')
+    checksums = getarch(var, 'CHKSUMS')
     if sources is None:
         logging.debug('Using legacy source directives')
         return [parse_package_url_legacy(var)]
@@ -135,9 +145,7 @@ def parse_package(location: str) -> ACBSPackageInfo:
     deps_arch: Optional[str] = var.get('PKGDEP__{arch}'.format(arch=arch.upper()))
     # determine whether this is an undefined value or an empty string
     deps: str = (var.get('PKGDEP') or '') if deps_arch is None else deps_arch
-    builddeps_arch: Optional[str] = var.get(
-        'BUILDDEP__{arch}'.format(arch=arch.upper())
-    )
+    builddeps_arch: Optional[str] = getarch(var, 'BUILDDEP', False)
     builddeps: str = var.get('BUILDDEP') if builddeps_arch is None else builddeps_arch
     deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
@@ -183,6 +191,9 @@ def get_deps_graph(
 
 
 def get_tree_by_name(filename: str, tree_name) -> str:
+    """
+    Get path to a tree.
+    """
     acbs_config = configparser.ConfigParser(
         interpolation=configparser.ExtendedInterpolation()
     )

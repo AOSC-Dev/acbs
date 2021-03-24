@@ -11,8 +11,12 @@ pool: Dict[str, ACBSPackageInfo] = {}
 def tarjan_search(
     packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: str
 ) -> List[List[ACBSPackageInfo]]:
-    """This function describes a Tarjan's strongly connected components algorithm.
-    The resulting list of ACBSPackageInfo are sorted topologically as a byproduct of the algorithm
+    """
+    Group dependencies by strongly-connected components per Tarjan.
+    The resulting list of ACBSPackageInfo are sorted topologically as a byproduct of the algorithm.
+
+    In human language: this finds groups of dependency loops; the groups are sorted in
+    "least-dependened-on" order.
     """
     # Initialize state trackers
     lowlink: Dict[str, int] = defaultdict(lambda: -1)
@@ -24,7 +28,7 @@ def tarjan_search(
     pool.update(packages)
     for i in packages_list:
         if index[i] == -1:  # recurse on each package that is not yet visited
-            strongly_connected(
+            _strongly_connected(
                 search_path,
                 packages_list,
                 results,
@@ -38,7 +42,7 @@ def tarjan_search(
     return results
 
 
-def strongly_connected(
+def _strongly_connected(
     search_path: str,
     packages_list: List[str],
     results: list,
@@ -81,7 +85,7 @@ def strongly_connected(
     for p in current_package.deps:
         if index[p] == -1:
             # recurse on unvisited packages
-            strongly_connected(
+            _strongly_connected(
                 search_path,
                 packages_list,
                 results,

@@ -42,6 +42,11 @@ def do_load_checkpoint(name: str) -> ACBSShrinkWrap:
 
 
 def do_resume_checkpoint(filename: str, args):
+    """
+    Resume from checkpoint. This is an entry point.
+
+    :param args: cmdline args from acbs-build.
+    """
     def resume_build():
         logging.debug('Queue: {}'.format(resumed_packages))
         logging.info(

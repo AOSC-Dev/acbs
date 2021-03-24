@@ -37,6 +37,7 @@ def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
 
 
 def escape_package_name(name: str) -> str:
+    """Escape package name for apt, which wants regex."""
     return re.sub(r'([+*?])', '\\\\\\1', name)
 
 

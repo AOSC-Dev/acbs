@@ -17,6 +17,9 @@ generate_mode = False
 def fetch_source(
     info: List[ACBSSourceInfo], source_location: str, package_name: str
 ) -> Optional[List[ACBSSourceInfo]]:
+    """
+    Fetch a bunch of sources.
+    """
     if not source_location:
         raise RuntimeError('Not supposed to have no source location.')
     logging.info('Fetching required source files...')
@@ -29,16 +32,19 @@ def fetch_source(
         if not i.enabled and not generate_mode:
             logging.info(f'Source {count} skipped.')
         url_hash = hash_url(i.url)
-        result = fetch_source_inner(i, source_location, url_hash)
+        result = _fetch_source_inner(i, source_location, url_hash)
         if result is None:
             raise RuntimeError('Unable to fetch source files, failed 5 times in a row.')
         ret.append(result)
     return ret
 
 
-def fetch_source_inner(
+def _fetch_source_inner(
     info: ACBSSourceInfo, source_location: str, url_hash: str
 ) -> Optional[ACBSSourceInfo]:
+    """
+    Fetch one source. Not to be used directly.
+    """
     type_ = info.type
     retry = 0
     fetcher: Optional[pair_signature] = handlers.get(type_.upper())
@@ -56,6 +62,9 @@ def fetch_source_inner(
 
 
 def process_source(info: ACBSPackageInfo, source_name: str) -> None:
+    """
+    Prepares a source for building (unpacking or checkout).
+    """
     idx = 0
     for source_uri in info.source_uri:
         type_ = source_uri.type

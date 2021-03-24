@@ -5,6 +5,9 @@ CHUNKSIZE = 1 * 1024 * 1024
 
 
 def calculate_hash(chksum_type: str, target_file: str) -> Optional[str]:
+    """
+    Use hashlib to calculate a hash.
+    """
     hash_type = chksum_type.lower()
     if hash_type == 'none':
         return None
@@ -22,12 +25,18 @@ def calculate_hash(chksum_type: str, target_file: str) -> Optional[str]:
 
 
 def hash_url(url: str) -> str:
+    """
+    Hash a URL for the filename.
+    """
     hash_obj = hashlib.new('sha256')
     hash_obj.update(url.encode('utf-8'))
     return hash_obj.hexdigest()
 
 
 def check_hash(chksum_tuple: Tuple[str, str], target_file: str) -> None:
+    """
+    Check a hash. Raise error on mismatch.
+    """
     hash_type, hash_value = chksum_tuple
     hash_type = hash_type.lower()
     hash_value = hash_value.lower()

@@ -66,6 +66,9 @@ class ACBSPackageInfo(object):
 
 
 class ACBSShrinkWrap(object):
+    """
+    Save state object.
+    """
     def __init__(
         self,
         cursor: int,

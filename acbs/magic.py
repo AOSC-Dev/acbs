@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-Fake magic bindings
+Fake magic bindings (unused??)
 """
 import subprocess
 
