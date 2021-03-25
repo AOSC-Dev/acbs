@@ -45,6 +45,8 @@ Acceptable Prefixes for ``SRCS``
 Supported Checksum (Hashing) Algorithm
 --------------------------------------
 
+Hash algorithm support mainly follows the Python `hashlib` module.
+
 +-----------+--------------+------------+
 | Algorithm | Recommended? | Notes      |
 +-----------+--------------+------------+

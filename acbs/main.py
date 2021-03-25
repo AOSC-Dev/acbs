@@ -38,6 +38,7 @@ class BuildCore(object):
     """
     Main driver for building.
     """
+
     def __init__(self, args) -> None:
         """
         Constructs, but ALSO initiates the build.

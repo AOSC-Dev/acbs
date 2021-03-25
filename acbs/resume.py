@@ -47,6 +47,7 @@ def do_resume_checkpoint(filename: str, args):
 
     :param args: cmdline args from acbs-build.
     """
+
     def resume_build():
         logging.debug('Queue: {}'.format(resumed_packages))
         logging.info(
