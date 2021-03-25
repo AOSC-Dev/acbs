@@ -265,10 +265,10 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
     def calculate_checksum(o: ACBSSourceInfo):
         if not o.source_location:
             raise ValueError('source_location is None.')
-        csum = calculate_hash('sha256', o.source_location)
+        csum = calculate_hash('blake2s', o.source_location)
         if not csum:
             raise ValueError(f'Unable to calculate checksum for {o.source_location}')
-        o.chksum = ('sha256', csum)
+        o.chksum = ('blake2s', csum)
         return o
 
     if legacy and info[0].type == 'tarball':
