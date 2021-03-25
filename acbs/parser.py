@@ -13,6 +13,7 @@ from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
 
 generate_mode = False
 
+
 def getarch(d: Dict[str, str], k: str, fallback=True) -> str:
     return d.get(f'{k}__{arch.upper()}', d.get(k) if Fallbask else None)
 
@@ -54,7 +55,7 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
 def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
     options_split = options.split(';')
     for option in options_split:
-        k, v = option.split('=')
+        k, v = option.split('=', maxsplit=1)
         if k == 'branch':
             acbs_source_info.branch = v.strip()
         elif k == 'rename':
