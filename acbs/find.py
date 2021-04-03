@@ -55,7 +55,7 @@ def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
         results = []
         for p in packages:
             p = p.strip()
-            if not p:
+            if not p or p.startswith('#'):
                 continue
             found = find_package_inner(p, search_path)
             if not found:
