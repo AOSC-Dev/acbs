@@ -7,7 +7,7 @@ import signal
 import subprocess
 import tempfile
 import time
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, Dict
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib_inner
@@ -125,12 +125,12 @@ def has_stamp(path: str) -> bool:
     return os.path.exists(os.path.join(path, '.acbs-stamp'))
 
 
-def start_build_capture(build_dir: str):
+def start_build_capture(env: Dict[str, str], build_dir: str):
     with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=build_dir, delete=False) as f:
         logging.info(f'Build log: {f.name}')
         header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n'
         f.write(header.encode())
-        process = pexpect.spawn('autobuild', logfile=f)
+        process = pexpect.spawn('autobuild', logfile=f, env=env)
         term_size = shutil.get_terminal_size()
         # we need to adjust the pseudo-terminal size to match the actual screen size
         process.setwinsize(rows=term_size.lines,
@@ -170,8 +170,10 @@ def check_artifact(name: str, build_dir: str):
     for f in os.listdir(build_dir):
         if f.endswith('.deb') and f.startswith(name):
             return
-    logging.error(f'{ANSI_RED}Autobuild malfunction! Emergency drop!{ANSI_RST}')
-    raise RuntimeError('STOP! Autobuild3 malfunction detected! Returned zero status with no artifact.')
+    logging.error(
+        f'{ANSI_RED}Autobuild malfunction! Emergency drop!{ANSI_RST}')
+    raise RuntimeError(
+        'STOP! Autobuild3 malfunction detected! Returned zero status with no artifact.')
 
 
 def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
@@ -181,6 +183,8 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     shutil.copytree(task.script_location, dst_dir, symlinks=True)
     # Inject variables to defines
     acbs_helper = os.path.join(task.build_location, '.acbs-script')
+    env_dict = {'PKGREL': task.rel, 'PKGVER': task.version,
+                'PKGEPOCH': task.epoch or '0'}
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
             task.rel, task.version, acbs_helper, acbs_helper))
@@ -190,11 +194,11 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
         f.write(generate_metadata(task))
     os.chdir(build_dir)
     if build_logging:
-        start_build_capture(build_dir)
+        start_build_capture(env_dict, build_dir)
         return
     logging.warning(
         'Build logging not available due to pexpect not installed.')
-    subprocess.check_call(['autobuild'])
+    subprocess.check_call(['autobuild'], env=env_dict)
 
 
 def human_time(full_seconds: float) -> str:
