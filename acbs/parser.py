@@ -165,6 +165,10 @@ def parse_package(location: str) -> ACBSPackageInfo:
     epoch = spec_var.get('EPOCH')
     if epoch:
         result.epoch = epoch
+    # collect exported variables (prefixed with `__`)
+    for k, v in spec_var.items():
+        if k.startswith('__'):
+            result.exported[k] = v
 
     return filter_dependencies(result)
 

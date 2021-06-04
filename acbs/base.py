@@ -1,6 +1,6 @@
 import re
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 from acbs import __version__
 
@@ -44,6 +44,8 @@ class ACBSPackageInfo(object):
         self.bin_arch = ''
         # script location (autobuild directory)
         self.script_location = location
+        # extra exported variables from spec
+        self.exported: Dict[str, str] = {}
 
     def __repr__(self) -> str:
         return '<ACBSPackageInfo {name}: - deps: {deps} - uri: {uri}>'.format(name=self.name, deps=self.deps, uri=self.source_uri)

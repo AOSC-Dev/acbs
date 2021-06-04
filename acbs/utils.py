@@ -185,6 +185,7 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     acbs_helper = os.path.join(task.build_location, '.acbs-script')
     env_dict = {'PKGREL': task.rel, 'PKGVER': task.version,
                 'PKGEPOCH': task.epoch or '0'}
+    env_dict.update(task.exported)
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
             task.rel, task.version, acbs_helper, acbs_helper))
