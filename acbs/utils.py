@@ -183,8 +183,9 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str):
     shutil.copytree(task.script_location, dst_dir, symlinks=True)
     # Inject variables to defines
     acbs_helper = os.path.join(task.build_location, '.acbs-script')
-    env_dict = {'PKGREL': task.rel, 'PKGVER': task.version,
-                'PKGEPOCH': task.epoch or '0'}
+    env_dict = os.environ.copy()
+    env_dict.update({'PKGREL': task.rel, 'PKGVER': task.version,
+                     'PKGEPOCH': task.epoch or '0'})
     env_dict.update(task.exported)
     with open(os.path.join(build_dir, 'autobuild', 'defines'), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
