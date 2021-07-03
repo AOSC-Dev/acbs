@@ -1,12 +1,14 @@
 #!/bin/bash -e
 
+export PATH="$HOME/.local/bin:$PATH"
+
 python3 --version
 
 echo '[-] Installing required dependencies to local user folder...'
 rm -f get-pip.py
 wget https://bootstrap.pypa.io/get-pip.py
 python3 get-pip.py --user
-pip install --user pyparsing
+pip3 install --user pyparsing
 echo '[-] Installing acbs (stage 0)...'
 python3 setup.py install --user
 rm -f get-pip.py
