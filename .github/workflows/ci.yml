@@ -34,6 +34,6 @@ jobs:
     - name: Run unittests
       run: ARCH=amd64 python -m unittest discover ./tests/
     - name: Install native dependencies
-      run: sudo apt-get install -y libapt-pkg-dev
+      run: sudo apt-get update && sudo apt-get install -y libapt-pkg-dev
     - name: Test building
       run: python setup.py build -f
