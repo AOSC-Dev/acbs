@@ -120,7 +120,7 @@ def install_from_repo(packages: List[str]):
     escaped = []
     for package in packages:
         escaped.append(escape_package_name_install(package))
-    command = ['apt-get', 'install', '-y']
+    command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
     command.extend(escaped)
     try:
         subprocess.check_call(command)
