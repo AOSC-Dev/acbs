@@ -157,7 +157,9 @@ class BuildCore(object):
         if error:
             raise RuntimeError(
                 'Dependencies NOT resolved. Couldn\'t continue!')
-        check_package_groups(packages)
+        if not self.reorder:
+            # TODO: correctly hoist the packages inside the groups
+            check_package_groups(packages)
         return resolved
 
     def build_sequential(self, build_timings, packages):

@@ -115,8 +115,8 @@ def check_package_groups(packages: List[ACBSPackageInfo]):
             continue
         if base_slug in groups_seen:
             if groups_seen[base_slug] > pkg.group_seq:
-                raise ValueError('Package {} (in {}) has a different sequential order (#{}) after dependency resolution'.format(
-                    pkg.name, base_slug, pkg.group_seq))
+                raise ValueError('Package {} (in {}) has a different sequential order (#{}) after dependency resolution (should be #{})'.format(
+                    pkg.name, base_slug, pkg.group_seq, groups_seen[base_slug] + 1))
         else:
             groups_seen[base_slug] = pkg.group_seq
 
