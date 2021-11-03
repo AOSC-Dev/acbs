@@ -108,6 +108,7 @@ class BuildCore(object):
         if self.save_list:
             filename = checkpoint_to_group(packages, self.tree_dir)
             logging.info(f'ACBS has saved your build queue to groups/{filename}')
+            return
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
@@ -145,6 +146,12 @@ class BuildCore(object):
                 logging.error('Found a loop in the dependency graph: {}'.format(
                     print_package_names(dep)))
                 error = True
+                if self.reorder:
+                    if not self.save_list:
+                        logging.warning('You probably want to add -p option to get a list of ordered packages.')
+                    else:
+                        logging.info('ACBS will still save the build queue. Please keep in mind that the build order inside the loop is not guaranteed.')
+                        error = False
             elif not error:
                 packages.extend(dep)
         if error:

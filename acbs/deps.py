@@ -1,6 +1,8 @@
 from collections import OrderedDict, defaultdict, deque
 from typing import List, Dict, Deque
 
+import logging
+
 from acbs.find import find_package
 from acbs.parser import ACBSPackageInfo
 
@@ -35,6 +37,10 @@ def prepare_for_reorder(package: ACBSPackageInfo, packages_list: List[str]) -> A
     """
     new_installables = []
     for d in package.installables:
+        # skip self-dependency
+        if d == package.name:
+            new_installables.append(d)
+            continue
         try:
             packages_list.index(d)
             package.deps.append(d)
@@ -74,8 +80,8 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     assert current_package is not None
     # prepare for re-order if necessary
     if reorder:
-        logging.debug(f'Prepare for re-ordering: {package.name}')
-        current_package = prepare_for_reorder(package, packages_list)
+        logging.debug(f'Prepare for re-ordering: {current_package.name}')
+        current_package = prepare_for_reorder(current_package, packages_list)
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:
