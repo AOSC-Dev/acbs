@@ -6,6 +6,8 @@ from acbs.parser import ACBSPackageInfo
 
 # package information cache
 pool: Dict[str, ACBSPackageInfo] = {}
+# use special re-order mode
+reorder: bool = False
 
 
 def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: str) -> List[List[ACBSPackageInfo]]:
@@ -25,6 +27,21 @@ def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: st
             strongly_connected(search_path, packages_list, results, packages,
                                i, lowlink, index, stackstate, stack)
     return results
+
+
+def prepare_for_reorder(package: ACBSPackageInfo, packages_list: List[str]) -> ACBSPackageInfo:
+    """This function prepares the package for reordering.
+    The idea is to move the installable dependencies which are in the build list to the "uninstallable" list.
+    """
+    new_installables = []
+    for d in package.installables:
+        try:
+            packages_list.index(d)
+            package.deps.append(d)
+        except ValueError:
+            new_installables.append(d)
+    package.installables = new_installables
+    return package
 
 
 def strongly_connected(search_path: str, packages_list: List[str], results: list, packages: 'OrderedDict[str, ACBSPackageInfo]', vert: str, lowlink: Dict[str, int], index: Dict[str, int], stackstate: Dict[str, bool], stack: Deque[str], depth=0):
@@ -55,6 +72,10 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
             current_package = package
             pool[vert] = current_package
     assert current_package is not None
+    # prepare for re-order if necessary
+    if reorder:
+        logging.debug(f'Prepare for re-ordering: {package.name}')
+        current_package = prepare_for_reorder(package, packages_list)
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:

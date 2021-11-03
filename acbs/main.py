@@ -35,6 +35,7 @@ class BuildCore(object):
         self.generate = args.acbs_write
         self.tree_dir = ''
         self.package_cursor = 0
+        self.reorder = args.reorder
         # static vars
         self.conf_dir = CONF_DIR
         self.dump_dir = DUMP_DIR
@@ -125,6 +126,7 @@ class BuildCore(object):
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
             logging.debug('Running Tarjan search...')
+            acbs.deps.reorder = self.reorder
             resolved = tarjan_search(graph, self.tree_dir)
         else:
             logging.warning('Warning: Dependency resolution disabled!')

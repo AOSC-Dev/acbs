@@ -24,6 +24,8 @@ def main() -> None:
                         help='Show the version and exit', action="version", version=f'ACBS version {acbs.__version__}')
     parser.add_argument(
         '-d', '--debug', help='Increase verbosity to ease debugging process', action="store_true")
+    parser.add_argument(
+        '-e', '--reorder', help='Reorder the input build list so that it follows the dependency order', action="store_true")
     parser.add_argument('-t', '--tree', nargs=1, dest='acbs_tree',
                         help='Specify which abbs-tree to use')
     parser.add_argument('-q', '--query', nargs=1, dest='acbs_query',
