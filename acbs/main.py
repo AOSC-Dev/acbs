@@ -11,7 +11,7 @@ import acbs.fetch
 import acbs.parser
 
 from acbs import __version__
-from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap
+from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap, checkpoint_to_group
 from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import tarjan_search
 from acbs.fetch import fetch_source, process_source
@@ -36,6 +36,7 @@ class BuildCore(object):
         self.tree_dir = ''
         self.package_cursor = 0
         self.reorder = args.reorder
+        self.save_list = args.save_list
         # static vars
         self.conf_dir = CONF_DIR
         self.dump_dir = DUMP_DIR
@@ -104,6 +105,9 @@ class BuildCore(object):
         logging.debug(f'Queue: {packages}')
         logging.info(
             f'Packages to be built: {print_package_names(packages, 5)}')
+        if self.save_list:
+            filename = checkpoint_to_group(packages, self.tree_dir)
+            logging.info(f'ACBS has saved your build queue to groups/{filename}')
         try:
             self.build_sequential(build_timings, packages)
         except Exception as ex:
