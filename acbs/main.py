@@ -152,7 +152,7 @@ class BuildCore(object):
                     else:
                         logging.info('ACBS will still save the build queue. Please keep in mind that the build order inside the loop is not guaranteed.')
                         error = False
-            elif not error:
+            if not error:
                 packages.extend(dep)
         if error:
             raise RuntimeError(
