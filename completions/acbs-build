@@ -20,7 +20,7 @@ _acbs()
     _init_completion || return
 
     if [[ $cur == -* ]]; then
-        COMPREPLY=($(compgen -W '-v --version -d --debug -t --tree -q --query -c --clear -k --skip-deps -g --get -r --resume -w --write' -- "$cur"))
+        COMPREPLY=($(compgen -W '-v --version -d --debug -t --tree -q --query -c --clear -k --skip-deps -g --get -r --resume -w --write -e --reorder -p --print-tasks' -- "$cur"))
     elif [[ $prev == "-t" || $prev == "--tree" ]]; then
         forest="$(acbs-build -q 'path:conf' 2>/dev/null)/forest.conf"
         if [[ "$?" -ne "0" ]]; then

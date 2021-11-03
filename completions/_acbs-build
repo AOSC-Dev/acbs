@@ -29,6 +29,8 @@ flags=(
     '(-g --get)'{-g,--get}'[Only download source packages without building]'
     '(-w --write)'{-w,--write}'[Write spec changes back (Need to be specified with -g)]'
     '(-r --resume)'{-r,--resume}'[Resume a previous build attempt]:file:'
+    '(-e --reorder)'{-e,--reorder}'[Reorder the input build list so that it follows the dependency order]'
+    '(-p --print-tasks)'{-p,--print-tasks}'[Save the resolved build order to the group folder and exit (dry-run)]'
     '(- 1 *)'{-h,--help}'[Show this help]'
     '*:: :->subcmd'
 )
