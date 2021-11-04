@@ -13,7 +13,7 @@ import acbs.parser
 from acbs import __version__
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap, checkpoint_to_group
 from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
-from acbs.deps import tarjan_search
+from acbs.deps import tarjan_search, prepare_for_reorder
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
 from acbs.parser import get_deps_graph, get_tree_by_name, arch
@@ -125,14 +125,27 @@ class BuildCore(object):
         raise RuntimeError(
             'Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
 
+
+    def reorder_deps(self, packages):
+        new_packages = []
+        for pkg in packages:
+            # prepare for re-order if necessary
+            logging.debug(f'Prepare for re-ordering: {pkg.name}')
+            new_packages.append(prepare_for_reorder(pkg, packages))
+        graph = get_deps_graph(new_packages)
+        return tarjan_search(graph, self.tree_dir)
+
+
     def resolve_deps(self, packages):
         error = False
         if not self.no_deps:
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
             logging.debug('Running Tarjan search...')
-            acbs.deps.reorder = self.reorder
             resolved = tarjan_search(graph, self.tree_dir)
+            # re-order the packages
+            if self.reorder:
+                resolved = self.reorder_deps([item for item in sublist for sublist in resolved])
         else:
             logging.warning('Warning: Dependency resolution disabled!')
             resolved = [[package] for package in packages]

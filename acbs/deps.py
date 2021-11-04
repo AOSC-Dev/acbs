@@ -1,15 +1,11 @@
 from collections import OrderedDict, defaultdict, deque
 from typing import List, Dict, Deque
 
-import logging
-
 from acbs.find import find_package
 from acbs.parser import ACBSPackageInfo
 
 # package information cache
 pool: Dict[str, ACBSPackageInfo] = {}
-# use special re-order mode
-reorder: bool = False
 
 
 def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: str) -> List[List[ACBSPackageInfo]]:
@@ -78,10 +74,6 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
             current_package = package
             pool[vert] = current_package
     assert current_package is not None
-    # prepare for re-order if necessary
-    if reorder:
-        logging.debug(f'Prepare for re-ordering: {current_package.name}')
-        current_package = prepare_for_reorder(current_package, packages_list)
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:
