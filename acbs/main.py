@@ -94,10 +94,10 @@ class BuildCore(object):
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
         for i in self.build_queue:
-            logging.debug('Finding {}...'.format(i))
+            logging.debug(f'Finding {i}...')
             package = find_package(i, self.tree_dir)
             if not package:
-                raise RuntimeError('Could not find package {}'.format(i))
+                raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)
         resolved = self.resolve_deps(packages)
         logging.info(
@@ -107,7 +107,8 @@ class BuildCore(object):
             f'Packages to be built: {print_package_names(packages, 5)}')
         if self.save_list:
             filename = checkpoint_to_group(packages, self.tree_dir)
-            logging.info(f'ACBS has saved your build queue to groups/{filename}')
+            logging.info(
+                f'ACBS has saved your build queue to groups/{filename}')
             return
         try:
             self.build_sequential(build_timings, packages)
@@ -123,8 +124,7 @@ class BuildCore(object):
         filename = do_shrink_wrap(shrink_wrap, '/tmp')
         logging.info(f'... saved to {filename}')
         raise RuntimeError(
-            'Build error.\nUse `acbs-build --resume {}` to resume after you sorted out the situation.'.format(filename))
-
+            f'Build error.\nUse `acbs-build --resume {filename}` to resume after you sorted out the situation.')
 
     def reorder_deps(self, packages):
         new_packages = []
@@ -135,7 +135,6 @@ class BuildCore(object):
         graph = get_deps_graph(new_packages)
         return tarjan_search(graph, self.tree_dir)
 
-
     def resolve_deps(self, packages):
         error = False
         if not self.no_deps:
@@ -145,7 +144,8 @@ class BuildCore(object):
             resolved = tarjan_search(graph, self.tree_dir)
             # re-order the packages
             if self.reorder:
-                resolved = self.reorder_deps([item for item in sublist for sublist in resolved])
+                resolved = self.reorder_deps(
+                    [item for item in sublist for sublist in resolved])
         else:
             logging.warning('Warning: Dependency resolution disabled!')
             resolved = [[package] for package in packages]
@@ -161,9 +161,11 @@ class BuildCore(object):
                 error = True
                 if self.reorder:
                     if not self.save_list:
-                        logging.warning('You probably want to add -p option to get a list of ordered packages.')
+                        logging.warning(
+                            'You probably want to add -p option to get a list of ordered packages.')
                     else:
-                        logging.info('ACBS will still save the build queue. Please keep in mind that the build order inside the loop is not guaranteed.')
+                        logging.info(
+                            'ACBS will still save the build queue. Please keep in mind that the build order inside the loop is not guaranteed.')
                         error = False
             if not error:
                 packages.extend(dep)
@@ -179,8 +181,8 @@ class BuildCore(object):
         # build process
         for task in packages:
             self.package_cursor += 1
-            logging.info('Building {} ({}/{})...'.format(task.name,
-                                                         self.package_cursor, len(packages)))
+            logging.info(
+                f'Building {task.name} ({self.package_cursor}/{len(packages)})...')
             source_name = task.name
             if task.fail_arch and task.fail_arch.match(arch):
                 raise RuntimeError(
@@ -196,7 +198,7 @@ class BuildCore(object):
                     is_legacy = is_spec_legacy(spec_location)
                     checksum = generate_checksums(task.source_uri, is_legacy)
                     write_checksums(spec_location, checksum)
-                    logging.info('Updated checksum for {}'.format(task.name))
+                    logging.info(f'Updated checksum for {task.name}')
                 build_timings.append((task.name, -1))
                 continue
             if not task.build_location:
@@ -229,9 +231,8 @@ class BuildCore(object):
                 if build_timings:
                     print_build_timings(build_timings)
                 raise RuntimeError(
-                    'Error when building {}.\nBuild folder: {}'.format(task.name, build_dir))
-            task_name = '{} ({} @ {}-{})'.format(task.name,
-                                                 task.bin_arch, task.version, task.rel)
+                    f'Error when building {task.name}.\nBuild folder: {build_dir}')
+            task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
             build_timings.append((task_name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
