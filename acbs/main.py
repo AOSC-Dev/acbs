@@ -127,6 +127,7 @@ class BuildCore(object):
             f'Build error.\nUse `acbs-build --resume {filename}` to resume after you sorted out the situation.')
 
     def reorder_deps(self, packages):
+        logging.info('Re-ordering packages...')
         new_packages = []
         for pkg in packages:
             # prepare for re-order if necessary
