@@ -93,6 +93,7 @@ class BuildCore(object):
         acbs.parser.generate_mode = self.generate
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
+        acbs.pm.reorder_mode = self.reorder
         for i in self.build_queue:
             logging.debug(f'Finding {i}...')
             package = find_package(i, self.tree_dir)
@@ -145,6 +146,7 @@ class BuildCore(object):
             resolved = tarjan_search(graph, self.tree_dir)
             # re-order the packages
             if self.reorder:
+                print()
                 resolved = self.reorder_deps(
                     [item for sublist in resolved for item in sublist])
         else:

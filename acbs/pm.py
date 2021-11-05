@@ -8,6 +8,7 @@ from acbs.base import ACBSPackageInfo
 installed_cache: Dict[str, bool] = {}
 available_cache: Dict[str, bool] = {}
 use_native_bindings: bool = True
+reorder_mode: bool = False
 
 try:
     from acbs.miniapt_query import apt_init_system, check_if_available as apt_check_if_available
@@ -21,7 +22,7 @@ def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
     installables = []
     deps = []
     for dep in package.deps:
-        if check_if_installed(dep):
+        if not reorder_mode and check_if_installed(dep):
             continue
         if check_if_available(dep):
             installables.append(dep)

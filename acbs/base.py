@@ -48,7 +48,7 @@ class ACBSPackageInfo(object):
         self.exported: Dict[str, str] = {}
 
     def __repr__(self) -> str:
-        return '<ACBSPackageInfo {name}: - deps: {deps} - uri: {uri}>'.format(name=self.name, deps=self.deps, uri=self.source_uri)
+        return f'<ACBSPackageInfo {self.name}: deps: {self.deps} ; uri: {self.source_uri}>'
 
 
 class ACBSShrinkWrap(object):
