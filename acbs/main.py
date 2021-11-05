@@ -130,10 +130,11 @@ class BuildCore(object):
     def reorder_deps(self, packages):
         logging.info('Re-ordering packages...')
         new_packages = []
+        package_names = [p.name for p in packages]
         for pkg in packages:
             # prepare for re-order if necessary
             logging.debug(f'Prepare for re-ordering: {pkg.name}')
-            new_packages.append(prepare_for_reorder(pkg, packages))
+            new_packages.append(prepare_for_reorder(pkg, package_names))
         graph = get_deps_graph(new_packages)
         return tarjan_search(graph, self.tree_dir)
 

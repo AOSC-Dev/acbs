@@ -22,7 +22,10 @@ def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
     installables = []
     deps = []
     for dep in package.deps:
-        if not reorder_mode and check_if_installed(dep):
+        if check_if_installed(dep):
+            if reorder_mode:
+                # HACK: when reordering dependencies, we need to pretend that they needs to be installed
+                installables.append(dep)
             continue
         if check_if_available(dep):
             installables.append(dep)
