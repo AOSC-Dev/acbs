@@ -104,7 +104,7 @@ class BuildCore(object):
             packages.extend(package)
         resolved = self.resolve_deps(packages)
         logging.info(
-            f'Dependencies resolved, {len(resolved)} packages in the queue')
+            f'Dependencies resolved, {len(packages)} packages in the queue')
         logging.debug(f'Queue: {packages}')
         logging.info(
             f'Packages to be built: {print_package_names(packages, 5)}')
