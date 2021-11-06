@@ -144,7 +144,7 @@ class BuildCore(object):
         buildable = []
         for p in packages:
             if not check_buildability(p):
-                unbuildable.append(p)
+                unbuildable.append(p.name)
             else:
                 buildable.append(p)
         logging.warning(f'The following packages will be skipped as they are not buildable:\n{(" ".join(unbuildable))}')
@@ -154,7 +154,9 @@ class BuildCore(object):
         error = False
         if not self.no_deps:
             logging.debug('Filtering packages...')
-            packages = self.filter_unbuildable(packages)
+            filtered = self.filter_unbuildable(packages)
+            packages.clear()
+            packages.extend(filtered)
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
             logging.debug('Running Tarjan search...')
