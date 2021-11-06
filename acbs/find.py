@@ -60,7 +60,7 @@ def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
             found = find_package_inner(p, search_path)
             if not found:
                 raise RuntimeError(
-                    'Package {} requested in {} was not found.'.format(p, name))
+                    f'Package {p} requested in {name} was not found.')
             results.extend(found)
         return results
     return find_package_inner(name, search_path)

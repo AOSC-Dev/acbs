@@ -203,6 +203,15 @@ def get_tree_by_name(filename: str, tree_name) -> str:
     return tree_loc
 
 
+def check_buildability(package: ACBSPackageInfo, required_by: Optional[str]=None) -> bool:
+    if package.fail_arch and package.fail_arch.match(arch):
+        if required_by:
+            raise RuntimeError(f'{package.name} is required by `{required_by}` but is not buildable on`{arch}` (FAIL_ARCH).')
+        else:
+            return False
+    return True
+
+
 arch = os.environ.get('CROSS') or os.environ.get(
     'ARCH') or get_arch_name() or ''
 if not arch:

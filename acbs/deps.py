@@ -2,7 +2,7 @@ from collections import OrderedDict, defaultdict, deque
 from typing import List, Dict, Deque
 
 from acbs.find import find_package
-from acbs.parser import ACBSPackageInfo
+from acbs.parser import ACBSPackageInfo, check_buildability
 
 # package information cache
 pool: Dict[str, ACBSPackageInfo] = {}
@@ -55,7 +55,7 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     stack.append(vert)
 
     # search package begin
-    print(f'[{len(results)}/{len(pool)}] {vert}\t\t\r', end='', flush=True)
+    print(f'[{len(results) + 1}/{len(pool)}] {vert}\t\t\r', end='', flush=True)
     current_package = packages.get(vert)
     if current_package is None:
         package = pool.get(vert) or find_package(vert, search_path)
@@ -74,6 +74,9 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
             current_package = package
             pool[vert] = current_package
     assert current_package is not None
+    # first check if this dependency is buildable
+    # when `required_by` argument is present, it will raise an exception when the dependency is unbuildable.
+    check_buildability(current_package, stack[-1] if len(stack) > 0 else '<unknown>')
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:

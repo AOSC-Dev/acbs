@@ -11,12 +11,13 @@ import acbs.fetch
 import acbs.parser
 
 from acbs import __version__
+from acbs.base import ACBSPackageInfo
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap, checkpoint_to_group
 from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import tarjan_search, prepare_for_reorder
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
-from acbs.parser import get_deps_graph, get_tree_by_name, arch
+from acbs.parser import get_deps_graph, get_tree_by_name, arch, check_buildability
 from acbs.pm import install_from_repo
 from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
@@ -50,7 +51,7 @@ class BuildCore(object):
     def init(self) -> None:
         sys.excepthook = self.acbs_except_hdr
         print(full_line_banner(
-            'Welcome to ACBS - {}'.format(__version__)))
+            f'Welcome to ACBS - {__version__}'))
         if self.debug:
             log_verbosity = logging.DEBUG
         else:
@@ -138,9 +139,22 @@ class BuildCore(object):
         graph = get_deps_graph(new_packages)
         return tarjan_search(graph, self.tree_dir)
 
+    def filter_unbuildable(self, packages: List[ACBSPackageInfo]) -> List[ACBSPackageInfo]:
+        unbuildable = []
+        buildable = []
+        for p in packages:
+            if not check_buildability(p):
+                unbuildable.append(p)
+            else:
+                buildable.append(p)
+        logging.warning(f'The following packages will be skipped as they are not buildable:\n{(" ".join(unbuildable))}')
+        return buildable
+
     def resolve_deps(self, packages):
         error = False
         if not self.no_deps:
+            logging.debug('Filtering packages...')
+            packages = self.filter_unbuildable(packages)
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
             logging.debug('Running Tarjan search...')
@@ -188,9 +202,6 @@ class BuildCore(object):
             logging.info(
                 f'Building {task.name} ({self.package_cursor}/{len(packages)})...')
             source_name = task.name
-            if task.fail_arch and task.fail_arch.match(arch):
-                raise RuntimeError(
-                    f'`{task.name}` is not buildable on `{arch}` (FAIL_ARCH).')
             if task.base_slug:
                 source_name = os.path.basename(task.base_slug)
             if not has_stamp(task.build_location):
