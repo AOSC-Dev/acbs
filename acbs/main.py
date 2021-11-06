@@ -95,8 +95,9 @@ class BuildCore(object):
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
         acbs.pm.reorder_mode = self.reorder
-        for i in self.build_queue:
+        for n, i in enumerate(self.build_queue):
             logging.debug(f'Finding {i}...')
+            print(f'[{n + 1}/{len(self.build_queue)}] {i}\t\t\r', end='', flush=True)
             package = find_package(i, self.tree_dir)
             if not package:
                 raise RuntimeError(f'Could not find package {i}')
@@ -147,7 +148,8 @@ class BuildCore(object):
                 unbuildable.append(p.name)
             else:
                 buildable.append(p)
-        logging.warning(f'The following packages will be skipped as they are not buildable:\n{(" ".join(unbuildable))}')
+        if unbuildable:
+            logging.warning(f'The following packages will be skipped as they are not buildable:\n\t{(" ".join(unbuildable))}')
         return buildable
 
     def resolve_deps(self, packages):
