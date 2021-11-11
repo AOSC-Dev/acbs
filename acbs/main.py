@@ -103,6 +103,9 @@ class BuildCore(object):
                 raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)
         resolved = self.resolve_deps(packages)
+        if not packages:
+            logging.info('Nothing to do after dependency resolution')
+            return
         logging.info(
             f'Dependencies resolved, {len(packages)} packages in the queue')
         logging.debug(f'Queue: {packages}')
