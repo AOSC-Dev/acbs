@@ -44,7 +44,7 @@ setup(
         "Build logging": ["pexpect"]
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
