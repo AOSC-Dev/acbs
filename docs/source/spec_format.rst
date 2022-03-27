@@ -79,6 +79,23 @@ To specify multiple options, you can join the options with semicolons (``;``) li
 
 The snippet above will make ``acbs`` rename the source directory to ``lmms-git`` and checkout the commit ``94363be``.
 
+Multiarch Manipulation
+-----------
+
+In some certain scenarios, packagers may have needs to specify different sources or dependencies for different architectures. Therefore, ACBS provides architecture-specific variables support. Such variables look like below:
+
+.. code-block:: bash
+  <VARIABLE>__<ARCH>=<VALUE>
+
+Details about architecture-specific variables:
+* ``<VARIABLE>`` supports the following values:
+  * ``SRCS`` and ``CHKSUM`` in ``specs``. Note that different ``SRCS__<ARCH>`` requires different ``CHKSUM__<ARCH>``, otherwise ACBS may refuse to build.
+  * ``PKGDEP`` and ``BUILDDEP`` in ``autobuild/defines``.
+  
+* ``<ARCH>``: By default, ACBS will automatically determine the current architecture of building environment, and replaces ``<ARCH>`` with it. Users can manually specify ``<ARCH>`` by setting the environment variable ``$CROSS`` or ``$ARCH`` to the desired architecture.
+
+* If no ``<VARIABLE>__<ARCH>`` found, ACBS will fallback to use the default value ``<VARIABLE>``.
+
 .. _Autobuild3: https://wiki.aosc.io/developer/packaging/autobuild3-manual/#the-defines-file
 .. [1] Example: 
 
