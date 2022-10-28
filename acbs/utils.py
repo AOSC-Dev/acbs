@@ -326,3 +326,12 @@ class ACBSLogFormatter(logging.Formatter):
                               logging.INFO, logging.DEBUG):
             record.msg = f'[{lvl_map[record.levelname]}]: \033[1m{record.msg}\033[0m'
         return super(ACBSLogFormatter, self).format(record)
+
+def get_defines_file_path(location, stage2=False) -> str:
+    '''
+    Return ${location}/defines or ${location}/defines.stage2 on various conditions.
+    '''
+    if stage2 == False:
+        return os.path.join(location, 'defines')
+    if os.path.exists(os.path.join(location, 'defines.stage2')):
+        return os.path.join(location, 'defines.stage2')

@@ -6,12 +6,12 @@ from acbs.parser import parse_package, ACBSPackageInfo, ACBSSourceInfo
 from acbs.utils import make_build_dir
 
 
-def check_package_group(name: str, search_path: str, entry_path: str) -> Optional[List[ACBSPackageInfo]]:
+def check_package_group(name: str, search_path: str, entry_path: str, stage2=False) -> Optional[List[ACBSPackageInfo]]:
     # is this a package group?
     if os.path.basename(entry_path) == os.path.basename(name) and os.path.isfile(os.path.join(search_path, entry_path, 'spec')):
         stub = ACBSPackageInfo(name, [], '', [ACBSSourceInfo('none', '', '')])
         stub.base_slug = entry_path
-        return expand_package_group(stub, search_path)
+        return expand_package_group(stub, search_path, stage2=stage2)
     with os.scandir(os.path.join(search_path, entry_path)) as group:
         # scan potential package groups
         for entry_group in group:
@@ -23,7 +23,7 @@ def check_package_group(name: str, search_path: str, entry_path: str) -> Optiona
                 continue
             # because the package inside the group will have a different name than the folder name
             # we will parse the defines file to decide
-            result = parse_package(full_search_path)
+            result = parse_package(full_search_path, stage2=stage2)
             if result and result.name == name:
                 # name of the package inside the group
                 package_alias = os.path.basename(
@@ -42,12 +42,12 @@ def check_package_group(name: str, search_path: str, entry_path: str) -> Optiona
                     group_category), root=os.path.basename(group_root))
                 result.group_seq = group_seq
                 group_result = expand_package_group(
-                    result, search_path)
+                    result, search_path, stage2=stage2)
                 return group_result
     return None
 
 
-def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
+def find_package(name: str, search_path: str, stage2=False) -> List[ACBSPackageInfo]:
     if os.path.isfile(os.path.join(search_path, name)):
         with open(os.path.join(search_path, name), 'rt') as f:
             content = f.read()
@@ -59,23 +59,23 @@ def find_package(name: str, search_path: str) -> List[ACBSPackageInfo]:
             p = p.strip()
             if not p or p.startswith('#'):
                 continue
-            found = find_package_inner(p, search_path)
+            found = find_package_inner(p, search_path, stage2=stage2)
             if not found:
                 raise RuntimeError(
                     f'Package {p} requested in {name} was not found.')
             results.extend(found)
         print()
         return results
-    return find_package_inner(name, search_path)
+    return find_package_inner(name, search_path, stage2=stage2)
 
 
-def find_package_inner(name: str, search_path: str, group=False) -> List[ACBSPackageInfo]:
+def find_package_inner(name: str, search_path: str, group=False, stage2=False) -> List[ACBSPackageInfo]:
     if os.path.isdir(os.path.join(search_path, name)):
         flat_path = os.path.join(search_path, name, 'autobuild')
         if os.path.isdir(flat_path):
-            return [parse_package(os.path.join(search_path, name, 'autobuild'))]
+            return [parse_package(os.path.join(search_path, name, 'autobuild'), stage2=stage2)]
         # is this a package group?
-        group_result = check_package_group(name, search_path, name)
+        group_result = check_package_group(name, search_path, name, stage2=stage2)
         if group_result:
             return group_result
     with os.scandir(search_path) as it:
@@ -91,12 +91,12 @@ def find_package_inner(name: str, search_path: str, group=False) -> List[ACBSPac
                     full_search_path = os.path.join(
                         search_path, entry.name, entry_inner.name, 'autobuild')
                     if entry_inner.name == name and os.path.isdir(full_search_path):
-                        return [parse_package(full_search_path)]
+                        return [parse_package(full_search_path, stage2=stage2)]
                     if not group:
                         continue
                     # is this a package group?
                     group_result = check_package_group(
-                        name, search_path, os.path.join(entry.name, entry_inner.name))
+                        name, search_path, os.path.join(entry.name, entry_inner.name), stage2=stage2)
                     if group_result:
                         return group_result
     if group:
@@ -124,7 +124,7 @@ def check_package_groups(packages: List[ACBSPackageInfo]):
             groups_seen[base_slug] = pkg.group_seq
 
 
-def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACBSPackageInfo]:
+def expand_package_group(package: ACBSPackageInfo, search_path: str, stage2=False) -> List[ACBSPackageInfo]:
     group_root = os.path.join(search_path, package.base_slug)
     original_base = package.base_slug
     actionables: List[ACBSPackageInfo] = []
@@ -138,7 +138,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str) -> List[ACB
                 'Malformed sub-package name: {name}'.format(name=entry.name))
         try:
             sequence = int(splitted[0])
-            package = parse_package(entry.path)
+            package = parse_package(entry.path, stage2=stage2)
             if package:
                 package.base_slug = original_base
                 package.group_seq = sequence

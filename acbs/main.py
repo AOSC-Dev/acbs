@@ -7,13 +7,14 @@ import traceback
 from pathlib import Path
 from typing import List, Tuple
 
+import acbs.ab3cfg
 import acbs.fetch
 import acbs.parser
 
 from acbs import __version__
 from acbs.base import ACBSPackageInfo
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap, checkpoint_to_group
-from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
+from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR, AUTOBUILD_CONF_DIR
 from acbs.deps import tarjan_search, prepare_for_reorder
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
@@ -38,12 +39,15 @@ class BuildCore(object):
         self.package_cursor = 0
         self.reorder = args.reorder
         self.save_list = args.save_list
+        self.stage2 = False
         # static vars
+        self.autobuild_conf_dir = AUTOBUILD_CONF_DIR
         self.conf_dir = CONF_DIR
         self.dump_dir = DUMP_DIR
         self.tmp_dir = TMP_DIR
         self.log_dir = LOG_DIR
-
+        self.ab3 = acbs.ab3cfg.AB3Cfg(os.path.join(AUTOBUILD_CONF_DIR, 'ab3cfg.sh'))
+        self.stage2 = self.ab3.is_in_stage2()
         if args.acbs_tree:
             self.tree = args.acbs_tree[0]
         self.init()
@@ -98,7 +102,7 @@ class BuildCore(object):
         for n, i in enumerate(self.build_queue):
             logging.debug(f'Finding {i}...')
             print(f'[{n + 1}/{len(self.build_queue)}] {i}\t\t\r', end='', flush=True)
-            package = find_package(i, self.tree_dir)
+            package = find_package(i, self.tree_dir, stage2=self.stage2)
             if not package:
                 raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)

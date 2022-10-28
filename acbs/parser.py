@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
+from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex, get_defines_file_path
 
 generate_mode = False
 
@@ -125,9 +125,10 @@ def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
     return acbs_source_info
 
 
-def parse_package(location: str) -> ACBSPackageInfo:
+def parse_package(location: str, stage2=False) -> ACBSPackageInfo:
     logging.debug('Parsing {}...'.format(location))
-    defines_location = os.path.join(location, "defines")
+    # Call a helper function to check if there's a stage2 defines automatically
+    defines_location = get_defines_file_path(location, stage2)
     spec_location = os.path.join(location, '..', 'spec')
     with open(defines_location, 'rt') as f:
         var = bashvar.eval_bashvar(f.read(), filename=defines_location)

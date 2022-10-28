@@ -14,6 +14,7 @@ ANSI_BROWN = '\033[33m'
 
 # Common paths
 CONF_DIR = '/etc/acbs/'
+AUTOBUILD_CONF_DIR = '/etc/autobuild/'
 DUMP_DIR = '/var/cache/acbs/tarballs/'
 TMP_DIR = '/var/cache/acbs/build/'
 LOG_DIR = '/var/log/acbs/'
