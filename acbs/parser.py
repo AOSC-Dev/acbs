@@ -8,9 +8,19 @@ from typing import Dict, List, Optional
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex, get_defines_file_path
+from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
 
 generate_mode = False
+
+
+def get_defines_file_path(location: str, stage2: bool=False) -> str:
+    '''
+    Return ${location}/defines or ${location}/defines.stage2 depending on the value of stage2 and whether the .stage2 file exists.
+    '''
+    if stage2 and os.path.exists(os.path.join(location, 'defines.stage2')):
+        return os.path.join(location, 'defines.stage2')
+    else:
+        return os.path.join(location, 'defines')
 
 
 def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
