@@ -172,7 +172,7 @@ class BuildCore(object):
             if self.reorder:
                 print()
                 resolved = self.reorder_deps(
-                    [item for sublist in resolved for item in sublist])
+                    [item for sublist in resolved for item in sublist], self.stage2)
         else:
             logging.warning('Warning: Dependency resolution disabled!')
             resolved = [[package] for package in packages]
