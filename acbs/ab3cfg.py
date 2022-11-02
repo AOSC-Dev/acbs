@@ -11,7 +11,7 @@ def is_in_stage2() -> bool:
         with open(ab3cfg_path) as f:
             vars = bashvar.eval_bashvar(f.read(), filename=ab3cfg_path)
             stage2_val: str = vars.get('ABSTAGE2')
-            return True if stage2_val == '1' else False
+            return stage2_val == '1'
     except OSError as e:
         raise RuntimeError(f'Unable to read Autobuild config file {ab3cfg_path}.') from e
     except ParseException as e:
