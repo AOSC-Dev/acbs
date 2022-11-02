@@ -13,7 +13,7 @@ from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
 generate_mode = False
 
 
-def get_defines_file_path(location: str, stage2: bool=False) -> str:
+def get_defines_file_path(location: str, stage2: bool) -> str:
     '''
     Return ${location}/defines or ${location}/defines.stage2 depending on the value of stage2 and whether the .stage2 file exists.
     '''
@@ -135,7 +135,7 @@ def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
     return acbs_source_info
 
 
-def parse_package(location: str, stage2=False) -> ACBSPackageInfo:
+def parse_package(location: str, stage2: bool) -> ACBSPackageInfo:
     logging.debug('Parsing {}...'.format(location))
     # Call a helper function to check if there's a stage2 defines automatically
     defines_location = get_defines_file_path(location, stage2)

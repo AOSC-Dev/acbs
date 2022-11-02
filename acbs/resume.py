@@ -57,6 +57,7 @@ def do_resume_checkpoint(filename: str, args):
 
     state = do_load_checkpoint(filename)
     builder = BuildCore(args)
+    stage2 = builder.stage2
     logging.info('Resuming from {}'.format(filename))
     if state.version != __version__:
         logging.warning(
@@ -83,7 +84,7 @@ def do_resume_checkpoint(filename: str, args):
         # the spec files changed
         if index < new_cursor:
             new_cursor = index
-        resumed_packages.extend(find_package(p.name, builder.tree_dir))
+        resumed_packages.extend(find_package(p.name, builder.tree_dir, stage2))
         # index doesn't matter now, since changes have been detected
     if not check_dpkg_state(state, resumed_packages[:new_cursor]):
         name = checkpoint_to_group(

@@ -104,7 +104,7 @@ class BuildCore(object):
             if not package:
                 raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)
-        resolved = self.resolve_deps(packages)
+        resolved = self.resolve_deps(packages, self.stage2)
         if not packages:
             logging.info('Nothing to do after dependency resolution')
             return
@@ -134,7 +134,7 @@ class BuildCore(object):
         raise RuntimeError(
             f'Build error.\nUse `acbs-build --resume {filename}` to resume after you sorted out the situation.')
 
-    def reorder_deps(self, packages):
+    def reorder_deps(self, packages, stage2: bool):
         logging.info('Re-ordering packages...')
         new_packages = []
         package_names = [p.name for p in packages]
@@ -143,7 +143,7 @@ class BuildCore(object):
             logging.debug(f'Prepare for re-ordering: {pkg.name}')
             new_packages.append(prepare_for_reorder(pkg, package_names))
         graph = get_deps_graph(new_packages)
-        return tarjan_search(graph, self.tree_dir)
+        return tarjan_search(graph, self.tree_dir, stage2)
 
     def filter_unbuildable(self, packages: List[ACBSPackageInfo]) -> List[ACBSPackageInfo]:
         unbuildable = []
@@ -157,7 +157,7 @@ class BuildCore(object):
             logging.warning(f'The following packages will be skipped as they are not buildable:\n\t{(" ".join(unbuildable))}')
         return buildable
 
-    def resolve_deps(self, packages):
+    def resolve_deps(self, packages, stage2: bool):
         error = False
         if not self.no_deps:
             logging.debug('Filtering packages...')
@@ -167,7 +167,7 @@ class BuildCore(object):
             logging.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
             logging.debug('Running Tarjan search...')
-            resolved = tarjan_search(graph, self.tree_dir)
+            resolved = tarjan_search(graph, self.tree_dir, stage2)
             # re-order the packages
             if self.reorder:
                 print()
