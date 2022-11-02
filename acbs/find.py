@@ -59,17 +59,17 @@ def find_package(name: str, search_path: str, stage2: bool) -> List[ACBSPackageI
             p = p.strip()
             if not p or p.startswith('#'):
                 continue
-            found = find_package_inner(p, search_path, stage2)
+            found = find_package_inner(p, search_path, stage2=stage2)
             if not found:
                 raise RuntimeError(
                     f'Package {p} requested in {name} was not found.')
             results.extend(found)
         print()
         return results
-    return find_package_inner(name, search_path, stage2)
+    return find_package_inner(name, search_path, stage2=stage2)
 
 
-def find_package_inner(name: str, search_path: str, stage2: bool, group=False) -> List[ACBSPackageInfo]:
+def find_package_inner(name: str, search_path: str, group=False, stage2: bool=False) -> List[ACBSPackageInfo]:
     if os.path.isdir(os.path.join(search_path, name)):
         flat_path = os.path.join(search_path, name, 'autobuild')
         if os.path.isdir(flat_path):
