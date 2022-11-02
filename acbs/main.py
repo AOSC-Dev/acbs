@@ -99,7 +99,7 @@ class BuildCore(object):
         acbs.pm.reorder_mode = self.reorder
         for n, i in enumerate(self.build_queue):
             logging.debug(f'Finding {i}...')
-            print(f'[{n + 1}/{len(self.build_queue)}] {i}\t\t\r', end='', flush=True)
+            print(f'[{n + 1}/{len(self.build_queue)}] {i:30}\r', end='', flush=True)
             package = find_package(i, self.tree_dir, stage2=self.stage2)
             if not package:
                 raise RuntimeError(f'Could not find package {i}')

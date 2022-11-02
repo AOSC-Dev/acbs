@@ -55,7 +55,7 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     stack.append(vert)
 
     # search package begin
-    print(f'[{len(results) + 1}/{len(pool)}] {vert}\t\t\r', end='', flush=True)
+    print(f'[{len(results) + 1}/{len(pool)}] {vert:30}\r', end='', flush=True)
     current_package = packages.get(vert)
     if current_package is None:
         package = pool.get(vert) or find_package(vert, search_path, stage2)

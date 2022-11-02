@@ -55,7 +55,7 @@ def find_package(name: str, search_path: str, stage2: bool) -> List[ACBSPackageI
         results = []
         print()
         for n, p in enumerate(packages):
-            print(f'[{n + 1}/{len(packages)}] {name} > {p}{" " * 15}\r', end='', flush=True)
+            print(f'[{n + 1}/{len(packages)}] {name} > {p:15}\r', end='', flush=True)
             p = p.strip()
             if not p or p.startswith('#'):
                 continue
