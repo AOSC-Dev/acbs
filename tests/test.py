@@ -32,7 +32,7 @@ def find_package_generic(name: str):
     make_build_dir_mock = unittest.mock.Mock(
         spec=make_build_dir, return_value='/tmp/')
     acbs.find.make_build_dir = make_build_dir_mock
-    return acbs.find.find_package(name, './tests/'), make_build_dir_mock
+    return acbs.find.find_package(name, './tests/', stage2=False), make_build_dir_mock
 
 
 class TestParser(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestParser(unittest.TestCase):
         acbs.parser.arch = 'none'
         acbs.parser.filter_dependencies = fake_pm
         package = acbs.parser.parse_package(
-            './tests/fixtures/test-1/autobuild')
+            './tests/fixtures/test-1/autobuild', stage2=False)
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-4'])
         self.assertEqual(package.version, '1')
         self.assertEqual(package.source_uri[0].type, 'none')
@@ -49,7 +49,7 @@ class TestParser(unittest.TestCase):
         acbs.parser.arch = 'arch'
         acbs.parser.filter_dependencies = fake_pm
         package = acbs.parser.parse_package(
-            './tests/fixtures/test-1/autobuild')
+            './tests/fixtures/test-1/autobuild', stage2=False)
         self.assertEqual(package.deps, ['test-2', 'test-3', 'test-17'])
         self.assertEqual(package.version, '1')
         self.assertEqual(package.source_uri[0].type, 'none')
@@ -58,8 +58,8 @@ class TestParser(unittest.TestCase):
         acbs.parser.arch = 'arch'
         acbs.parser.filter_dependencies = fake_pm
         package = acbs.parser.parse_package(
-            './tests/fixtures/test-3/autobuild')
-        packages = tarjan_search(get_deps_graph([package]), './tests')
+            './tests/fixtures/test-3/autobuild', stage2=False)
+        packages = tarjan_search(get_deps_graph([package]), './tests', stage2=False)
         error = check_scc(packages)
         self.assertEqual(error, True)
 
@@ -98,7 +98,7 @@ class TestParser(unittest.TestCase):
         acbs.parser.arch = 'none'
         acbs.parser.filter_dependencies = fake_pm
         package = acbs.parser.parse_package(
-            './tests/fixtures/test-4/autobuild')
+            './tests/fixtures/test-4/autobuild', stage2=False)
         self.assertEqual(package.deps, ['test-4'])
         self.assertEqual(package.version, '1')
         self.assertEqual(package.source_uri[0].type, 'git')
