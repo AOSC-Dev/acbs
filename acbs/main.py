@@ -94,6 +94,8 @@ class BuildCore(object):
         build_timings: List[Tuple[str, float]] = []
         acbs.fetch.generate_mode = self.generate
         acbs.parser.generate_mode = self.generate
+        if self.stage2:
+            logging.info("Life-cycle: currently running in stage2 mode.")
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
         acbs.pm.reorder_mode = self.reorder
