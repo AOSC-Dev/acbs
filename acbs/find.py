@@ -104,7 +104,7 @@ def find_package_inner(name: str, search_path: str, group=False, stage2: bool=Fa
     else:
         # if cannot find a package without considering it as part of a group
         # then re-search with group enabled
-        return find_package_inner(name, search_path, True)
+        return find_package_inner(name, search_path, True, stage2)
 
 
 def check_package_groups(packages: List[ACBSPackageInfo]):
