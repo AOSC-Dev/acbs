@@ -250,7 +250,7 @@ class BuildCore(object):
                 install_from_repo(task.installables)
             start = time.monotonic()
             try:
-                invoke_autobuild(task, build_dir)
+                invoke_autobuild(task, build_dir, self.stage2)
                 check_artifact(task.name, build_dir)
             except Exception:
                 # early printing of build summary before exploding
