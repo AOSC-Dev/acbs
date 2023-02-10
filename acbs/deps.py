@@ -76,14 +76,15 @@ def strongly_connected(search_path: str, packages_list: List[str], results: list
     assert current_package is not None
     # first check if this dependency is buildable
     # when `required_by` argument is present, it will raise an exception when the dependency is unbuildable.
-    check_buildability(current_package, stack[-2] if len(stack) > 1 else '<unknown>')
+    check_buildability(
+        current_package, stack[-2] if len(stack) > 1 else '<unknown>')
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:
         if index[p] == -1:
             # recurse on unvisited packages
             strongly_connected(search_path, packages_list, results, packages,
-                               p, lowlink, index, stackstate, stack, depth)
+                               p, lowlink, index, stackstate, stack, stage2, depth)
             lowlink[vert] = min(lowlink[p], lowlink[vert])
         # adjacent package is in the stack which means it is part of a loop
         elif stackstate[p] is True:
