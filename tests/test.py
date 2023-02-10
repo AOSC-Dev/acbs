@@ -63,6 +63,17 @@ class TestParser(unittest.TestCase):
         error = check_scc(packages)
         self.assertEqual(error, True)
 
+    def test_deps_loop_bidirection(self):
+        acbs.parser.arch = 'arch'
+        acbs.parser.filter_dependencies = fake_pm
+        package = acbs.parser.parse_package(
+            './tests/fixtures/test-5/autobuild', stage2=False)
+        package2 = acbs.parser.parse_package(
+            './tests/fixtures/test-6/autobuild', stage2=False)
+        packages = tarjan_search(get_deps_graph([package, package2]), './tests', stage2=False)
+        error = check_scc(packages)
+        self.assertEqual(error, True)
+
     def test_fail_arch(self):
         import re
         self.assertEqual(re.compile("^(?!amd64)"), fail_arch_regex("!amd64"))

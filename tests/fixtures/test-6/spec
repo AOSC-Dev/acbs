@@ -1,0 +1,3 @@
+VER=1
+SRCS='git::git://github.com/AOSC-Dev/acbs git::https://github.com/AOSC-Dev/acbs'
+CHKSUMS='SKIP SKIP'
