@@ -187,7 +187,9 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool):
     env_dict.update({'PKGREL': task.rel, 'PKGVER': task.version,
                      'PKGEPOCH': task.epoch or '0'})
     env_dict.update(task.exported)
-    defines_file = 'defines.stage2' if stage2 else 'defines'
+    defines_file = 'defines'
+    if stage2 and os.path.exists(os.path.join(build_dir, 'autobuild', 'defines.stage2')):
+        defines_file = 'defines.stage2'
     with open(os.path.join(build_dir, 'autobuild', defines_file), 'at') as f:
         f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
             task.rel, task.version, acbs_helper, acbs_helper))
