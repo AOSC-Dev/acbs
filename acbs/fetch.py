@@ -143,13 +143,28 @@ def gix_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
     else:
         logging.info('Updating repository with gix...')
         # gix doesn't have the --prune option yet.
-        # FIXME: reset HEAD to master to fix gix can't second fetch src issue.
-        subprocess.check_call(['git', 'symbolic-ref', 'HEAD'], cwd=full_path)
+        # FIXME: reset HEAD to the first valid branch to fix gix can't second fetch src issue.
+        subprocess.check_call(
+            ['git', 'symbolic-ref', 'HEAD', 'refs/heads/HEAD'], cwd=full_path)
+        valid_branches: list(str) = subprocess.check_output(
+            ['git', 'branch'], cwd=full_path, encoding='utf-8').splitlines()
+        for word in valid_branches:
+            word = word.strip()
+            if len(word) > 0:
+                valid_branches: str = word
+                break
+        if isinstance(valid_branches, list):
+            logging.warn(
+                'No valid branches found. Falling back to traditional git.')
+            raise ValueError('No valid branches found')
+        subprocess.check_call(
+            ['git', 'symbolic-ref', 'HEAD', 'refs/heads/' + valid_branches], cwd=full_path)
         os.remove(os.path.join(full_path, "index"))
         subprocess.check_call(
             ['gix', 'fetch', 'origin', '+refs/heads/*:refs/heads/*'], cwd=full_path)
     info.source_location = full_path
     return info
+
 
 def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
     info = package.source_uri[index]
