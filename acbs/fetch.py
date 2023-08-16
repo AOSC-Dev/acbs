@@ -120,16 +120,31 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
 
 
 def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+    try:
+        return gix_fetch(info, source_location, name)
+    except:
+        full_path = os.path.join(source_location, name)
+        if not os.path.exists(full_path):
+            subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
+        else:
+            logging.info('Updating repository...')
+            subprocess.check_call(
+                ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+        info.source_location = full_path
+        return info
+
+
+def gix_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
-        subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
+        subprocess.check_call(['gix', 'clone', '--bare', info.url, full_path])
     else:
         logging.info('Updating repository...')
+        # gix doesn't have the --prune option yet.
         subprocess.check_call(
-            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+            ['gix', 'fetch', 'origin', '+refs/heads/*:refs/heads/*'], cwd=full_path)
     info.source_location = full_path
     return info
-
 
 def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
     info = package.source_uri[index]
