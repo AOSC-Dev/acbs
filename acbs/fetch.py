@@ -140,7 +140,7 @@ def gix_hack(path: str):
     # FIXME: reset HEAD to the first valid branch to fix gix can't second fetch src issue.
     subprocess.check_call(
         ['git', 'symbolic-ref', 'HEAD', 'refs/heads/HEAD'], cwd=path)
-    valid_branches: list[str] = subprocess.check_output(
+    valid_branches = subprocess.check_output(
         ['git', 'branch'], cwd=path, encoding='utf-8').splitlines()
     invalid: bool = True
     for word in valid_branches:
