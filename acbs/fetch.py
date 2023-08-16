@@ -121,8 +121,10 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
 
 def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     try:
+        # Try use gix
         return gix_fetch(info, source_location, name)
     except:
+        # Fallback to git
         full_path = os.path.join(source_location, name)
         if not os.path.exists(full_path):
             subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
@@ -139,8 +141,11 @@ def gix_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
     if not os.path.exists(full_path):
         subprocess.check_call(['gix', 'clone', '--bare', info.url, full_path])
     else:
-        logging.info('Updating repository...')
+        logging.info('Updating repository with gix...')
         # gix doesn't have the --prune option yet.
+        # FIXME: reset HEAD to master to fix gix can't second fetch src issue.
+        subprocess.check_call(['git', 'symbolic-ref', 'HEAD'], cwd=full_path)
+        os.remove(os.path.join(full_path, "index"))
         subprocess.check_call(
             ['gix', 'fetch', 'origin', '+refs/heads/*:refs/heads/*'], cwd=full_path)
     info.source_location = full_path
