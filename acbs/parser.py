@@ -75,6 +75,9 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             if translated is None:
                 raise ValueError(f'Invalid submodule directive: {v}')
             acbs_source_info.submodule = translated
+        elif k == 'nogix':
+            acbs_source_info.no_gix = v.strip() == 'true'
+        
     return acbs_source_info
 
 

@@ -119,21 +119,28 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
     return tarball_processor_innner(package, index, source_name, False)
 
 
-def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
-    try:
-        # Try use gix
-        return gix_fetch(info, source_location, name)
-    except:
-        # Fallback to git
-        full_path = os.path.join(source_location, name)
-        if not os.path.exists(full_path):
-            subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
-        else:
-            logging.info('Updating repository...')
-            subprocess.check_call(
+def git_fetch_fallback(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+    if info.no_gix:
+        return git_fetch(info, source_location, name)
+    else:
+        try:
+            # Try use gix
+            return gix_fetch(info, source_location, name)
+        except:
+            # Fallback to git
+            return git_fetch(info, source_location, name)
+
+
+def git_fetch(info, source_location, name):
+    full_path = os.path.join(source_location, name)
+    if not os.path.exists(full_path):
+        subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
+    else:
+        logging.info('Updating repository...')
+        subprocess.check_call(
                 ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
-        info.source_location = full_path
-        return info
+    info.source_location = full_path
+    return info
 
 
 def gix_hack(path: str):
@@ -334,7 +341,7 @@ def fossil_processor(package: ACBSPackageInfo, index: int, source_name: str) -> 
 
 
 handlers: Dict[str, pair_signature] = {
-    'GIT': (git_fetch, git_processor),
+    'GIT': (git_fetch_fallback, git_processor),
     'SVN': (svn_fetch, svn_processor),
     'BZR': (bzr_fetch, bzr_processor),
     'HG': (hg_fetch, hg_processor),
