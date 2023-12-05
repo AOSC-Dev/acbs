@@ -209,14 +209,14 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool):
 def human_time(full_seconds: float) -> str:
     """
     Convert time span (in seconds) to more friendly format
-    :param seconds: Time span in seconds (decimal is acceptable)
+    :param full_seconds: Time span in seconds (decimal is acceptable)
     """
     if full_seconds < 0:
         return 'Download only'
     out_str_tmp = '{}'.format(
         datetime.timedelta(seconds=full_seconds))
     out_str = out_str_tmp.replace(
-        ':', (f'{ANSI_GREEN}:{ANSI_RST}'))
+        ':', f'{ANSI_GREEN}:{ANSI_RST}')
     return out_str
 
 

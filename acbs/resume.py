@@ -96,7 +96,7 @@ def do_resume_checkpoint(filename: str, args):
     reassign_build_dir(resumed_packages)
     if new_cursor != (state.cursor - 1):
         logging.warning(
-            'Senario mismatch detected! Dependency resolution will be re-attempted.')
+            'Scenario mismatch detected! Dependency resolution will be re-attempted.')
         resolved = builder.resolve_deps(resumed_packages, stage2)
         logging.info(
             'Dependencies resolved, {} packages in the queue'.format(len(resolved)))
