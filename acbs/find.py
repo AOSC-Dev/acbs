@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import List, Dict, Optional
 
 from acbs.const import TMP_DIR
@@ -118,8 +119,12 @@ def check_package_groups(packages: List[ACBSPackageInfo]):
             continue
         if base_slug in groups_seen:
             if groups_seen[base_slug] > pkg.group_seq:
-                raise ValueError('Package {} (in {}) has a different sequential order (#{}) after dependency resolution (should be #{})'.format(
+                logging.error('Package {} (in {}) has a different sequential order (#{}) after dependency resolution (should be #{})'.format(
                     pkg.name, base_slug, pkg.group_seq, groups_seen[base_slug] + 1))
+                logging.error('This might indicate a dependency cycle between the sub-packages (needs bootstrapping?) ...')
+                logging.error('... or maybe the sub-package should be named {}-{:02d}'.format(pkg.name, groups_seen[base_slug] + 1))
+                logging.error('Please check which situation this package is in and fix it.')
+                raise ValueError('Specified sub-package order contradicts with the dependency resolution results')
         else:
             groups_seen[base_slug] = pkg.group_seq
 
