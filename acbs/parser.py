@@ -4,6 +4,7 @@ import os
 import re
 from collections import OrderedDict
 from typing import Dict, List, Optional
+from urllib.parse import urlparse
 
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
@@ -51,6 +52,11 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     acbs_source_info.chksum = (
         chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
     acbs_source_info.url = url_plain
+    if acbs_source_info.use_url_name and acbs_source_info.source_name:
+        raise ValueError("Option 'use-url-name' can NOT be used with the 'rename' option.")
+    if acbs_source_info.use_url_name:
+        parsed = urlparse(url_plain)
+        acbs_source_info.source_name = os.path.basename(parsed.path)
     return acbs_source_info
 
 
@@ -62,6 +68,8 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             acbs_source_info.branch = v.strip()
         elif k == 'rename':
             acbs_source_info.source_name = v.strip()
+        elif k == 'use-url-name':
+            acbs_source_info.use_url_name = v.strip() == 'true'
         elif k == 'commit':
             acbs_source_info.revision = v.strip()
         elif k == 'copy-repo':

@@ -14,6 +14,7 @@ class ACBSSourceInfo(object):
         self.depth: Optional[int] = depth
         self.chksum: Tuple[str, str] = ('', '')
         self.source_name: Optional[str] = ''
+        self.use_url_name: bool = False
         # where the source file/folder is located (on local filesystem)
         self.source_location: Optional[str] = None
         self.enabled: bool = True
