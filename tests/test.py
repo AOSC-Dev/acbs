@@ -104,6 +104,9 @@ class TestParser(unittest.TestCase):
         self.assertEqual(info.url, 'https://github.com/AOSC-Dev/acbs#title')
         self.assertEqual(info.revision, 'a2e5eff')
         self.assertEqual(info.chksum, ('none', ''))
+        info = parse_url_schema('tbl::use-url-name=true::https://example.com/test.tar.gz;p=123?test=ok#fragment', 'sha256::123')
+        self.assertEqual(info.type, 'tarball')
+        self.assertEqual(info.source_name, 'test.tar.gz')
 
     def test_parse_new_spec(self):
         acbs.parser.arch = 'none'
