@@ -229,17 +229,27 @@ def format_column(data: Sequence[Tuple[str, ...]]) -> str:
     return output
 
 
-def print_build_timings(timings: List[Tuple[str, float]]):
+def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[str]):
     """
     Print the build statistics
 
     :param timings: List of timing data
     """
     formatted_timings: List[Tuple[str, str]] = []
+    print(full_line_banner('', '='))
     for timing in timings:
         formatted_timings.append((timing[0], human_time(timing[1])))
-    print(full_line_banner('Build Summary'))
-    print(format_column(formatted_timings))
+    print('\t\tACBS Build {}', 'Successful' if not failed_packages else 'Failed')
+    print(full_line_banner('', '='))
+    if failed_packages:
+        print("Failed package:")
+        print(failed_packages[0])
+    if timings:
+        print("Package(s) built:")
+        print(format_column(formatted_timings))
+    if len(failed_packages) > 2:
+        print("Package(s) not built due to previous build failure:")
+        print(failed_packages[1:])
 
 
 def is_spec_legacy(spec: str) -> bool:
@@ -328,4 +338,24 @@ class ACBSLogFormatter(logging.Formatter):
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
             record.msg = f'[{lvl_map[record.levelname]}]: \033[1m{record.msg}\033[0m'
+        return super(ACBSLogFormatter, self).format(record)
+
+
+class ACBSLogPlainFormatter(logging.Formatter):
+    """
+    ABBS-like format logger formatter class
+    ... but with no color codes
+    """
+
+    def format(self, record):
+        lvl_map = {
+            'WARNING': f'WARN',
+            'INFO': f'INFO',
+            'DEBUG': f'DEBUG',
+            'ERROR': f'ERROR',
+            'CRITICAL': f'CRIT'
+        }
+        if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
+                              logging.INFO, logging.DEBUG):
+            record.msg = f'[{lvl_map[record.levelname]}]: {record.msg}'
         return super(ACBSLogFormatter, self).format(record)

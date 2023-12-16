@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import traceback
+import itertools
 from pathlib import Path
 from typing import List, Tuple
 
@@ -20,7 +21,7 @@ from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
 from acbs.parser import get_deps_graph, get_tree_by_name, arch, check_buildability
 from acbs.pm import install_from_repo
-from acbs.utils import (ACBSLogFormatter, full_line_banner, guess_subdir,
+from acbs.utils import (ACBSLogFormatter, ACBSLogPlainFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
                         print_build_timings, print_package_names, write_checksums,
                         generate_checksums, is_spec_legacy, check_artifact)
@@ -80,7 +81,10 @@ class BuildCore(object):
         logger.setLevel(0)  # Set to lowest to bypass the initial filter
         str_handler = logging.StreamHandler()
         str_handler.setLevel(str_verbosity)
-        str_handler.setFormatter(ACBSLogFormatter())
+        if os.environ.get('NO_COLOR'):
+            str_handler.setFormatter(ACBSLogPlainFormatter())
+        else:
+            str_handler.setFormatter(ACBSLogFormatter())
         logger.addHandler(str_handler)
         log_file_handler = logging.handlers.RotatingFileHandler(
             os.path.join(self.log_dir, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=3)
@@ -125,7 +129,7 @@ class BuildCore(object):
         except Exception as ex:
             logging.exception(ex)
             self.save_checkpoint(build_timings, packages)
-        print_build_timings(build_timings)
+        print_build_timings(build_timings, [])
 
     def save_checkpoint(self, build_timings, packages):
         logging.info('ACBS is trying to save your build status...')
@@ -208,7 +212,7 @@ class BuildCore(object):
 
     def build_sequential(self, build_timings, packages):
         # build process
-        for task in packages:
+        for idx, task in enumerate(packages):
             self.package_cursor += 1
             logging.info(
                 f'Building {task.name} ({self.package_cursor}/{len(packages)})...')
@@ -249,16 +253,16 @@ class BuildCore(object):
                 logging.info('Installing dependencies from repository...')
                 install_from_repo(task.installables)
             start = time.monotonic()
+            task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
             try:
                 invoke_autobuild(task, build_dir, self.stage2)
                 check_artifact(task.name, build_dir)
             except Exception:
                 # early printing of build summary before exploding
                 if build_timings:
-                    print_build_timings(build_timings)
+                    print_build_timings(build_timings, packages[idx:])
                 raise RuntimeError(
-                    f'Error when building {task.name}.\nBuild folder: {build_dir}')
-            task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
+                    f'Build directory of the failed package:\n\n{build_dir}')
             build_timings.append((task_name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
