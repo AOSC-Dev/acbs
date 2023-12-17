@@ -262,7 +262,7 @@ class BuildCore(object):
                 if build_timings:
                     print_build_timings(build_timings, packages[idx:], time.monotonic() - start)
                 raise RuntimeError(
-                    f'Build directory of the failed package:\n\n{build_dir}')
+                    f'Build directory of the failed package: {build_dir}')
             build_timings.append((task_name, time.monotonic() - start))
 
     def acbs_except_hdr(self, type_, value, tb):
