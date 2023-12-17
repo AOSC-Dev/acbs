@@ -242,11 +242,11 @@ def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[
     formatted_timings: List[Tuple[str, str]] = []
     formatted_failed_packages = [format_package_name(pkg) for pkg in failed_packages]
     banner = '=' * 40
-    print(banner)
+    print(f"\n{banner}")
     for timing in timings:
         formatted_timings.append((timing[0], human_time(timing[1])))
     print(f"    ACBS Build {'Successful' if not failed_packages else 'Failed'}")
-    print(banner)
+    print(f"{banner}\n")
     if failed_packages:
         print("Failed package:")
         line_data = (formatted_failed_packages[0], human_time(last_build_time))
