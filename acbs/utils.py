@@ -229,28 +229,34 @@ def format_column(data: Sequence[Tuple[str, ...]]) -> str:
     return output
 
 
-def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[str]):
+def format_package_name(package: ACBSPackageInfo) -> str:
+    return f'{package.name} ({package.bin_arch} @ {package.epoch + ":" if package.epoch else ""}{package.version}-{package.rel})'
+
+
+def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[ACBSPackageInfo], last_build_time: float=0.0):
     """
     Print the build statistics
 
     :param timings: List of timing data
     """
     formatted_timings: List[Tuple[str, str]] = []
-    print(full_line_banner('', '='))
+    formatted_failed_packages = [format_package_name(pkg) for pkg in failed_packages]
+    banner = '=' * 40
+    print(banner)
     for timing in timings:
         formatted_timings.append((timing[0], human_time(timing[1])))
-    s = 'Successful' if not failed_packages else 'Failed'
-    print(f'\t\tACBS Build {s}')
-    print(full_line_banner('', '='))
+    print(f"\t\tACBS Build {'Successful' if not failed_packages else 'Failed'}")
+    print(banner)
     if failed_packages:
         print("Failed package:")
-        print(failed_packages[0])
+        line_data = (formatted_failed_packages[0], human_time(last_build_time))
+        print(format_column([line_data]))
     if timings:
         print("Package(s) built:")
         print(format_column(formatted_timings))
     if len(failed_packages) > 2:
         print("Package(s) not built due to previous build failure:")
-        print(failed_packages[1:])
+        print(formatted_failed_packages[1:])
 
 
 def is_spec_legacy(spec: str) -> bool:

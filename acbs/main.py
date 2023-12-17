@@ -210,7 +210,7 @@ class BuildCore(object):
             check_package_groups(packages)
         return resolved
 
-    def build_sequential(self, build_timings, packages):
+    def build_sequential(self, build_timings, packages: List[ACBSPackageInfo]):
         # build process
         for idx, task in enumerate(packages):
             self.package_cursor += 1
@@ -260,7 +260,7 @@ class BuildCore(object):
             except Exception:
                 # early printing of build summary before exploding
                 if build_timings:
-                    print_build_timings(build_timings, packages[idx:])
+                    print_build_timings(build_timings, packages[idx:], time.monotonic() - start)
                 raise RuntimeError(
                     f'Build directory of the failed package:\n\n{build_dir}')
             build_timings.append((task_name, time.monotonic() - start))
