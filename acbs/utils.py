@@ -245,7 +245,7 @@ def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[
     print(banner)
     for timing in timings:
         formatted_timings.append((timing[0], human_time(timing[1])))
-    print(f"\t\tACBS Build {'Successful' if not failed_packages else 'Failed'}")
+    print(f"    ACBS Build {'Successful' if not failed_packages else 'Failed'}")
     print(banner)
     if failed_packages:
         print("Failed package:")
