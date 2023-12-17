@@ -254,7 +254,7 @@ def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[
     if timings:
         print("Package(s) built:")
         print(format_column(formatted_timings))
-    if len(failed_packages) > 2:
+    if len(failed_packages) > 1:
         print("Package(s) not built due to previous build failure:")
         print(formatted_failed_packages[1:])
 
