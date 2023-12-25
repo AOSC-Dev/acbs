@@ -24,7 +24,7 @@ from acbs.pm import install_from_repo
 from acbs.utils import (ACBSLogFormatter, ACBSLogPlainFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
                         print_build_timings, print_package_names, write_checksums,
-                        generate_checksums, is_spec_legacy, check_artifact)
+                        generate_checksums, is_spec_legacy, check_artifact, validate_package_name)
 
 
 class BuildCore(object):
@@ -104,6 +104,8 @@ class BuildCore(object):
         logging.info('Searching and resolving dependencies...')
         acbs.pm.reorder_mode = self.reorder
         for n, i in enumerate(self.build_queue):
+            if not validate_package_name(i):
+                raise ValueError(f'Invalid package name: `{i}`')
             logging.debug(f'Finding {i}...')
             print(f'[{n + 1}/{len(self.build_queue)}] {i:30}\r', end='', flush=True)
             package = find_package(i, self.tree_dir, stage2=self.stage2)

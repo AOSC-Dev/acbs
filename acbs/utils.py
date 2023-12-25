@@ -29,6 +29,16 @@ SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
                 if v.startswith('SIG') and not v.startswith('SIG_'))
 
 
+def validate_package_name(package_name: str) -> bool:
+    """
+    Validate package name
+
+    :param package_name: name of the package
+    :returns: True if the package name is valid
+    """
+    return re.match(r'^[a-z0-9][a-z0-9\-+\.]+$', package_name) is not None
+
+
 def guess_extension_name(filename: str) -> str:
     """
     Guess extension name based on filename
