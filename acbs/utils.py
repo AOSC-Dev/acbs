@@ -36,6 +36,8 @@ def validate_package_name(package_name: str) -> bool:
     :param package_name: name of the package
     :returns: True if the package name is valid
     """
+    if '/' in package_name:
+        package_name = os.path.basename(package_name)
     return re.match(r'^[a-z0-9][a-z0-9\-+\.]*$', package_name) is not None
 
 
