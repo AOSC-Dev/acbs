@@ -93,6 +93,16 @@ class BuildCore(object):
             '%(asctime)s:%(levelname)s:%(message)s'))
         logger.addHandler(log_file_handler)
 
+    def set_modifiers(self, p: str) -> str:
+        del os.environ['ABMODIFIERS']
+        if ':' in p:
+            results = p.split(':', 1)
+            if len(p) == 2:
+                p, m = results
+                os.environ['ABMODIFIERS'] = m
+                return p
+        return p
+
     def build(self) -> None:
         packages = []
         build_timings: List[Tuple[str, float]] = []
@@ -104,6 +114,7 @@ class BuildCore(object):
         logging.info('Searching and resolving dependencies...')
         acbs.pm.reorder_mode = self.reorder
         for n, i in enumerate(self.build_queue):
+            i = self.set_modifiers(i)
             if not validate_package_name(i):
                 raise ValueError(f'Invalid package name: `{i}`')
             logging.debug(f'Finding {i}...')
