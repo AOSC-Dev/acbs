@@ -47,6 +47,12 @@ class ACBSPackageInfo(object):
         self.script_location = location
         # extra exported variables from spec
         self.exported: Dict[str, str] = {}
+        # modifiers to be applied to the source file/folder (only available in autobuild4)
+        self.modifiers: str = ''
+
+    def is_in_stage2(modifiers: str) -> bool:
+        return '+stage2' in modifiers.lower()
+
 
     def __repr__(self) -> str:
         return f'<ACBSPackageInfo {self.name}: deps: {self.deps} ; uri: {self.source_uri}>'

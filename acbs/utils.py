@@ -199,6 +199,8 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool):
     env_dict.update({'PKGREL': task.rel, 'PKGVER': task.version,
                      'PKGEPOCH': task.epoch or '0'})
     env_dict.update(task.exported)
+    if task.modifiers:
+        env_dict['ABMODIFIERS'] = task.modifiers
     defines_file = 'defines'
     if stage2 and os.path.exists(os.path.join(build_dir, 'autobuild', 'defines.stage2')):
         defines_file = 'defines.stage2'

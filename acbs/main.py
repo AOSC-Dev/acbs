@@ -93,15 +93,13 @@ class BuildCore(object):
             '%(asctime)s:%(levelname)s:%(message)s'))
         logger.addHandler(log_file_handler)
 
-    def set_modifiers(self, p: str) -> str:
-        del os.environ['ABMODIFIERS']
+    def strip_modifiers(self, p: str) -> Tuple[str, str]:
         if ':' in p:
             results = p.split(':', 1)
             if len(p) == 2:
                 p, m = results
-                os.environ['ABMODIFIERS'] = m
-                return p
-        return p
+                return p, m
+        return p, ''
 
     def build(self) -> None:
         packages = []
@@ -114,12 +112,13 @@ class BuildCore(object):
         logging.info('Searching and resolving dependencies...')
         acbs.pm.reorder_mode = self.reorder
         for n, i in enumerate(self.build_queue):
-            i = self.set_modifiers(i)
+            i, modifiers = self.set_modifiers(i)
             if not validate_package_name(i):
                 raise ValueError(f'Invalid package name: `{i}`')
             logging.debug(f'Finding {i}...')
             print(f'[{n + 1}/{len(self.build_queue)}] {i:30}\r', end='', flush=True)
-            package = find_package(i, self.tree_dir, stage2=self.stage2)
+            scoped_stage2 = ACBSPackageInfo.is_in_stage2(modifiers) | self.stage2
+            package = find_package(i, self.tree_dir, stage2=scoped_stage2)
             if not package:
                 raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)
@@ -268,7 +267,8 @@ class BuildCore(object):
             start = time.monotonic()
             task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
             try:
-                invoke_autobuild(task, build_dir, self.stage2)
+                scoped_stage2 = ACBSPackageInfo.is_in_stage2(task.modifiers) | stage2
+                invoke_autobuild(task, build_dir, scoped_stage2)
                 check_artifact(task.name, build_dir)
             except Exception:
                 # early printing of build summary before exploding
