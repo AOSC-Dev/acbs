@@ -50,6 +50,7 @@ class ACBSPackageInfo(object):
         # modifiers to be applied to the source file/folder (only available in autobuild4)
         self.modifiers: str = ''
 
+    @staticmethod
     def is_in_stage2(modifiers: str) -> bool:
         return '+stage2' in modifiers.lower()
 

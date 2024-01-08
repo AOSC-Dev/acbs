@@ -112,7 +112,7 @@ class BuildCore(object):
         logging.info('Searching and resolving dependencies...')
         acbs.pm.reorder_mode = self.reorder
         for n, i in enumerate(self.build_queue):
-            i, modifiers = self.set_modifiers(i)
+            i, modifiers = self.strip_modifiers(i)
             if not validate_package_name(i):
                 raise ValueError(f'Invalid package name: `{i}`')
             logging.debug(f'Finding {i}...')
@@ -267,7 +267,7 @@ class BuildCore(object):
             start = time.monotonic()
             task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
             try:
-                scoped_stage2 = ACBSPackageInfo.is_in_stage2(task.modifiers) | stage2
+                scoped_stage2 = ACBSPackageInfo.is_in_stage2(task.modifiers) | self.stage2
                 invoke_autobuild(task, build_dir, scoped_stage2)
                 check_artifact(task.name, build_dir)
             except Exception:
