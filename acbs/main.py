@@ -12,7 +12,7 @@ import acbs.fetch
 import acbs.parser
 
 from acbs import __version__
-from acbs.ab3cfg import is_in_stage2
+from acbs.ab4cfg import is_in_stage2
 from acbs.base import ACBSPackageInfo
 from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap, checkpoint_to_group
 from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR, AUTOBUILD_CONF_DIR
