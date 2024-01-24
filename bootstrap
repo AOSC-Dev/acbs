@@ -31,7 +31,7 @@ fi
 echo '[-] Installing acbs (stage 1)...'
 TMPDIR="$(mktemp -d)"
 cd "$TMPDIR"
-git clone --depth 10 -b stable https://github.com/AOSC-Dev/aosc-os-abbs
+git clone --filter=blob:none -b stable https://github.com/AOSC-Dev/aosc-os-abbs
 ABBSDIR="$(readlink -f aosc-os-abbs)"
 mkdir -p '/etc/acbs/'
 mkdir -p '/var/cache/acbs/'{build,tarballs}

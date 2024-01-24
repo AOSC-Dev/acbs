@@ -122,7 +122,7 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
 def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
-        subprocess.check_call(['git', 'clone', '--bare', info.url, full_path])
+        subprocess.check_call(['git', 'clone', '--bare', '--filter=blob:none', info.url, full_path])
     else:
         logging.info('Updating repository...')
         subprocess.check_call(
