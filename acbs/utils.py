@@ -371,11 +371,11 @@ class ACBSLogPlainFormatter(logging.Formatter):
 
     def format(self, record):
         lvl_map = {
-            'WARNING': f'WARN',
-            'INFO': f'INFO',
-            'DEBUG': f'DEBUG',
-            'ERROR': f'ERROR',
-            'CRITICAL': f'CRIT'
+            'WARNING': 'WARN',
+            'INFO': 'INFO',
+            'DEBUG': 'DEBUG',
+            'ERROR': 'ERROR',
+            'CRITICAL': 'CRIT'
         }
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):

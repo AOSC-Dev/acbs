@@ -4,7 +4,6 @@ import os
 import sys
 import time
 import traceback
-import itertools
 from pathlib import Path
 from typing import List, Tuple
 
@@ -19,7 +18,7 @@ from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR, AUTOBUILD_CONF_DIR
 from acbs.deps import tarjan_search, prepare_for_reorder
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
-from acbs.parser import get_deps_graph, get_tree_by_name, arch, check_buildability
+from acbs.parser import get_deps_graph, get_tree_by_name, check_buildability
 from acbs.pm import install_from_repo
 from acbs.utils import (ACBSLogFormatter, ACBSLogPlainFormatter, full_line_banner, guess_subdir,
                         has_stamp, invoke_autobuild, make_build_dir,
