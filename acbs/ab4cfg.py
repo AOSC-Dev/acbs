@@ -23,7 +23,7 @@ def is_in_stage2() -> bool:
     """
     abcfg_path: str = os.path.join(AUTOBUILD_CONF_DIR, 'ab3cfg.sh')
     if not os.path.exists(abcfg_path):
-        abcfg_path: str = os.path.join(AUTOBUILD_CONF_DIR, 'ab4cfg.sh')
+        abcfg_path = os.path.join(AUTOBUILD_CONF_DIR, 'ab4cfg.sh')
     try:
         return is_in_stage2_env() or is_in_stage2_file(abcfg_path)
     except OSError as e:
