@@ -51,10 +51,10 @@ def fix_pm_states(escaped: List[str]):
     count = 0
     while count < 3:
         try:
-            subprocess.call(['dpkg', '--configure', '-a'])
-            subprocess.check_call(['apt-get', 'install', '-yf'])
+            subprocess.call(['DEBIAN_FRONTEND=noninteractive', 'dpkg', '--configure', '-a'])
+            subprocess.check_call(['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-yf'])
             if escaped:
-                command = ['apt-get', 'install', '-y']
+                command = ['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-y']
                 command.extend(escaped)
                 subprocess.check_call(command)
             return
@@ -111,7 +111,7 @@ def check_if_available(name: str) -> bool:
             ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
         logging.debug('Checking if %s can be installed' % name)
         subprocess.check_output(
-            ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT)
+            ['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-s', name], stderr=subprocess.STDOUT)
         available_cache[name] = True
         return True
     except subprocess.CalledProcessError:
@@ -124,7 +124,7 @@ def install_from_repo(packages: List[str]):
     escaped = []
     for package in packages:
         escaped.append(escape_package_name_install(package))
-    command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
+    command = ['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
     command.extend(escaped)
     try:
         subprocess.check_call(command)
