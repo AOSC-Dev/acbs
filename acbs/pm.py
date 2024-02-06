@@ -51,12 +51,12 @@ def fix_pm_states(escaped: List[str]):
     count = 0
     while count < 3:
         try:
-            subprocess.call(['DEBIAN_FRONTEND=noninteractive', 'dpkg', '--configure', '-a'])
-            subprocess.check_call(['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-yf'])
+            subprocess.call(['dpkg', '--configure', '-a'])
+            subprocess.check_call(['apt-get', 'install', '-yf'])
             if escaped:
-                command = ['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-y']
+                command = ['apt-get', 'install', '-y']
                 command.extend(escaped)
-                subprocess.check_call(command)
+                subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
             return
         except subprocess.CalledProcessError:
             count += 1
@@ -111,7 +111,7 @@ def check_if_available(name: str) -> bool:
             ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
         logging.debug('Checking if %s can be installed' % name)
         subprocess.check_output(
-            ['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-s', name], stderr=subprocess.STDOUT)
+            ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT, env={'DEBIAN_FRONTEND': 'noninteractive'})
         available_cache[name] = True
         return True
     except subprocess.CalledProcessError:
@@ -124,10 +124,10 @@ def install_from_repo(packages: List[str]):
     escaped = []
     for package in packages:
         escaped.append(escape_package_name_install(package))
-    command = ['DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
+    command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
     command.extend(escaped)
     try:
-        subprocess.check_call(command)
+        subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
     except subprocess.CalledProcessError:
         logging.warning(
             'Failed to install dependencies, attempting to correct issues...')
