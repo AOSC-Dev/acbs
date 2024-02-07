@@ -7,13 +7,19 @@ import signal
 import subprocess
 import tempfile
 import time
-from typing import List, Optional, Sequence, Tuple, Dict
+from typing import Dict, List, Optional, Sequence, Tuple
 
-from acbs.base import ACBSPackageInfo, ACBSSourceInfo
-from acbs.crypto import check_hash_hashlib_inner
-from acbs.const import (ANSI_BROWN, ANSI_GREEN, ANSI_LT_CYAN, ANSI_RED,
-                        ANSI_RST, ANSI_YELLOW)
 from acbs import __version__
+from acbs.base import ACBSPackageInfo, ACBSSourceInfo
+from acbs.const import (
+    ANSI_BROWN,
+    ANSI_GREEN,
+    ANSI_LT_CYAN,
+    ANSI_RED,
+    ANSI_RST,
+    ANSI_YELLOW,
+)
+from acbs.crypto import check_hash_hashlib_inner
 
 build_logging = False
 

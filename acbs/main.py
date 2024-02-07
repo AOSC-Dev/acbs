@@ -9,21 +9,32 @@ from typing import List, Tuple
 
 import acbs.fetch
 import acbs.parser
-
 from acbs import __version__
 from acbs.ab4cfg import is_in_stage2
 from acbs.base import ACBSPackageInfo
-from acbs.checkpoint import ACBSShrinkWrap, do_shrink_wrap, checkpoint_to_group
-from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR, AUTOBUILD_CONF_DIR
-from acbs.deps import tarjan_search, prepare_for_reorder
+from acbs.checkpoint import ACBSShrinkWrap, checkpoint_to_group, do_shrink_wrap
+from acbs.const import AUTOBUILD_CONF_DIR, CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
+from acbs.deps import prepare_for_reorder, tarjan_search
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
-from acbs.parser import get_deps_graph, get_tree_by_name, check_buildability
+from acbs.parser import check_buildability, get_deps_graph, get_tree_by_name
 from acbs.pm import install_from_repo
-from acbs.utils import (ACBSLogFormatter, ACBSLogPlainFormatter, full_line_banner, guess_subdir,
-                        has_stamp, invoke_autobuild, make_build_dir,
-                        print_build_timings, print_package_names, write_checksums,
-                        generate_checksums, is_spec_legacy, check_artifact, validate_package_name)
+from acbs.utils import (
+    ACBSLogFormatter,
+    ACBSLogPlainFormatter,
+    check_artifact,
+    full_line_banner,
+    generate_checksums,
+    guess_subdir,
+    has_stamp,
+    invoke_autobuild,
+    is_spec_legacy,
+    make_build_dir,
+    print_build_timings,
+    print_package_names,
+    validate_package_name,
+    write_checksums,
+)
 
 
 class BuildCore(object):

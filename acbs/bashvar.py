@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
+import collections
 import logging
+import re
+import subprocess
 import tempfile
 import warnings
-import subprocess
-import collections
+
 import pyparsing as pp  # type: ignore
 
 pp.ParserElement.enablePackrat()

@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import Callable, Dict, Optional, Tuple, List
+from typing import Callable, Dict, List, Optional, Tuple
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib, hash_url

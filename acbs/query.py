@@ -1,7 +1,7 @@
 import os
 from typing import Optional, Sequence
 
-from acbs.const import CONF_DIR, DUMP_DIR, TMP_DIR, LOG_DIR
+from acbs.const import CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.parser import get_tree_by_name
 
 

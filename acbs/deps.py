@@ -1,5 +1,5 @@
 from collections import OrderedDict, defaultdict, deque
-from typing import List, Dict, Deque
+from typing import Deque, Dict, List
 
 from acbs.find import find_package
 from acbs.parser import ACBSPackageInfo, check_buildability

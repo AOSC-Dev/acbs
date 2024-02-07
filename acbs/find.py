@@ -1,9 +1,9 @@
-import os
 import logging
-from typing import List, Dict, Optional
+import os
+from typing import Dict, List, Optional
 
 from acbs.const import TMP_DIR
-from acbs.parser import parse_package, ACBSPackageInfo, ACBSSourceInfo
+from acbs.parser import ACBSPackageInfo, ACBSSourceInfo, parse_package
 from acbs.utils import make_build_dir
 
 

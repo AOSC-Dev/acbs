@@ -1,8 +1,9 @@
 import os
 
-from acbs.const import AUTOBUILD_CONF_DIR
+from pyparsing import ParseException  # type: ignore
+
 from acbs import bashvar
-from pyparsing import ParseException # type: ignore
+from acbs.const import AUTOBUILD_CONF_DIR
 
 
 def is_in_stage2_file(abcfg_path: str) -> bool:

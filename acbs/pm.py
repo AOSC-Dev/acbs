@@ -1,7 +1,7 @@
 import logging
 import re
 import subprocess
-from typing import List, Dict
+from typing import Dict, List
 
 from acbs.base import ACBSPackageInfo
 
@@ -11,7 +11,8 @@ use_native_bindings: bool = True
 reorder_mode: bool = False
 
 try:
-    from acbs.miniapt_query import apt_init_system, check_if_available as apt_check_if_available
+    from acbs.miniapt_query import apt_init_system
+    from acbs.miniapt_query import check_if_available as apt_check_if_available
     if not apt_init_system():
         raise ImportError('Initialization failure.')
 except ImportError:

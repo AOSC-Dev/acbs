@@ -1,14 +1,13 @@
 import unittest
 import unittest.mock
 
-import acbs.parser
 import acbs.find
+import acbs.parser
 import acbs.pm
-
-from acbs.utils import make_build_dir, guess_extension_name, fail_arch_regex
 from acbs.const import TMP_DIR
 from acbs.deps import tarjan_search
 from acbs.parser import get_deps_graph, parse_url_schema
+from acbs.utils import fail_arch_regex, guess_extension_name, make_build_dir
 
 
 def fake_pm(package):

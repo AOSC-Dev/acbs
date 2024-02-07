@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import get_arch_name, tarball_pattern, fail_arch_regex
+from acbs.utils import fail_arch_regex, get_arch_name, tarball_pattern
 
 generate_mode = False
 

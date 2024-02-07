@@ -1,5 +1,5 @@
 import hashlib
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 
 def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> Optional[str]:

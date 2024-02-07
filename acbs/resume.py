@@ -1,15 +1,15 @@
-import pickle
 import logging
+import pickle
+from typing import Dict, List
 
 from acbs import __version__
-from acbs.base import ACBSShrinkWrap, ACBSPackageInfo
-from acbs.main import BuildCore
-from acbs.find import find_package
-from acbs.utils import print_package_names, print_build_timings, make_build_dir
-from acbs.checkpoint import checkpoint_spec, checkpoint_dpkg, checkpoint_to_group
+from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
+from acbs.checkpoint import checkpoint_dpkg, checkpoint_spec, checkpoint_to_group
 from acbs.const import TMP_DIR
+from acbs.find import find_package
+from acbs.main import BuildCore
 from acbs.pm import check_if_installed
-from typing import List, Dict
+from acbs.utils import make_build_dir, print_build_timings, print_package_names
 
 
 def reassign_build_dir(packages: List[ACBSPackageInfo]):
