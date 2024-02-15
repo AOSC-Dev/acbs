@@ -106,7 +106,7 @@ class BuildCore(object):
     def strip_modifiers(self, p: str) -> Tuple[str, str]:
         if ':' in p:
             results = p.split(':', 1)
-            if len(p) == 2:
+            if len(results) == 2:
                 p, m = results
                 return p, m
         return p, ''
@@ -132,7 +132,7 @@ class BuildCore(object):
             if not package:
                 raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)
-        resolved = self.resolve_deps(packages, self.stage2)
+        self.resolve_deps(packages, self.stage2)
         if not packages:
             logging.info('Nothing to do after dependency resolution')
             return
