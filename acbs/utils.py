@@ -169,7 +169,7 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
 
 
 def generate_metadata(task: ACBSPackageInfo) -> str:
-    tree_commit = 'unknown'
+    tree_commit = 'unknown\n'
     try:
         tree_commit = subprocess.check_output(
             ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8')
