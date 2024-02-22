@@ -119,14 +119,62 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
     return tarball_processor_innner(package, index, source_name, False)
 
 
-def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+def git_fetch_fallback(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+    if info.no_gix:
+        return git_fetch(info, source_location, name)
+    else:
+        try:
+            # Try use gix
+            return gix_fetch(info, source_location, name)
+        except:
+            # Fallback to git
+            return git_fetch(info, source_location, name)
+
+
+def git_fetch(info, source_location, name):
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
         subprocess.check_call(['git', 'clone', '--bare', '--filter=blob:none', info.url, full_path])
     else:
         logging.info('Updating repository...')
         subprocess.check_call(
-            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+                ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+    info.source_location = full_path
+    return info
+
+
+def gix_hack(path: str):
+    # FIXME: reset HEAD to the first valid branch to fix gix can't second fetch src issue.
+    subprocess.check_call(
+        ['git', 'symbolic-ref', 'HEAD', 'refs/heads/HEAD'], cwd=path)
+    valid_branches = subprocess.check_output(
+        ['git', 'branch'], cwd=path, encoding='utf-8').splitlines()
+    invalid: bool = True
+    for word in valid_branches:
+        word = word.strip()
+        if len(word) > 0:
+            branch: str = word
+            invalid = False
+            break
+    if invalid:
+        logging.warn(
+            'No valid branches found. Falling back to traditional git.')
+        raise ValueError('No valid branches found')
+    subprocess.check_call(
+        ['git', 'symbolic-ref', 'HEAD', 'refs/heads/' + branch], cwd=path)
+    os.remove(os.path.join(path, "index"))
+
+
+def gix_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+    full_path = os.path.join(source_location, name)
+    if not os.path.exists(full_path):
+        subprocess.check_call(['gix', 'clone', '--bare', info.url, full_path])
+    else:
+        logging.info('Updating repository with gix...')
+        # gix doesn't have the --prune option yet.
+        gix_hack(full_path)
+        subprocess.check_call(
+            ['gix', 'fetch', 'origin', '+refs/heads/*:refs/heads/*'], cwd=full_path)
     info.source_location = full_path
     return info
 
@@ -293,7 +341,7 @@ def fossil_processor(package: ACBSPackageInfo, index: int, source_name: str) -> 
 
 
 handlers: Dict[str, pair_signature] = {
-    'GIT': (git_fetch, git_processor),
+    'GIT': (git_fetch_fallback, git_processor),
     'SVN': (svn_fetch, svn_processor),
     'BZR': (bzr_fetch, bzr_processor),
     'HG': (hg_fetch, hg_processor),
