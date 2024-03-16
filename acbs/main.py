@@ -127,8 +127,7 @@ class BuildCore(object):
                 raise ValueError(f'Invalid package name: `{i}`')
             logging.debug(f'Finding {i}...')
             print(f'[{n + 1}/{len(self.build_queue)}] {i:30}\r', end='', flush=True)
-            scoped_stage2 = ACBSPackageInfo.is_in_stage2(modifiers) | self.stage2
-            package = find_package(i, self.tree_dir, stage2=scoped_stage2)
+            package = find_package(i, self.tree_dir, modifiers)
             if not package:
                 raise RuntimeError(f'Could not find package {i}')
             packages.extend(package)

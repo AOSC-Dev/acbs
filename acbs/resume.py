@@ -84,7 +84,7 @@ def do_resume_checkpoint(filename: str, args):
         # the spec files changed
         if index < new_cursor:
             new_cursor = index
-        resumed_packages.extend(find_package(p.name, builder.tree_dir, stage2))
+        resumed_packages.extend(find_package(p.name, builder.tree_dir, '+stage2' if stage2 else ''))
         # index doesn't matter now, since changes have been detected
     if not check_dpkg_state(state, resumed_packages[:new_cursor]):
         name = checkpoint_to_group(

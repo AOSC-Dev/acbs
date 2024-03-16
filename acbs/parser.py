@@ -143,8 +143,9 @@ def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
     return acbs_source_info
 
 
-def parse_package(location: str, stage2: bool) -> ACBSPackageInfo:
+def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     logging.debug('Parsing {}...'.format(location))
+    stage2 = ACBSPackageInfo.is_in_stage2(modifiers)
     # Call a helper function to check if there's a stage2 defines automatically
     defines_location = get_defines_file_path(location, stage2)
     spec_location = os.path.join(location, '..', 'spec')
@@ -184,6 +185,7 @@ def parse_package(location: str, stage2: bool) -> ACBSPackageInfo:
     epoch = spec_var.get('EPOCH')
     if epoch:
         result.epoch = epoch
+    result.modifiers = modifiers
     # collect exported variables (prefixed with `__`)
     for k, v in spec_var.items():
         if k.startswith('__'):
