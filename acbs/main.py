@@ -17,6 +17,7 @@ from acbs.const import AUTOBUILD_CONF_DIR, CONF_DIR, DUMP_DIR, LOG_DIR, TMP_DIR
 from acbs.deps import prepare_for_reorder, tarjan_search
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
+from acbs.ipc import connect_to_ciel_server, send_to_ciel_server, receive_from_ciel_server
 from acbs.parser import check_buildability, get_deps_graph, get_tree_by_name
 from acbs.pm import install_from_repo
 from acbs.utils import (
@@ -232,6 +233,12 @@ class BuildCore(object):
         return resolved
 
     def build_sequential(self, build_timings, packages: List[ACBSPackageInfo]):
+        # connect to Ciel
+        try:
+            ciel_ipc = connect_to_ciel()
+        except Exception as ex:
+            logging.warning(f'Could not connect to Ciel IPC: {ex}')
+            ciel_ipc = None
         # build process
         for idx, task in enumerate(packages):
             self.package_cursor += 1
@@ -286,6 +293,16 @@ class BuildCore(object):
                 raise RuntimeError(
                     f'Build directory of the failed package: {build_dir}')
             build_timings.append((task_name, time.monotonic() - start))
+            # refresh packages
+            if ciel_ipc:
+                try:
+                    send_to_ciel_server(ciel_ipc, 'Refresh')
+                    logging.info(f'Waiting for Ciel to finish ... ')
+                    resp = receive_from_ciel_server(ciel_ipc)
+                    if resp.get('error'):
+                        logging.warning(f'Ciel server error: {resp["error"]}')
+                except Exception as ex:
+                    logging.warning(f'Could not request Ciel server: {ex}')
 
     def acbs_except_hdr(self, type_, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
