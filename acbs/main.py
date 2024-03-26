@@ -235,7 +235,7 @@ class BuildCore(object):
     def build_sequential(self, build_timings, packages: List[ACBSPackageInfo]):
         # connect to Ciel
         try:
-            ciel_ipc = connect_to_ciel()
+            ciel_ipc = connect_to_ciel_server()
         except Exception as ex:
             logging.warning(f'Could not connect to Ciel IPC: {ex}')
             ciel_ipc = None

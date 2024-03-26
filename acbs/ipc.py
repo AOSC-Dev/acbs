@@ -1,6 +1,8 @@
 import socket
 import json
 
+from typing import Any, Dict
+
 
 def connect_to_ciel_server() -> socket.socket:
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -19,7 +21,7 @@ def send_to_ciel_server(s: socket.socket, command: str):
     s.sendall(data.encode('utf-8'))
 
 
-def receive_from_ciel_server(s: socket.socket):
+def receive_from_ciel_server(s: socket.socket) -> Dict[str, Any]:
     buf = s.recv(4096)
     tag = b'Content-Length: '
     header, *parts = buf.splitlines()
@@ -30,3 +32,4 @@ def receive_from_ciel_server(s: socket.socket):
             buf = s.recv(length - 4096)
             body += buf
         return json.loads(body.decode('utf-8'))
+    return {}
