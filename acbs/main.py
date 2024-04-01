@@ -41,7 +41,7 @@ from acbs.utils import (
 CIEL_LOCK_PATH = '/debs/fresh.lock'
 
 def ciel_invalidate_cache():
-    with open(CIEL_LOCK_PATH, 'w') as lock_file:
+    with open(CIEL_LOCK_PATH, 'r+') as lock_file:
         lock_file_fd = lock_file.fileno()
         fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
         if lock_file.read(1) != '0':
