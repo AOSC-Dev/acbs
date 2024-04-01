@@ -41,28 +41,28 @@ from acbs.utils import (
 CIEL_LOCK_PATH = '/debs/fresh.lock'
 
 def ciel_invalidate_cache():
-    lock_file = open(CIEL_LOCK_PATH, 'r+')
-    lock_file_fd = lock_file.fileno()
-    fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
-    if lock_file.read(1) != '0':
-        lock_file.seek(0)
-        lock_file.truncate(0)
-        lock_file.write('0')
-    fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+    with open(CIEL_LOCK_PATH, 'w') as lock_file:
+        lock_file_fd = lock_file.fileno()
+        fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
+        if lock_file.read(1) != '0':
+            lock_file.seek(0)
+            lock_file.truncate(0)
+            lock_file.write('0')
+        fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
 
 
 def ciel_wait_for_refresh():
-    lock_file = open(CIEL_LOCK_PATH, 'r')
-    lock_file_fd = lock_file.fileno()
-    fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
-    if not lock_file.read(1) != '1':
-        # flock for some reason didn't work
-        for _ in range(10):
-            time.sleep(1)
-            lock_file.seek(0)
-            if lock_file.read(1) == '1':
-                break
-    fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+    with open(CIEL_LOCK_PATH, 'r') as lock_file:
+        lock_file_fd = lock_file.fileno()
+        fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
+        if not lock_file.read(1) != '1':
+            # flock for some reason didn't work
+            for _ in range(10):
+                time.sleep(1)
+                lock_file.seek(0)
+                if lock_file.read(1) == '1':
+                    break
+        fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
 
 
 class BuildCore(object):
