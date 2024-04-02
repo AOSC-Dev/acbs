@@ -35,7 +35,7 @@ Mandatory dependencies:
 * GNU File (libmagic): File type detection.
 * LibArchive (bsdtar): Archive handling.
 * GNU Wget or Aria2: Source downloading.
-* Autobuild3_: Package building.
+* Autobuild4_: Package building.
 
 .. _Optional dependencies:
 
@@ -45,7 +45,7 @@ Optional dependencies [1]_:
 * pycryptodome: Python module to verify file checksums.
 * pexpect: Python module to simulate PTY sessions and log output to file.
 
-.. _Autobuild3: https://github.com/AOSC-Dev/autobuild3
+.. _Autobuild4: https://github.com/AOSC-Dev/autobuild4
 
 .. [1] Note: By installing optional dependencies, functionalities of ACBS could be enhanced. These dependencies are available on PyPI.
 

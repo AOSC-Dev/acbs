@@ -165,7 +165,7 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
             footer = f'\n!!Build exited with {exit_status}'
         f.write(footer.encode())
         if signal_status or exit_status:
-            raise RuntimeError('autobuild3 did not exit successfully.')
+            raise RuntimeError('autobuild4 did not exit successfully.')
 
 
 def generate_metadata(task: ACBSPackageInfo) -> str:

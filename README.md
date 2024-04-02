@@ -29,7 +29,7 @@ Mandatory:
   - Util-Linux: File checksum verification.
   - LibArchive (bsdtar): Archive handling.
   - GNU Wget or Aria2: Source downloading.
-  - [Autobuild3](https://github.com/AOSC-Dev/autobuild3): Package building.
+  - [Autobuild4](https://github.com/AOSC-Dev/autobuild4): Package building.
 
 Optional:
   - libmagic: Python module to detect file type.
