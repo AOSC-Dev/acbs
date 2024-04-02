@@ -322,8 +322,7 @@ class BuildCore(object):
                 check_artifact(task.name, build_dir)
             except Exception:
                 # early printing of build summary before exploding
-                if build_timings:
-                    print_build_timings(build_timings, packages[idx:], time.monotonic() - start)
+                print_build_timings(build_timings, packages[idx:], time.monotonic() - start)
                 raise RuntimeError(
                     f'Build directory of the failed package: {build_dir}')
             build_timings.append((task_name, time.monotonic() - start))
