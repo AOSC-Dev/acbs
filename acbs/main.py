@@ -81,12 +81,23 @@ class BuildCore(object):
         # static vars
         self.autobuild_conf_dir = AUTOBUILD_CONF_DIR
         self.conf_dir = CONF_DIR
-        self.dump_dir = DUMP_DIR
-        self.tmp_dir = TMP_DIR
-        self.log_dir = LOG_DIR
+        if args.acbs_dump_dir is not None:
+            self.dump_dir = args.acbs_dump_dir[0]
+        else:
+            self.dump_dir = DUMP_DIR
+        if args.acbs_temp_dir is not None:
+            self.tmp_dir = args.acbs_temp_dir[0]
+        else:
+            self.tmp_dir = TMP_DIR
+        if args.acbs_log_dir is not None:
+            self.log_dir = args.acbs_log_dir[0]
+        else:
+            self.log_dir = LOG_DIR
         self.stage2 = is_in_stage2()
         if args.acbs_tree:
             self.tree = args.acbs_tree[0]
+        if args.acbs_tree_dir is not None:
+            self.tree_dir = args.acbs_tree_dir[0]
         self.init()
 
     def init(self) -> None:
@@ -105,13 +116,15 @@ class BuildCore(object):
         except Exception:
             raise IOError('\033[93mFailed to create work directories\033[0m!')
         self.__install_logger(log_verbosity)
-        forest_file = os.path.join(self.conf_dir, 'forest.conf')
-        if os.path.exists(forest_file):
-            self.tree_dir = get_tree_by_name(forest_file, self.tree)
-            if not self.tree_dir:
-                raise ValueError('Tree not found!')
-        else:
-            raise Exception('forest.conf not found')
+        if self.tree_dir is None:
+            # If the user did not specify tree path via -b/--tree-dir, read from config
+            forest_file = os.path.join(self.conf_dir, 'forest.conf')
+            if os.path.exists(forest_file):
+                self.tree_dir = get_tree_by_name(forest_file, self.tree)
+                if not self.tree_dir:
+                    raise ValueError('Tree not found!')
+            else:
+                raise Exception('forest.conf not found')
 
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
