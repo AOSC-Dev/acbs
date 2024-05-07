@@ -44,6 +44,15 @@ def main() -> None:
                         help='Only download source packages without building', action="store_true")
     parser.add_argument('-r', '--resume', nargs=1, dest='state_file',
                         help='Resume a previous build attempt')
+    parser.add_argument('-l', '--cache-dir', nargs=1, dest='acbs_dump_dir',
+                        help='Override cache directory')
+    parser.add_argument('-o', '--log-dir', nargs=1, dest='acbs_log_dir',
+                        help='Override log directory')
+    parser.add_argument('-b', '--tree-dir', nargs=1, dest='acbs_tree_dir',
+                        help='Override abbs tree directory')
+    parser.add_argument('-z', '--temp-dir', nargs=1, dest='acbs_temp_dir',
+                        help='Override temp directory')
+
     args = parser.parse_args()
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
