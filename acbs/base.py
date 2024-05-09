@@ -5,7 +5,7 @@ from acbs import __version__
 
 
 class ACBSSourceInfo(object):
-    def __init__(self, type: str, url: str, revision=None, branch=None, depth=None) -> None:
+    def __init__(self, type: str, url: str, revision=None, branch=None, depth=None, no_gix=False) -> None:
         self.type = type
         self.url = url
         self.revision: Optional[str] = revision
@@ -21,9 +21,10 @@ class ACBSSourceInfo(object):
         self.copy_repo: bool = False
         # this is a tristate: 0 - off; 1 - on (non-recursive); 2 - recursive
         self.submodule: int = 2
+        self.no_gix: bool = no_gix
 
     def __repr__(self) -> str:
-        return '<ACBSSourceInfo {type}: {url}:{branch}@{revision} integrity: {checksum}>'.format(type=self.type, url=self.url, branch=self.branch, revision=self.revision, checksum=self.chksum)
+        return '<ACBSSourceInfo {type}: {url}:{branch}@{revision} integrity: {checksum} no_gix: {no_gix}>'.format(type=self.type, url=self.url, branch=self.branch, revision=self.revision, checksum=self.chksum, no_gix=self.no_gix)
 
 
 class ACBSPackageInfo(object):
