@@ -41,28 +41,36 @@ from acbs.utils import (
 CIEL_LOCK_PATH = '/debs/fresh.lock'
 
 def ciel_invalidate_cache():
-    with open(CIEL_LOCK_PATH, 'r+') as lock_file:
-        lock_file_fd = lock_file.fileno()
-        fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
-        if lock_file.read(1) != '0':
-            lock_file.seek(0)
-            lock_file.truncate(0)
-            lock_file.write('0')
-        fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+    logging.info('Asking ciel to refresh repository...')
+    if os.path.exists(CIEL_LOCK_PATH):
+        with open(CIEL_LOCK_PATH, 'r+') as lock_file:
+            lock_file_fd = lock_file.fileno()
+            fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
+            if lock_file.read(1) != '0':
+                lock_file.seek(0)
+                lock_file.truncate(0)
+                lock_file.write('0')
+            fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+    else:
+        logging.warning('Ciel did not create lock file, skipping...')
 
 
 def ciel_wait_for_refresh():
-    with open(CIEL_LOCK_PATH, 'r') as lock_file:
-        lock_file_fd = lock_file.fileno()
-        fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
-        if not lock_file.read(1) != '1':
-            # flock for some reason didn't work
-            for _ in range(10):
-                time.sleep(1)
-                lock_file.seek(0)
-                if lock_file.read(1) == '1':
-                    break
-        fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+    logging.info('Waiting for ciel to refresh repository...')
+    if os.path.exists(CIEL_LOCK_PATH):
+        with open(CIEL_LOCK_PATH, 'r') as lock_file:
+            lock_file_fd = lock_file.fileno()
+            fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
+            if lock_file.read(1) != '1':
+                # flock for some reason didn't work
+                for _ in range(10):
+                    time.sleep(1)
+                    lock_file.seek(0)
+                    if lock_file.read(1) == '1':
+                        break
+            fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+    else:
+        logging.warning('Ciel did not create lock file, skipping...')
 
 
 class BuildCore(object):
