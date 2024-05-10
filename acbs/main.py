@@ -61,14 +61,26 @@ def ciel_wait_for_refresh():
         with open(CIEL_LOCK_PATH, 'r') as lock_file:
             lock_file_fd = lock_file.fileno()
             fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
-            if lock_file.read(1) != '1':
-                # flock for some reason didn't work
+
+            success = False
+            if lock_file.read(1) == '1':
+                success = True
+            else:
                 for _ in range(10):
+                    fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
                     time.sleep(1)
+                    fcntl.flock(lock_file_fd, fcntl.LOCK_EX)
+
                     lock_file.seek(0)
                     if lock_file.read(1) == '1':
+                        success = True
                         break
             fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
+
+            if success:
+                logging.info('Ciel finished refreshing repository...')
+            else:
+                logging.warning('Ciel failed to refresh repository in time...')
     else:
         logging.warning('Ciel did not create lock file, skipping...')
 
