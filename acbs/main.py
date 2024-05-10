@@ -116,7 +116,7 @@ class BuildCore(object):
         except Exception:
             raise IOError('\033[93mFailed to create work directories\033[0m!')
         self.__install_logger(log_verbosity)
-        if self.tree_dir is None:
+        if self.tree_dir == '':
             # If the user did not specify tree path via -b/--tree-dir, read from config
             forest_file = os.path.join(self.conf_dir, 'forest.conf')
             if os.path.exists(forest_file):
