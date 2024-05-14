@@ -17,7 +17,6 @@ from acbs.resume import do_resume_checkpoint
 
 
 def main() -> None:
-    tmp_loc = TMP_DIR
     parser = argparse.ArgumentParser(description=help_msg(acbs.__version__
                                                           ), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version',
@@ -54,6 +53,10 @@ def main() -> None:
                         help='Override temp directory')
 
     args = parser.parse_args()
+    if args.acbs_temp_dir:
+        tmp_loc = args.acbs_temp_dir[0]
+    else:
+        tmp_loc = TMP_DIR
     if args.clear_dir:
         clear_tmp(tmp_dir=tmp_loc)
         del args.clear_dir

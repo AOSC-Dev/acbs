@@ -7,12 +7,12 @@ from acbs.parser import ACBSPackageInfo, ACBSSourceInfo, parse_package
 from acbs.utils import make_build_dir
 
 
-def check_package_group(name: str, search_path: str, entry_path: str, modifiers: str) -> Optional[List[ACBSPackageInfo]]:
+def check_package_group(name: str, search_path: str, entry_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> Optional[List[ACBSPackageInfo]]:
     # is this a package group?
     if os.path.basename(entry_path) == os.path.basename(name) and os.path.isfile(os.path.join(search_path, entry_path, 'spec')):
         stub = ACBSPackageInfo(name, [], '', [ACBSSourceInfo('none', '', '')])
         stub.base_slug = entry_path
-        return expand_package_group(stub, search_path, modifiers)
+        return expand_package_group(stub, search_path, modifiers, tmp_dir)
     with os.scandir(os.path.join(search_path, entry_path)) as group:
         # scan potential package groups
         for entry_group in group:
@@ -43,12 +43,12 @@ def check_package_group(name: str, search_path: str, entry_path: str, modifiers:
                     group_category), root=os.path.basename(group_root))
                 result.group_seq = group_seq
                 group_result = expand_package_group(
-                    result, search_path, modifiers)
+                    result, search_path, modifiers, tmp_dir)
                 return group_result
     return None
 
 
-def find_package(name: str, search_path: str, modifiers: str) -> List[ACBSPackageInfo]:
+def find_package(name: str, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
     if os.path.isfile(os.path.join(search_path, name)):
         with open(os.path.join(search_path, name), 'rt') as f:
             content = f.read()
@@ -60,23 +60,23 @@ def find_package(name: str, search_path: str, modifiers: str) -> List[ACBSPackag
             p = p.strip()
             if not p or p.startswith('#'):
                 continue
-            found = find_package_inner(p, search_path, modifiers=modifiers)
+            found = find_package_inner(p, search_path, modifiers=modifiers, tmp_dir=tmp_dir)
             if not found:
                 raise RuntimeError(
                     f'Package {p} requested in {name} was not found.')
             results.extend(found)
         print()
         return results
-    return find_package_inner(name, search_path, modifiers=modifiers)
+    return find_package_inner(name, search_path, modifiers=modifiers, tmp_dir=tmp_dir)
 
 
-def find_package_inner(name: str, search_path: str, group=False, modifiers: str='') -> List[ACBSPackageInfo]:
+def find_package_inner(name: str, search_path: str, group=False, modifiers: str='', tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
     if os.path.isdir(os.path.join(search_path, name)):
         flat_path = os.path.join(search_path, name, 'autobuild')
         if os.path.isdir(flat_path):
             return [parse_package(os.path.join(search_path, name, 'autobuild'), modifiers)]
         # is this a package group?
-        group_result = check_package_group(name, search_path, name, modifiers)
+        group_result = check_package_group(name, search_path, name, modifiers, tmp_dir)
         if group_result:
             return group_result
     with os.scandir(search_path) as it:
@@ -97,7 +97,7 @@ def find_package_inner(name: str, search_path: str, group=False, modifiers: str=
                         continue
                     # is this a package group?
                     group_result = check_package_group(
-                        name, search_path, os.path.join(entry.name, entry_inner.name), modifiers)
+                        name, search_path, os.path.join(entry.name, entry_inner.name), modifiers, tmp_dir)
                     if group_result:
                         return group_result
     if group:
@@ -105,7 +105,7 @@ def find_package_inner(name: str, search_path: str, group=False, modifiers: str=
     else:
         # if cannot find a package without considering it as part of a group
         # then re-search with group enabled
-        return find_package_inner(name, search_path, True, modifiers)
+        return find_package_inner(name, search_path, True, modifiers, tmp_dir)
 
 
 def check_package_groups(packages: List[ACBSPackageInfo]):
@@ -129,7 +129,7 @@ def check_package_groups(packages: List[ACBSPackageInfo]):
             groups_seen[base_slug] = pkg.group_seq
 
 
-def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: str) -> List[ACBSPackageInfo]:
+def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
     group_root = os.path.join(search_path, package.base_slug)
     original_base = package.base_slug
     actionables: List[ACBSPackageInfo] = []
@@ -154,7 +154,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: 
     # because the directory order is arbitrary, we need to sort them
     actionables = sorted(actionables, key=lambda a: a.group_seq)
     # pre-assign build location for sub-packages
-    location = make_build_dir(TMP_DIR)
+    location = make_build_dir(tmp_dir)
     for a in actionables:
         a.build_location = location
     return actionables
