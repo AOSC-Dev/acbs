@@ -126,7 +126,7 @@ def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
     else:
         logging.info('Updating repository...')
         subprocess.check_call(
-            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune'], cwd=full_path)
+            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune', '--tags'], cwd=full_path)
     info.source_location = full_path
     return info
 
