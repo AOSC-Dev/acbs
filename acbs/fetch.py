@@ -125,8 +125,11 @@ def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional
         subprocess.check_call(['git', 'clone', '--bare', '--filter=blob:none', info.url, full_path])
     else:
         logging.info('Updating repository...')
+        # --prune: prune remote-tracking branches no longer on remote
+        # --tags: fetch all tags and associated objects
+        # --force: force overwrite of local reference
         subprocess.check_call(
-            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune', '--tags'], cwd=full_path)
+            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune', '--tags', '--force'], cwd=full_path)
     info.source_location = full_path
     return info
 
