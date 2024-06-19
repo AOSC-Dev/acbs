@@ -135,7 +135,8 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     if fail_arch:
         fail_arch_re = fail_arch_regex(fail_arch)
         if fail_arch_re.match(arch):
-            logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}')
+            logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
+                           'Any encountered empty SRCS will be ignored.')
             # Continue parsing but ignore any source error, since we still
             # need the complete tree.
             # There are some packages that use different sources for each
