@@ -94,7 +94,7 @@ def parse_package_url(var: Dict[str, str], ignore_empty_srcs: bool) -> List[ACBS
         arch=arch.upper())) or var.get('CHKSUMS')
     if sources is None:
         if not ignore_empty_srcs:
-            return ValueError(
+            raise ValueError(
                 'Source definition is missing. If that is intended, '
                 'perhaps you want to set DUMMYSRC=1.')
         else:
