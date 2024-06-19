@@ -92,6 +92,9 @@ def parse_package_url(var: Dict[str, str], ignore_empty_srcs: bool) -> List[ACBS
         arch=arch.upper())) or var.get('SRCS')
     checksums = var.get('CHKSUMS__{arch}'.format(
         arch=arch.upper())) or var.get('CHKSUMS')
+    if var.get('DUMMYSRC') in ['y', 'yes', '1']:
+        acbs_source_info.append(ACBSSourceInfo('none', '', ''))
+        return acbs_source_info
     if sources is None:
         if not ignore_empty_srcs:
             raise ValueError(
