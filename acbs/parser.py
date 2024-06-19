@@ -86,15 +86,19 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
     return acbs_source_info
 
 
-def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
+def parse_package_url(var: Dict[str, str], ignore_empty_srcs: bool) -> List[ACBSSourceInfo]:
     acbs_source_info: List[ACBSSourceInfo] = []
     sources = var.get('SRCS__{arch}'.format(
         arch=arch.upper())) or var.get('SRCS')
     checksums = var.get('CHKSUMS__{arch}'.format(
         arch=arch.upper())) or var.get('CHKSUMS')
     if sources is None:
-        logging.debug('Using legacy source directives')
-        return [parse_package_url_legacy(var)]
+        if not ignore_empty_srcs:
+            return ValueError(
+                'Source definition is missing. If that is intended, '
+                'perhaps you want to set DUMMYSRC=1.')
+        else:
+            return []
     if checksums is None and not generate_mode:
         raise ValueError(
             'Missing checksums. You can use `SKIP` for VCS sources.')
@@ -110,40 +114,10 @@ def parse_package_url(var: Dict[str, str]) -> List[ACBSSourceInfo]:
     return acbs_source_info
 
 
-def parse_package_url_legacy(var: Dict[str, str]) -> ACBSSourceInfo:
-    acbs_source_info = ACBSSourceInfo('none', '', '')
-    if var.get('DUMMYSRC') in ['y', 'yes', '1']:
-        return acbs_source_info
-    url = var.get('SRCTBL')
-    if url:
-        acbs_source_info.type = 'tarball'
-        acbs_source_info.url = url
-        chksum = var.get('CHKSUM')
-        if not chksum:
-            return acbs_source_info
-        chksum_ = chksum.split('::', 1)
-        if len(chksum_) != 2:  # malformed checksum line
-            return acbs_source_info
-        acbs_source_info.chksum = (chksum_[0], chksum_[1])
-        return acbs_source_info
-    # VCS related
-    for type_ in ('GIT', 'BZR', 'SVN', 'HG', 'BK'):
-        url = var.get('{type_}SRC'.format(type_=type_))
-        if url:
-            acbs_source_info.type = type_
-            acbs_source_info.url = url
-            acbs_source_info.revision = var.get(
-                '{type_}CO'.format(type_=type_))
-            acbs_source_info.branch = var.get(
-                '{type_}BRANCH'.format(type_=type_))
-    # No sources specified?
-    if acbs_source_info.type == 'none':
-        raise ValueError(
-            'No sources specified, if this is intended, please set `DUMMYSRC=1`')
-    return acbs_source_info
-
-
 def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
+    # Ignore (seemingly) empty srcs on unbuildable archs, if the package
+    # uses different sources for each (supported) architectures.
+    ignore_empty_srcs: bool = False
     logging.debug('Parsing {}...'.format(location))
     stage2 = ACBSPackageInfo.is_in_stage2(modifiers)
     # Call a helper function to check if there's a stage2 defines automatically
@@ -153,6 +127,19 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         var = bashvar.eval_bashvar(f.read(), filename=defines_location)
     with open(spec_location, 'rt') as f:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
+    fail_arch = var.get('FAIL_ARCH')
+    fail_arch_re: Optional[re.Pattern] = None
+    if fail_arch:
+        fail_arch_re = fail_arch_regex(fail_arch)
+        if fail_arch_re.match(arch):
+            logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}')
+            # Continue parsing but ignore any source error, since we still
+            # need the complete tree.
+            # There are some packages that use different sources for each
+            # (supported) architectures, but for unbuildable packages the
+            # source info parser will fail, as there is no SRCS for current
+            # arch.
+            ignore_empty_srcs = True
     deps_arch: Optional[str] = var.get('PKGDEP__{arch}'.format(
         arch=arch.upper()))
     # determine whether this is an undefined value or an empty string
@@ -163,7 +150,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         'BUILDDEP') if builddeps_arch is None else builddeps_arch
     deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
-    acbs_source_info = parse_package_url(spec_var)
+    acbs_source_info = parse_package_url(spec_var, ignore_empty_srcs)
     if not deps:
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
@@ -171,12 +158,11 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
     result.bin_arch = var.get('ABHOST') or arch
-    fail_arch = var.get('FAIL_ARCH')
     release = spec_var.get('REL') or '0'
     result.rel = release
     version = spec_var.get('VER')
     if fail_arch:
-        result.fail_arch = fail_arch_regex(fail_arch)
+        result.fail_arch = fail_arch_re
     if version:
         result.version = version
     subdir = spec_var.get('SUBDIR')
