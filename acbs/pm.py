@@ -121,31 +121,16 @@ def check_if_available(name: str) -> bool:
 
 
 def install_from_repo(packages: List[str]):
-    oma_is_success = install_from_repo_oma(packages)
-
-    if not oma_is_success:
-        logging.debug('Installing %s' % packages)
-        escaped = []
-        for package in packages:
-            escaped.append(escape_package_name_install(package))
-        command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
-        command.extend(escaped)
-        try:
-            subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
-        except subprocess.CalledProcessError:
-            logging.warning(
-                'Failed to install dependencies, attempting to correct issues...')
-            fix_pm_states(escaped)
-    return
-
-def install_from_repo_oma(packages: List[str]) -> bool:
-    logging.debug('Installing %s from oma' % packages)
-    command = ['oma', 'install', '-y', '--force-confnew', '--no-progress']
-    command.extend(packages)
+    logging.debug('Installing %s' % packages)
+    escaped = []
+    for package in packages:
+        escaped.append(escape_package_name_install(package))
+    command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
+    command.extend(escaped)
     try:
-        subprocess.check_call(command)
-    except:
+        subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
+    except subprocess.CalledProcessError:
         logging.warning(
-            'Failed to use oma install dependencies, fallbacking to apt...')
-        return False
-    return True
+            'Failed to install dependencies, attempting to correct issues...')
+        fix_pm_states(escaped)
+    return
