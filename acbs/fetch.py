@@ -151,7 +151,7 @@ def git_processor(package: ACBSPackageInfo, index: int, source_name: str) -> Non
         logging.info('Fetching submodules (if any)...')
         params = [
                 'git', '--git-dir', info.source_location, '--work-tree', checkout_location,
-                'submodule', 'update', '--init'
+                'submodule', 'update', '--init', '--filter=blob:none'
             ]
         if info.submodule == 2:
             params.append('--recursive')
