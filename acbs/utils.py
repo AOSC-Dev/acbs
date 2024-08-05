@@ -178,6 +178,40 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
     return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}'
 
 
+def generate_version_stamp(task: ACBSPackageInfo) -> str:
+    try:
+        stamp = ''
+        head_ref = subprocess.check_output(
+            ['git', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8')
+        if head_ref == 'refs/heads/stable':
+            logging.info(f'Using no version stamp')
+            return ''
+
+        dirty = len(subprocess.check_output(
+            ['git', 'status', '--porcelain'], cwd=task.script_location).decode('utf-8').strip()) != 0
+        timestamp = None
+        if dirty:
+            timestamp = int(time.time())
+        else:
+            timestamp = int(subprocess.check_output(
+                ['git', 'show', '-s', '--format=%ct', 'HEAD'], cwd=task.script_location).decode('utf-8'))
+        stamp += '~pre'
+        stamp += (
+            datetime.datetime.utcfromtimestamp(timestamp)
+            .isoformat(timespec = 'seconds')
+            .replace(':', '')
+            .replace('-', '')
+        )
+        stamp += 'Z'
+        if dirty:
+            stamp += '-dirty'
+        logging.info(f'Using version stamp: {stamp}')
+        return stamp
+    except subprocess.CalledProcessError as ex:
+        logging.warning(f'Could not determine version stamp: {ex}')
+        return ''
+
+
 def check_artifact(name: str, build_dir: str):
     """
     Check if the artifact exists
@@ -203,7 +237,8 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool):
     acbs_helper = os.path.join(task.build_location, '.acbs-script')
     env_dict = os.environ.copy()
     env_dict.update({'PKGREL': task.rel, 'PKGVER': task.version,
-                     'PKGEPOCH': task.epoch or '0'})
+                     'PKGEPOCH': task.epoch or '0',
+                     'VERSTAMP': generate_version_stamp(task)})
     env_dict.update(task.exported)
     if task.modifiers:
         env_dict['ABMODIFIERS'] = task.modifiers
