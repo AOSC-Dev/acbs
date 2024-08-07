@@ -98,6 +98,7 @@ class BuildCore(object):
         self.package_cursor = 0
         self.reorder = args.reorder
         self.save_list = args.save_list
+        self.force_use_apt = args.force_use_apt
         # static vars
         self.autobuild_conf_dir = AUTOBUILD_CONF_DIR
         self.conf_dir = CONF_DIR
@@ -333,7 +334,7 @@ class BuildCore(object):
                 build_dir = os.path.join(build_dir, subdir)
             if task.installables:
                 logging.info('Installing dependencies from repository...')
-                install_from_repo(task.installables)
+                install_from_repo(task.installables, self.force_use_apt)
             start = time.monotonic()
             task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
             try:
