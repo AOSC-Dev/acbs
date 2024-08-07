@@ -4,6 +4,7 @@ import subprocess
 from typing import Dict, List
 
 from acbs.base import ACBSPackageInfo
+from acbs.utils import get_arch_name
 
 installed_cache: Dict[str, bool] = {}
 available_cache: Dict[str, bool] = {}
@@ -121,21 +122,29 @@ def check_if_available(name: str) -> bool:
 
 
 def install_from_repo(packages: List[str]):
+    if get_arch_name() == "riscv64":
+        return install_from_repo_apt(packages)
+
     oma_is_success = install_from_repo_oma(packages)
 
     if not oma_is_success:
-        logging.debug('Installing %s' % packages)
-        escaped = []
-        for package in packages:
-            escaped.append(escape_package_name_install(package))
-        command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
-        command.extend(escaped)
-        try:
-            subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
-        except subprocess.CalledProcessError:
-            logging.warning(
-                'Failed to install dependencies, attempting to correct issues...')
-            fix_pm_states(escaped)
+        install_from_repo_apt(packages)
+
+    return
+
+def install_from_repo_apt(packages: List[str]):
+    logging.debug('Installing %s' % packages)
+    escaped = []
+    for package in packages:
+        escaped.append(escape_package_name_install(package))
+    command = ['apt-get', 'install', '-y', '-o', 'Dpkg::Options::=--force-confnew']
+    command.extend(escaped)
+    try:
+        subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
+    except subprocess.CalledProcessError:
+        logging.warning(
+            'Failed to install dependencies, attempting to correct issues...')
+        fix_pm_states(escaped)
     return
 
 def install_from_repo_oma(packages: List[str]) -> bool:
