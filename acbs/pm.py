@@ -122,6 +122,8 @@ def check_if_available(name: str) -> bool:
 
 
 def install_from_repo(packages: List[str], force_use_apt=False):
+    # FIXME: RISC-V build hosts is unreliable when using oma: random lock-ups
+    # during `oma refresh'. Disabling oma to workaround potential lock-ups.
     if get_arch_name() == "riscv64" or force_use_apt:
         return install_from_repo_apt(packages)
 
