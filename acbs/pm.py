@@ -121,8 +121,8 @@ def check_if_available(name: str) -> bool:
         return False
 
 
-def install_from_repo(packages: List[str]):
-    if get_arch_name() == "riscv64":
+def install_from_repo(packages: List[str], force_use_apt=False):
+    if get_arch_name() == "riscv64" or force_use_apt:
         return install_from_repo_apt(packages)
 
     oma_is_success = install_from_repo_oma(packages)
