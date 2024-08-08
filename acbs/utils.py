@@ -172,7 +172,7 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
     tree_commit = 'unknown\n'
     try:
         tree_commit = subprocess.check_output(
-            ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8')
+            ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8').strip()
     except subprocess.CalledProcessError as ex:
         logging.warning(f'Could not determine tree commit: {ex}')
     return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}'
@@ -182,7 +182,7 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
     try:
         stamp = ''
         head_ref = subprocess.check_output(
-            ['git', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8')
+            ['git', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8').strip()
         if head_ref == 'refs/heads/stable':
             logging.info(f'Using no version stamp')
             return ''
@@ -194,7 +194,7 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
             timestamp = int(time.time())
         else:
             timestamp = int(subprocess.check_output(
-                ['git', 'show', '-s', '--format=%ct', 'HEAD'], cwd=task.script_location).decode('utf-8'))
+                ['git', 'show', '-s', '--format=%ct', 'HEAD'], cwd=task.script_location).decode('utf-8').strip())
         stamp += '~pre'
         stamp += (
             datetime.datetime.utcfromtimestamp(timestamp)
