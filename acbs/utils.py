@@ -166,7 +166,20 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
         f.write(footer.encode())
         if signal_status or exit_status:
             raise RuntimeError('autobuild4 did not exit successfully.')
+        
+def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, package_name: str):
+    process = pexpect.spawn('autobuild', args=["-p"], env=env, encoding='utf-8')
+    process.expect(pexpect.EOF)
 
+    path = ''
+    if script_location.split('/')[-1] == 'autobuild':
+        path = os.path.join(script_location, '..', '.srcinfo.json')
+    else:
+        path = os.path.join(script_location, '..', f'.srcinfo-{package_name}.json')
+
+    with open(path, 'w') as f:
+        f.write(process.before)
+        logging.info(f".srcinfo.json is save to: {path}")
 
 def generate_metadata(task: ACBSPackageInfo) -> str:
     tree_commit = 'unknown\n'
@@ -228,7 +241,7 @@ def check_artifact(name: str, build_dir: str):
         'STOP! Autobuild3 malfunction detected! Returned zero status with no artifact.')
 
 
-def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool):
+def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool, generate_pkg_metadata: bool):
     dst_dir = os.path.join(build_dir, 'autobuild')
     if os.path.exists(dst_dir) and task.group_seq > 1:
         shutil.rmtree(dst_dir)
@@ -254,7 +267,10 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool):
         f.write(generate_metadata(task))
     os.chdir(build_dir)
     if build_logging:
-        start_build_capture(env_dict, build_dir)
+        if not generate_pkg_metadata:
+            start_build_capture(env_dict, build_dir)
+        else:
+            start_general_autobuild_metadata(env_dict, task.script_location, task.name)
         return
     logging.warning(
         'Build logging not available due to pexpect not installed.')

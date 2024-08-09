@@ -52,6 +52,8 @@ def main() -> None:
     parser.add_argument('-z', '--temp-dir', nargs=1, dest='acbs_temp_dir',
                         help='Override temp directory')
     parser.add_argument('--force-use-apt', help="Only use apt to install dependency", action="store_true", dest="force_use_apt")
+    parser.add_argument('--generate-package-metadata', help="Generate package metadata", action="store_true", dest="generate_pkg_metadata")
+
 
     args = parser.parse_args()
     if args.acbs_temp_dir:
