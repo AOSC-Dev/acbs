@@ -99,6 +99,8 @@ class BuildCore(object):
         self.reorder = args.reorder
         self.save_list = args.save_list
         self.force_use_apt = args.force_use_apt
+        self.generate_pkg_metadata = args.generate_pkg_metadata
+
         # static vars
         self.autobuild_conf_dir = AUTOBUILD_CONF_DIR
         self.conf_dir = CONF_DIR
@@ -302,7 +304,7 @@ class BuildCore(object):
             source_name = task.name
             if task.base_slug:
                 source_name = os.path.basename(task.base_slug)
-            if not has_stamp(task.build_location):
+            if not has_stamp(task.build_location) and not self.generate_pkg_metadata:
                 fetch_source(task.source_uri, self.dump_dir, source_name)
             if self.dl_only:
                 if self.generate:
@@ -317,11 +319,13 @@ class BuildCore(object):
             if not task.build_location:
                 build_dir = make_build_dir(self.tmp_dir)
                 task.build_location = build_dir
-                process_source(task, source_name)
+                if not self.generate_pkg_metadata:
+                    process_source(task, source_name)
             else:
                 # First sub-package in a meta-package
                 if not has_stamp(task.build_location):
-                    process_source(task, source_name)
+                    if not self.generate_pkg_metadata:
+                        process_source(task, source_name)
                     Path(os.path.join(task.build_location, '.acbs-stamp')).touch()
                 build_dir = task.build_location
             if task.subdir:
@@ -332,23 +336,25 @@ class BuildCore(object):
                     raise RuntimeError(
                         'Could not determine sub-directory, please specify manually.')
                 build_dir = os.path.join(build_dir, subdir)
-            if task.installables:
+            if task.installables and not self.generate_pkg_metadata:
                 logging.info('Installing dependencies from repository...')
                 install_from_repo(task.installables, self.force_use_apt)
             start = time.monotonic()
             task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
             try:
                 scoped_stage2 = ACBSPackageInfo.is_in_stage2(task.modifiers) | self.stage2
-                invoke_autobuild(task, build_dir, scoped_stage2)
-                check_artifact(task.name, build_dir)
+                invoke_autobuild(task, build_dir, scoped_stage2, self.generate_pkg_metadata)
+                if not self.generate_pkg_metadata:
+                    check_artifact(task.name, build_dir)
             except Exception:
                 # early printing of build summary before exploding
                 print_build_timings(build_timings, packages[idx:], time.monotonic() - start)
                 raise RuntimeError(
                     f'Build directory of the failed package: {build_dir}')
-            build_timings.append((task_name, time.monotonic() - start))
-            ciel_invalidate_cache()
-            ciel_wait_for_refresh()
+            if not self.generate_pkg_metadata:
+                build_timings.append((task_name, time.monotonic() - start))
+                ciel_invalidate_cache()
+                ciel_wait_for_refresh()
 
     def acbs_except_hdr(self, type_, value, tb):
         logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
