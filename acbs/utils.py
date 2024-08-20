@@ -188,7 +188,7 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
             ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8').strip()
     except subprocess.CalledProcessError as ex:
         logging.warning(f'Could not determine tree commit: {ex}')
-    return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}'
+    return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}\n'
 
 
 def generate_version_stamp(task: ACBSPackageInfo) -> str:
