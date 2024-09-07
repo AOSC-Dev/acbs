@@ -217,7 +217,7 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
         )
         stamp += 'Z'
         if dirty:
-            stamp += '-dirty'
+            stamp += '~dirty'
         logging.info(f'Using version stamp: {stamp}')
         return stamp
     except subprocess.CalledProcessError as ex:
