@@ -182,7 +182,7 @@ def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, 
     logging.info(f".srcinfo.json is save to: {path}")
 
 def generate_metadata(task: ACBSPackageInfo) -> str:
-    tree_commit = 'unknown\n'
+    tree_commit = 'unknown'
     try:
         tree_commit = subprocess.check_output(
             ['git', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8').strip()
