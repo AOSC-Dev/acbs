@@ -1,7 +1,11 @@
+import http.client
 import logging
 import os
 import shutil
 import subprocess
+import json
+import re
+
 from typing import Callable, Dict, List, Optional, Tuple
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
@@ -67,25 +71,31 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
         if not info.chksum[1] and not generate_mode:
             raise ValueError('No checksum found. Please specify the checksum!')
         full_path = os.path.join(source_location, filename)
-        flag_path = os.path.join(source_location, f'{filename}.dl')
-        if os.path.exists(full_path) and not os.path.exists(flag_path):
-            info.source_location = full_path
-            return info
         try:
-            # `touch ${flag_path}`, some servers may not support Range, so this is to ensure
-            # if the download has finished successfully, we don't overwrite the downloaded file
-            with open(flag_path, 'wb') as f:
-                f.write(b'')
-            subprocess.check_call(
-                ['wget', '-c', info.url, '-O', full_path])
+            wget_download(info.url, full_path)
             info.source_location = full_path
-            os.unlink(flag_path)  # delete the flag
             return info
         except Exception:
             raise AssertionError('Failed to fetch source with Wget!')
         return None
     return None
 
+
+def wget_download(url: str, full_path: str):
+    flag_path = full_path + ".dl"
+    if os.path.exists(full_path) and not os.path.exists(flag_path):
+        return
+    try:
+        # `touch ${flag_path}`, some servers may not support Range, so this is to ensure
+        # if the download has finished successfully, we don't overwrite the downloaded file
+        with open(flag_path, 'wb') as f:
+            f.write(b'')
+        subprocess.check_call(
+            ['wget', '-c', url, '-O', full_path])
+        os.unlink(flag_path)  # delete the flag
+        return
+    except Exception:
+        raise AssertionError('Failed to fetch source with Wget!')
 
 def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: str, decompress=True) -> None:
     info = package.source_uri[index]
@@ -113,6 +123,40 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
 
 def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
     return tarball_processor_innner(package, index, source_name)
+
+
+def pypi_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
+    # GET https://pypi.org/pypi/<project_name>/<version>/json
+    api = "/pypi/{}/{}/json".format(info.url, info.revision)
+    conn = http.client.HTTPSConnection("pypi.org")
+    conn.request("GET", api)
+    response = conn.getresponse()
+    if response.status != 200:
+        raise RuntimeError("Failed to query PyPI API endpoint")
+    result = json.load(response)
+
+    actual_url = ""
+    for r in result["urls"]:
+        if r["packagetype"] == "sdist":
+            actual_url = r["url"]
+            break
+    if actual_url == "":
+        raise RuntimeError("Can't find source URL")
+    
+    regex = r"\.tar\.([a-zA-Z]+)$"
+    matches = re.findall(regex, actual_url)
+    if len(matches) != 1:
+        raise RuntimeError("Can't determine source code compression mode")
+    compression = matches[0]
+
+    full_path = os.path.join(source_location, name)
+    try:
+        wget_download(actual_url, full_path)
+        info.source_location = full_path
+        return info
+    except Exception:
+        raise AssertionError('Failed to fetch source with Wget!')
+    return None
 
 
 def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
@@ -303,5 +347,6 @@ handlers: Dict[str, pair_signature] = {
     'FOSSIL': (fossil_fetch, fossil_processor),
     'TARBALL': (tarball_fetch, tarball_processor),
     'FILE': (tarball_fetch, blob_processor),
+    'PYPI': (pypi_fetch, tarball_processor),
     'NONE': (dummy_fetch, dummy_processor),
 }

@@ -72,6 +72,8 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             acbs_source_info.use_url_name = v.strip() == 'true'
         elif k == 'commit':
             acbs_source_info.revision = v.strip()
+        elif k == 'version':
+            acbs_source_info.revision = v.strip()
         elif k == 'copy-repo':
             acbs_source_info.copy_repo = v.strip() == 'true'
         elif k == 'submodule':
