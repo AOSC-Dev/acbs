@@ -355,7 +355,7 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
     sums = []
     formatter = ' ' if len(info) < 2 else ' \\\n         '
     for i in info:
-        if i.type in ('tarball', 'file'):
+        if i.type in ('tarball', 'file', 'pypi'):
             i = calculate_checksum(i)
             sums.append('::'.join(i.chksum))
         else:
