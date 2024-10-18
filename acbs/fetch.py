@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 import json
-import re
 
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -103,8 +102,14 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
         raise ValueError('Where is the source file?')
     logging.info('Computing %s checksum for %s...' % (info.chksum, info.source_location))
     check_hash_hashlib(info.chksum, info.source_location)
+
     server_filename = os.path.basename(info.url)
     extension = guess_extension_name(server_filename)
+    if len(extension) == 0:
+        # also guess from downloaded file name
+        # pypi (maybe other fetcher) use tarball processor, but has no file extension in info.url
+        extension = guess_extension_name(info.source_location)
+
     # this name is used in the build directory (will be seen by the build scripts)
     # the name will be, e.g. 'acbs-0.1.0.tar.gz'
     facade_name = info.source_name or '{name}-{version}{index}{extension}'.format(
@@ -126,12 +131,14 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
 
 
 def pypi_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
-    # GET https://pypi.org/pypi/<project_name>/<version>/json
-    api = "/pypi/{}/{}/json".format(info.url, info.revision)
+    # https://warehouse.pypa.io/api-reference/json.html#release
+    api = f"/pypi/{info.url}/{info.revision}/json"
+    logging.info(f"Querying PyPI API endpoint for source URL...")
     conn = http.client.HTTPSConnection("pypi.org")
     conn.request("GET", api)
     response = conn.getresponse()
     if response.status != 200:
+        logging.error(f"Got response {response.status}")
         raise RuntimeError("Failed to query PyPI API endpoint")
     result = json.load(response)
 
@@ -142,14 +149,10 @@ def pypi_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optiona
             break
     if actual_url == "":
         raise RuntimeError("Can't find source URL")
-    
-    regex = r"\.tar\.([a-zA-Z]+)$"
-    matches = re.findall(regex, actual_url)
-    if len(matches) != 1:
-        raise RuntimeError("Can't determine source code compression mode")
-    compression = matches[0]
+    logging.info(f"Source URL is {actual_url}")
 
-    full_path = os.path.join(source_location, name)
+    ext = guess_extension_name(actual_url)
+    full_path = os.path.join(source_location, name + ext)
     try:
         wget_download(actual_url, full_path)
         info.source_location = full_path
