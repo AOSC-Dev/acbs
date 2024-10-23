@@ -131,25 +131,8 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
 
 
 def pypi_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
-    # https://warehouse.pypa.io/api-reference/json.html#release
-    api = f"/pypi/{info.url}/{info.revision}/json"
-    logging.info(f"Querying PyPI API endpoint for source URL...")
-    conn = http.client.HTTPSConnection("pypi.org")
-    conn.request("GET", api)
-    response = conn.getresponse()
-    if response.status != 200:
-        logging.error(f"Got response {response.status}")
-        raise RuntimeError("Failed to query PyPI API endpoint")
-    result = json.load(response)
-
-    actual_url = ""
-    for r in result["urls"]:
-        if r["packagetype"] == "sdist":
-            actual_url = r["url"]
-            break
-    if actual_url == "":
-        raise RuntimeError("Can't find source URL")
-    logging.info(f"Source URL is {actual_url}")
+    pfx = info.url[0]
+    actual_url = f"https://pypi.io/packages/source/{pfx}/{info.url}/{info.url}-{info.revision}.tar.gz"
 
     ext = guess_extension_name(actual_url)
     full_path = os.path.join(source_location, name + ext)
