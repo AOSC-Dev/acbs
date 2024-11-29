@@ -24,6 +24,7 @@ from acbs.utils import (
     ACBSLogFormatter,
     ACBSLogPlainFormatter,
     check_artifact,
+    detect_nspawn,
     full_line_banner,
     generate_checksums,
     guess_subdir,
@@ -39,6 +40,12 @@ from acbs.utils import (
 
 
 CIEL_LOCK_PATH = '/debs/fresh.lock'
+
+# Git config to treat the ABBS tree as "safe directory".
+GIT_CONFIG_SAFEDIR = """
+[safe]
+\tdirectory = /tree
+"""
 
 def ciel_invalidate_cache():
     logging.info('Asking ciel to refresh repository...')
@@ -148,6 +155,14 @@ class BuildCore(object):
                     raise ValueError('Tree not found!')
             else:
                 raise Exception('forest.conf not found')
+
+        # Install a git config file to allow dubious ownership in /tree.
+        if detect_nspawn():
+            try:
+                with open("/root/.gitconfig", 'w+') as f:
+                    f.writelines(GIT_CONFIG_SAFEDIR)
+            except Exception as e:
+                logging.warning("Unable to install git config file: {}, skipping.".format(e))
 
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
