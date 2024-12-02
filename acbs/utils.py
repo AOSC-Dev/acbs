@@ -438,16 +438,3 @@ class ACBSLogPlainFormatter(logging.Formatter):
                               logging.INFO, logging.DEBUG):
             record.msg = f'[{lvl_map[record.levelname]}]: {record.msg}'
         return super(ACBSLogFormatter, self).format(record)
-
-def detect_nspawn() -> bool:
-    try:
-        with open("/run/systemd/container", "r") as f:
-            content = f.readline()
-            if content.strip() == "systemd-nspawn":
-                return True
-    except FileNotFoundError:
-        return False
-    except Exception as e:
-        logging.warning("Unable to detect containerization: {}, assuming false.".format(e))
-        return False
-    return False
