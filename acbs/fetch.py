@@ -6,6 +6,7 @@ import subprocess
 import json
 
 from typing import Callable, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib, hash_url
@@ -82,8 +83,14 @@ def tarball_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Opti
 
 def wget_download(url: str, full_path: str):
     flag_path = full_path + ".dl"
+    url_info = urlparse(url)
     if os.path.exists(full_path) and not os.path.exists(flag_path):
         return
+    if url_info.hostname.endswith('sourceforge.net'): # type: ignore # url_info is a urlparse() returned ParseResult, url_info.path type is always string.
+        if url_info.path.endswith('/download') or (url_info.hostname == 'downloads.sourceforge.net'):
+            url = url_info._replace(query='failedmirror=cyfuture.dl.sourceforge.net').geturl()
+        else:
+            url = url_info._replace(query='failedmirror=cyfuture.dl.sourceforge.net', path=url_info.path+'/download').geturl()
     try:
         # `touch ${flag_path}`, some servers may not support Range, so this is to ensure
         # if the download has finished successfully, we don't overwrite the downloaded file
