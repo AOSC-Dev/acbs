@@ -47,7 +47,7 @@ def validate_package_name(package_name: str) -> bool:
     return re.match(r'^[a-z0-9][a-z0-9\-+\.]*$', package_name) is not None
 
 
-def guess_extension_name_from_contents(filename: str) -> str:
+def guess_extension_name_from_contents(filename: str) -> Optional[str]:
     from acbs import magic
     checker = magic.open(magic.MAGIC_MIME_TYPE)
     result = checker.file(filename)
