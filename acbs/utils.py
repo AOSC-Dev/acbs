@@ -47,6 +47,23 @@ def validate_package_name(package_name: str) -> bool:
     return re.match(r'^[a-z0-9][a-z0-9\-+\.]*$', package_name) is not None
 
 
+def guess_extension_name_from_contents(filename: str) -> str:
+    from acbs import magic
+    checker = magic.open(magic.MAGIC_MIME_TYPE)
+    result = checker.file(filename)
+    mime_type = result.decode('utf-8').split(';')[0]
+    return {
+        "application/zip": "zip",
+        "application/gzip": "gz",
+        "application/x-xz": "xz",
+        "application/vnd.rar": "rar",
+        "application/vnd.debian.binary-package": "deb",
+        "application/x-7z-compressed": "7z",
+        "application/x-xar": "xar",
+        "application/x-cpio": "cpio",
+    }.get(mime_type)
+
+
 def guess_extension_name(filename: str) -> str:
     """
     Guess extension name based on filename
@@ -69,7 +86,10 @@ def guess_extension_name(filename: str) -> str:
                 break
         # no extension name?
         if not extensions:
-            return ''
+            try:
+                return guess_extension_name_from_contents(filename) or ''
+            except Exception:
+                return ''
         else:
             # strip out query parameters
             extension = extensions.split('?', 1)[0]

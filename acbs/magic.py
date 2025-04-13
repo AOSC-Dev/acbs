@@ -38,7 +38,7 @@ class fakeMagic(object):
 
     def __init__(self):
         self.flags = []
-        self.cmd_args = ['file', '-b']
+        self.cmd_args = []
         return
 
     def magic_open(self, flags=[]) -> None:
@@ -46,6 +46,7 @@ class fakeMagic(object):
         return
 
     def add_cmds(self) -> None:
+        self.cmd_args = ['file', '-b']
         if (self.flags & MAGIC_MIME):
             self.cmd_args.append('-i')
         elif (self.flags & MAGIC_MIME_TYPE):
@@ -61,7 +62,7 @@ class fakeMagic(object):
     def file(self, *args) -> bytes:
         self.add_cmds()
         self.cmd_args.append(*args)
-        return subprocess.check_output(self.cmd_args)
+        return subprocess.check_output(self.cmd_args).strip()
 
 
 mgc = fakeMagic()
