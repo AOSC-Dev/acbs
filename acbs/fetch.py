@@ -97,7 +97,7 @@ def wget_download(url: str, full_path: str):
         with open(flag_path, 'wb') as f:
             f.write(b'')
         subprocess.check_call(
-            ['wget', '-c', url, '-O', full_path])
+            ['wget', '--connect-timeout=20', '-c', url, '-O', full_path])
         os.unlink(flag_path)  # delete the flag
         return
     except Exception:
