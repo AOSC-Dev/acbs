@@ -86,8 +86,8 @@ def wget_download(url: str, full_path: str):
     url_info = urlparse(url)
     if os.path.exists(full_path) and not os.path.exists(flag_path):
         return
-    if url_info.hostname.endswith('sourceforge.net'): # type: ignore # url_info is a urlparse() returned ParseResult, url_info.path type is always string.
-        if url_info.path.endswith('/download') or (url_info.hostname == 'downloads.sourceforge.net'):
+    if url_info.hostname == 'sourceforge.net':
+        if url_info.path.endswith('/download'):
             url = url_info._replace(query='failedmirror=cyfuture.dl.sourceforge.net').geturl()
         else:
             url = url_info._replace(query='failedmirror=cyfuture.dl.sourceforge.net', path=url_info.path+'/download').geturl()
