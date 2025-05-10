@@ -38,7 +38,7 @@ setup(
     url="https://github.com/AOSC-Dev/acbs",
     packages=find_packages(),
     install_requires=[
-        "pyparsing>=2.4,<3"
+        "pyparsing>=2.4,<4"
     ],
     extras_require={
         "Build logging": ["pexpect"]
