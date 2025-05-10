@@ -28,7 +28,9 @@ def fetch_source(info: List[ACBSSourceInfo], source_location: str, package_name:
         # in generate mode, we need to fetch all the sources
         if not i.enabled and not generate_mode:
             logging.info(f'Source {count} skipped.')
-        url_hash = hash_url(i.url)
+        # special handling for PyPI type
+        url = i.url if i.type != "pypi" else f"pypi://{i.url}/{i.revision}"
+        url_hash = hash_url(url)
         fetch_source_inner(i, source_location, url_hash)
     return None
 
