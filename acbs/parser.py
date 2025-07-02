@@ -130,8 +130,10 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     spec_location = os.path.join(location, '..', 'spec')
     with open(defines_location, 'rt') as f:
         var = bashvar.eval_bashvar(f.read(), filename=defines_location)
+        assert isinstance(var, dict)
     with open(spec_location, 'rt') as f:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
+        assert isinstance(spec_var, dict)
     fail_arch = var.get('FAIL_ARCH')
     fail_arch_re: Optional[re.Pattern] = None
     if fail_arch:
@@ -152,7 +154,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     deps: str = (var.get('PKGDEP') or '') if deps_arch is None else deps_arch
     builddeps_arch: Optional[str] = var.get('BUILDDEP__{arch}'.format(
         arch=arch.upper()))
-    builddeps: str = var.get(
+    builddeps = var.get(
         'BUILDDEP') if builddeps_arch is None else builddeps_arch
     deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies

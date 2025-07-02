@@ -19,7 +19,7 @@ from acbs.deps import prepare_for_reorder, tarjan_search
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
 from acbs.parser import check_buildability, get_deps_graph, get_tree_by_name
-from acbs.pm import install_from_repo
+from acbs.pm import install_from_repo, enable_reorder_mode
 from acbs.utils import (
     ACBSLogFormatter,
     ACBSLogPlainFormatter,
@@ -161,7 +161,7 @@ class BuildCore(object):
             str_handler.setFormatter(ACBSLogFormatter())
         logger.addHandler(str_handler)
         log_file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(self.log_dir, 'acbs-build.log'), mode='a', maxBytes=2e5, backupCount=3)
+            os.path.join(self.log_dir, 'acbs-build.log'), mode='a', maxBytes=int(2e5), backupCount=3)
         log_file_handler.setLevel(file_verbosity)
         log_file_handler.setFormatter(logging.Formatter(
             '%(asctime)s:%(levelname)s:%(message)s'))
@@ -184,7 +184,7 @@ class BuildCore(object):
             logging.info("Life-cycle: currently running in stage2 mode.")
         # begin finding and resolving dependencies
         logging.info('Searching and resolving dependencies...')
-        acbs.pm.reorder_mode = self.reorder
+        enable_reorder_mode(self.reorder)
         for n, i in enumerate(self.build_queue):
             i, modifiers = self.strip_modifiers(i)
             if not validate_package_name(i):

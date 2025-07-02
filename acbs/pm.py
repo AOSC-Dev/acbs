@@ -1,7 +1,7 @@
 import logging
 import re
 import subprocess
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from acbs.base import ACBSPackageInfo
 from acbs.utils import get_arch_name
@@ -18,6 +18,15 @@ try:
         raise ImportError('Initialization failure.')
 except ImportError:
     use_native_bindings = False
+    apt_init_system = None
+    apt_check_if_available = None
+
+
+def enable_reorder_mode(enable: Optional[bool]=None) -> bool:
+    global reorder_mode
+    if enable is not None:
+        reorder_mode = enable
+    return reorder_mode
 
 
 def filter_dependencies(package: ACBSPackageInfo) -> ACBSPackageInfo:
@@ -72,6 +81,7 @@ def check_if_installed(name: str) -> bool:
     if cached is not None:
         return cached
     if use_native_bindings:
+        assert callable(apt_check_if_available)
         logging.debug('... using libapt-pkg')
         result = apt_check_if_available(name)
         if result == 0:
@@ -105,6 +115,7 @@ def check_if_available(name: str) -> bool:
     if cached is not None:
         return cached
     if use_native_bindings:
+        assert callable(apt_check_if_available)
         logging.debug('... using libapt-pkg')
         if apt_check_if_available(name) != 1:
             return False
@@ -155,7 +166,7 @@ def install_from_repo_oma(packages: List[str]) -> bool:
     command.extend(packages)
     try:
         subprocess.check_call(command)
-    except:
+    except subprocess.CalledProcessError:
         logging.warning(
             'Failed to use oma install dependencies, fallbacking to apt...')
         return False

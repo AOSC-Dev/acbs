@@ -5,11 +5,14 @@ from pyparsing import ParseException  # type: ignore
 from acbs import bashvar
 from acbs.const import AUTOBUILD_CONF_DIR
 
+from typing import Optional
+
 
 def is_in_stage2_file(abcfg_path: str) -> bool:
     with open(abcfg_path) as f:
         vars = bashvar.eval_bashvar(f.read(), filename=abcfg_path)
-        stage2_val: str = vars.get('ABSTAGE2')
+        assert isinstance(vars, dict)
+        stage2_val: Optional[str] = vars.get('ABSTAGE2')
         return stage2_val == '1'
     return False
 

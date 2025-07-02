@@ -8,7 +8,9 @@ import subprocess
 import tempfile
 import warnings
 
-import pyparsing as pp  # type: ignore
+import pyparsing as pp
+
+from typing import List, Optional, OrderedDict
 
 pp.ParserElement.enablePackrat()
 
@@ -158,9 +160,9 @@ def combine_value(tokens, variables):
     return ''.join(val)
 
 
-def eval_bashvar_literal(source):
+def eval_bashvar_literal(source: str):
     parsed = bashvarfile.parseString(source, parseAll=True)
-    variables = collections.OrderedDict()
+    variables: OrderedDict[str, str] = collections.OrderedDict()
     for line in parsed:
         if not line:
             continue
@@ -183,9 +185,9 @@ def uniq(seq):  # Dave Kirby
     return [x for x in seq if x not in seen and not seen.add(x)]
 
 
-def eval_bashvar_ext(source, filename=None):
+def eval_bashvar_ext(source: str, filename: Optional[str]=None):
     # we don't specify encoding here because the env will do.
-    var = []
+    var: List[str] = []
     stdin = []
     for ln in source.splitlines(True):
         match = re_variable.match(ln)
@@ -205,13 +207,13 @@ def eval_bashvar_ext(source, filename=None):
     if errs:
         warnings.warn(errs.decode('utf-8', 'backslashreplace').rstrip(),
                       BashErrorWarning)
-    lines = [l.replace('\\n', '\n') for l in outs.decode('utf-8').splitlines()]
+    lines = [line.replace('\\n', '\n') for line in outs.decode('utf-8').splitlines()]
     if len(var) != len(lines) and not errs:
         warnings.warn('bash output not expected', BashErrorWarning)
     return collections.OrderedDict(zip(var, lines))
 
 
-def eval_bashvar(source: str, filename=None, msg=False):
+def eval_bashvar(source: str, filename: Optional[str]=None, msg=False):
     with warnings.catch_warnings(record=True) as wns:
         try:
             ret = eval_bashvar_literal(source)
