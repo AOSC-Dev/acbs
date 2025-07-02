@@ -37,11 +37,11 @@ MAGIC_NO_CHECK_BUILTIN = NO_CHECK_BUILTIN = 4173824
 class fakeMagic(object):
 
     def __init__(self):
-        self.flags = []
+        self.flags = 0
         self.cmd_args = []
         return
 
-    def magic_open(self, flags=[]) -> None:
+    def magic_open(self, flags=0) -> None:
         self.flags = flags
         return
 

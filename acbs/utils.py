@@ -27,10 +27,10 @@ try:
     import pexpect  # type: ignore
     build_logging = True
 except ImportError:
-    pass
+    pexpect = None
 
-chksum_pattern = r"CHKSUM(?:S)?=['\"].*?['\"]"
-tarball_pattern = r'\.(tar\..+|cpio\..+)'
+chksum_pattern = re.compile(r"CHKSUM(?:S)?=['\"].*?['\"]")
+tarball_pattern = re.compile(r'\.(tar\..+|cpio\..+)')
 SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
                 if v.startswith('SIG') and not v.startswith('SIG_'))
 
@@ -168,7 +168,8 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
         logging.info(f'Build log: {f.name}')
         header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n'
         f.write(header.encode())
-        process = pexpect.spawn('autobuild', logfile=f, env=env)
+        assert pexpect
+        process = pexpect.spawn('autobuild', logfile=f, env=env)  # type: ignore
         term_size = shutil.get_terminal_size()
         # we need to adjust the pseudo-terminal size to match the actual screen size
         process.setwinsize(rows=term_size.lines,
@@ -189,8 +190,7 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
         
 def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, package_name: str, build_dir: str):
     env["AB_WRITE_METADATA"] = "1"
-    process = pexpect.spawn('autobuild', args=["-p"], env=env, encoding='utf-8')
-    process.expect(pexpect.EOF)
+    subprocess.check_call(['autobuild', '-p'], env=env)
 
     path = ''
     if script_location.split('/')[-1] == 'autobuild':
@@ -199,7 +199,7 @@ def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, 
         path = os.path.join(script_location, '..', f'.srcinfo-{package_name}.json')
 
     shutil.copyfile(os.path.join(build_dir, '.srcinfo.json'), path)
-    logging.info(f".srcinfo.json is save to: {path}")
+    logging.info(f".srcinfo.json saved to: {path}")
 
 def generate_metadata(task: ACBSPackageInfo) -> str:
     tree_commit = 'unknown'
@@ -217,7 +217,7 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
         head_ref = subprocess.check_output(
             ['git', '-c', 'safe.directory=/tree', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8').strip()
         if head_ref == 'refs/heads/stable':
-            logging.info(f'Using no version stamp')
+            logging.info('Using no version stamp')
             return ''
 
         dirty = len(subprocess.check_output(
@@ -457,4 +457,4 @@ class ACBSLogPlainFormatter(logging.Formatter):
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
             record.msg = f'[{lvl_map[record.levelname]}]: {record.msg}'
-        return super(ACBSLogFormatter, self).format(record)
+        return super(ACBSLogPlainFormatter, self).format(record)

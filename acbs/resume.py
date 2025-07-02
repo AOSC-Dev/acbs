@@ -53,7 +53,7 @@ def do_resume_checkpoint(filename: str, args):
             # failed again?
             logging.exception(ex)
             builder.save_checkpoint(build_timings, resumed_packages)
-        print_build_timings(build_timings)
+        print_build_timings(build_timings, [])
 
     state = do_load_checkpoint(filename)
     builder = BuildCore(args)
