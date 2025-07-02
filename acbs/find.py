@@ -3,7 +3,7 @@ import os
 from typing import Dict, List, Optional
 
 from acbs.const import TMP_DIR
-from acbs.parser import ACBSPackageInfo, ACBSSourceInfo, parse_package
+from acbs.parser import ACBSPackageInfo, ACBSSourceInfo, parse_package, check_buildability
 from acbs.utils import make_build_dir
 
 
@@ -48,6 +48,24 @@ def check_package_group(name: str, search_path: str, entry_path: str, modifiers:
     return None
 
 
+def filter_unbuildable_packages(packages: List[ACBSPackageInfo], group_name: Optional[str]=None) -> List[ACBSPackageInfo]:
+    """Filter out packages that are not buildable."""
+    filtered_packages = []
+    unbuildable = []
+    for package in packages:
+        if check_buildability(package):
+            filtered_packages.append(package)
+        else:
+            unbuildable.append(package.name)
+    if unbuildable:
+        logging.warning(
+            "The following packages %swill be skipped as they are not buildable:\n\t%s",
+            f"(in {group_name}) " if group_name else "",
+            " ".join(unbuildable),
+        )
+    return filtered_packages
+
+
 def find_package(name: str, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
     if os.path.isfile(os.path.join(search_path, name)):
         with open(os.path.join(search_path, name), 'rt') as f:
@@ -66,7 +84,7 @@ def find_package(name: str, search_path: str, modifiers: str, tmp_dir: str = TMP
                     f'Package {p} requested in {name} was not found.')
             results.extend(found)
         print()
-        return results
+        return filter_unbuildable_packages(results, group_name=name)
     return find_package_inner(name, search_path, modifiers=modifiers, tmp_dir=tmp_dir)
 
 
