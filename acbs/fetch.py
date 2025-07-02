@@ -142,7 +142,7 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
 def pypi_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     # https://warehouse.pypa.io/api-reference/json.html#release
     api = f"/pypi/{info.url}/{info.revision}/json"
-    logging.info(f"Querying PyPI API endpoint for source URL...")
+    logging.info("Querying PyPI API endpoint for source URL...")
     conn = http.client.HTTPSConnection("pypi.org")
     conn.request("GET", api)
     response = conn.getresponse()
