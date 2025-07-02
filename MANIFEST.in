@@ -1,0 +1,3 @@
+graft tests
+graft completions
+global-exclude *.py[cod]
