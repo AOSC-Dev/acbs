@@ -19,6 +19,7 @@ echo '[-] Testing acbs...'
 if ! command -v autobuild > /dev/null 2>&1; then
     echo '[!] Autobuild3 not detected on your system.'
     echo '[!] Please manually run the following command:'
+    # shellcheck disable=SC2016
     echo 'export PATH="$HOME:/.local/bin/":$PATH'
     exit 0
 fi
