@@ -7,7 +7,7 @@ import signal
 import subprocess
 import tempfile
 import time
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple, cast
 
 from acbs import __version__
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
@@ -24,7 +24,7 @@ from acbs.crypto import check_hash_hashlib_inner
 build_logging = False
 
 try:
-    import pexpect  # type: ignore
+    import pexpect
     build_logging = True
 except ImportError:
     pexpect = None
@@ -169,7 +169,7 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
         header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n'
         f.write(header.encode())
         assert pexpect
-        process = pexpect.spawn('autobuild', logfile=f, env=env)  # type: ignore
+        process = pexpect.spawn('autobuild', logfile=f, env=cast(os._Environ, env))
         term_size = shutil.get_terminal_size()
         # we need to adjust the pseudo-terminal size to match the actual screen size
         process.setwinsize(rows=term_size.lines,

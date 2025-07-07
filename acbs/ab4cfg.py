@@ -1,6 +1,6 @@
 import os
 
-from pyparsing import ParseException  # type: ignore
+from pyparsing import ParseException
 
 from acbs import bashvar
 from acbs.const import AUTOBUILD_CONF_DIR

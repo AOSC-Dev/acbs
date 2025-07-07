@@ -4,7 +4,7 @@ import os
 import pickle
 import tarfile
 import time
-from typing import IO, List, cast
+from typing import List
 
 from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
 from acbs.const import DPKG_DIR
@@ -14,7 +14,7 @@ class Hasher(io.IOBase):
     def __init__(self):
         self.hash_obj = hashlib.new("sha256")
 
-    def write(self, data):
+    def write(self, data: bytes):
         self.hash_obj.update(data)
 
     def hexdigest(self):
@@ -22,10 +22,10 @@ class Hasher(io.IOBase):
 
 
 def checkpoint_spec(package: ACBSPackageInfo) -> str:
-    f = cast(IO[bytes], Hasher())
+    f = Hasher()
     with tarfile.open(mode='w|', fileobj=f) as tar:
         tar.add(os.path.join(package.script_location, '..'))
-    return f.hexdigest()  # type: ignore
+    return f.hexdigest()
 
 
 def checkpoint_dpkg() -> str:
