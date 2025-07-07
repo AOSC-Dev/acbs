@@ -138,12 +138,8 @@ def install_from_repo(packages: List[str], force_use_apt=False):
     if get_arch_name() == "riscv64" or force_use_apt:
         return install_from_repo_apt(packages)
 
-    oma_is_success = install_from_repo_oma(packages)
+    return install_from_repo_oma(packages) or install_from_repo_apt(packages)
 
-    if not oma_is_success:
-        install_from_repo_apt(packages)
-
-    return
 
 def install_from_repo_apt(packages: List[str]):
     logging.debug('Installing %s' % packages)
@@ -159,6 +155,7 @@ def install_from_repo_apt(packages: List[str]):
             'Failed to install dependencies, attempting to correct issues...')
         fix_pm_states(escaped)
     return
+
 
 def install_from_repo_oma(packages: List[str]) -> bool:
     logging.debug('Installing %s from oma' % packages)
