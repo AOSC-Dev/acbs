@@ -213,11 +213,10 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
 
 def generate_version_stamp(task: ACBSPackageInfo) -> str:
     try:
-        stamp = ''
         head_ref = subprocess.check_output(
             ['git', '-c', 'safe.directory=/tree', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8').strip()
         if head_ref == 'refs/heads/stable':
-            logging.info('Using no version stamp')
+            logging.info('Not using pre-release version stamp')
             return ''
 
         dirty = len(subprocess.check_output(
@@ -228,14 +227,10 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
         else:
             timestamp = int(subprocess.check_output(
                 ['git', '-c', 'safe.directory=/tree', 'show', '-s', '--format=%ct', 'HEAD'], cwd=task.script_location).decode('utf-8').strip())
-        stamp += '~pre'
-        stamp += (
+        stamp = (
             datetime.datetime.utcfromtimestamp(timestamp)
-            .isoformat(timespec = 'seconds')
-            .replace(':', '')
-            .replace('-', '')
+            .strftime('~pre%Y%m%dT%H%M%SZ')
         )
-        stamp += 'Z'
         if dirty:
             stamp += '~dirty'
         logging.info(f'Using version stamp: {stamp}')
