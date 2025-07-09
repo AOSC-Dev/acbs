@@ -296,33 +296,6 @@ def dummy_processor(package: ACBSPackageInfo, index: int, source_name: str) -> N
     return None
 
 
-def bzr_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
-    full_path = os.path.join(source_location, name)
-    if not os.path.exists(full_path):
-        subprocess.check_call(['bzr', 'branch', '--no-tree', info.url, full_path])
-    else:
-        logging.info('Updating repository...')
-        subprocess.check_call(['bzr', 'pull'], cwd=full_path)
-    info.source_location = full_path
-    return info
-
-
-def bzr_processor(package: ACBSPackageInfo, index: int, source_name: str) -> None:
-    info = package.source_uri[index]
-    if not info.revision:
-        raise ValueError(
-            'Please specify a specific bzr revision for this package. (BZRCO not defined)')
-    if not info.source_location:
-        raise ValueError('Where is the bzr repository?')
-    checkout_location = os.path.join(package.build_location, info.source_name or source_name)
-    logging.info('Copying bzr repository...')
-    shutil.copytree(info.source_location, checkout_location)
-    logging.info(f'Checking out bzr repository at {info.revision}')
-    subprocess.check_call(
-        ['bzr', 'co', '-r', info.revision], cwd=checkout_location)
-    return None
-
-
 def fossil_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name + '.fossil')
     if not os.path.exists(full_path):
@@ -354,7 +327,6 @@ def fossil_processor(package: ACBSPackageInfo, index: int, source_name: str) -> 
 handlers: Dict[str, pair_signature] = {
     'GIT': (git_fetch, git_processor),
     'SVN': (svn_fetch, svn_processor),
-    'BZR': (bzr_fetch, bzr_processor),
     'HG': (hg_fetch, hg_processor),
     'FOSSIL': (fossil_fetch, fossil_processor),
     'TARBALL': (tarball_fetch, tarball_processor),
