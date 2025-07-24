@@ -163,8 +163,10 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
     else:
+        # filter out dependencies that are prefixed with @AB_ (autobuild special placeholders)
+        deps_iter = filter(lambda d: not d.startswith("@AB_"), deps.split())
         result = ACBSPackageInfo(
-            name=var['PKGNAME'], deps=deps.split(), location=location, source_uri=acbs_source_info)
+            name=var['PKGNAME'], deps=list(deps_iter), location=location, source_uri=acbs_source_info)
     result.bin_arch = var.get('ABHOST') or arch
     release = spec_var.get('REL') or '0'
     result.rel = release
