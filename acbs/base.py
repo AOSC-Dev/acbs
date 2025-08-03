@@ -40,10 +40,12 @@ class ACBSPackageInfo:
     subdir: Optional[str] = None
     fail_arch: Optional[re.Pattern] = None  # fail_arch regex
     bin_arch: str = ''
-    script_location: str = ''  # script location (autobuild directory)
+    script_location: str = field(init=False)  # script location (autobuild directory)
     exported: Dict[str, str] = field(default_factory=dict)  # extra exported variables from spec
     modifiers: str = ''  # modifiers to be applied to the source file/folder (only available in autobuild4)
 
+    def __post_init__(self):
+        self.script_location = self.location
 
     @staticmethod
     def is_in_stage2(modifiers: str) -> bool:
