@@ -178,14 +178,14 @@ def blob_processor(package: ACBSPackageInfo, index: int, source_name: str) -> No
 def git_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     full_path = os.path.join(source_location, name)
     if not os.path.exists(full_path):
-        subprocess.check_call(['git', 'clone', '--bare', '--filter=blob:none', info.url, full_path], env={'GIT_TERMINAL_PROMPT': '1'})
+        subprocess.check_call(['git', 'clone', '--bare', '--filter=blob:none', info.url, full_path], env={'GIT_TERMINAL_PROMPT': '0'})
     else:
         logging.info('Updating repository...')
         # --prune: prune remote-tracking branches no longer on remote
         # --tags: fetch all tags and associated objects
         # --force: force overwrite of local reference
         subprocess.check_call(
-            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune', '--tags', '--force'], cwd=full_path, env={'GIT_TERMINAL_PROMPT': '1'})
+            ['git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*', '--prune', '--tags', '--force'], cwd=full_path, env={'GIT_TERMINAL_PROMPT': '0'})
     info.source_location = full_path
     return info
 
