@@ -10,6 +10,7 @@ import time
 from typing import Dict, List, Optional, Sequence, Tuple, cast
 
 from acbs import __version__
+from acbs.ab4cfg import get_arch_override
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.const import (
     ANSI_BROWN,
@@ -18,6 +19,7 @@ from acbs.const import (
     ANSI_RED,
     ANSI_RST,
     ANSI_YELLOW,
+    AUTOBUILD_CONF_DIR,
 )
 from acbs.crypto import check_hash_hashlib_inner
 
@@ -104,7 +106,11 @@ def get_arch_name() -> Optional[str]:
 
     :returns: architecture name
     """
+    abcfg_path = os.path.join(AUTOBUILD_CONF_DIR, 'ab4cfg.sh')
     try:
+        arch_override = get_arch_override(abcfg_path)
+        if arch_override:
+            return arch_override
         output = subprocess.check_output(['dpkg', '--print-architecture'])
         return output.decode('utf-8').strip()
     except Exception:
