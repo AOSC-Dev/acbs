@@ -130,7 +130,7 @@ def tarball_processor_innner(package: ACBSPackageInfo, index: int, source_name: 
         return
     # decompress
     logging.info(f'Extracting {facade_name}...')
-    subprocess.check_call(['bsdtar', '-xf', facade_name],
+    subprocess.check_call(['bsdtar', '--no-xattrs', '-xf', facade_name],
                           cwd=package.build_location)
     return
 
