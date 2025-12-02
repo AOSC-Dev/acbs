@@ -221,7 +221,7 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
     try:
         head_ref = subprocess.check_output(
             ['git', '-c', 'safe.directory=/tree', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8').strip()
-        if head_ref == 'refs/heads/stable':
+        if '/stable' in head_ref:
             logging.info('Not using pre-release version stamp')
             return ''
 
