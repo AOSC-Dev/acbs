@@ -416,9 +416,11 @@ def fail_arch_regex(expr: str) -> re.Pattern:
                 continue
             elif i == 1 and sup_bracket:
                 regex += '?!'
+        if c == '|' or c == ')':
+            regex += '$'
         regex += c
     if sup_bracket:
-        regex += ')'
+        regex += '$)'
     return re.compile(regex)
 
 

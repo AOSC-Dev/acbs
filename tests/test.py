@@ -75,10 +75,10 @@ class TestParser(unittest.TestCase):
 
     def test_fail_arch(self):
         import re
-        self.assertEqual(re.compile("^(?!amd64)"), fail_arch_regex("!amd64"))
+        self.assertEqual(re.compile("^(?!amd64$)"), fail_arch_regex("!amd64"))
         self.assertEqual(re.compile("^amd64"), fail_arch_regex("amd64"))
-        self.assertEqual(re.compile("^(amd64|arm64)"), fail_arch_regex("(amd64|arm64)"))
-        self.assertEqual(re.compile("^(?!amd64|arm64)"), fail_arch_regex("!(amd64|arm64)"))
+        self.assertEqual(re.compile("^(amd64$|arm64$)"), fail_arch_regex("(amd64|arm64)"))
+        self.assertEqual(re.compile("^(?!amd64$|arm64$)"), fail_arch_regex("!(amd64|arm64)"))
 
     def test_parse_url(self):
         info = parse_url_schema('tbl::https://example.com', 'sha256::123')
