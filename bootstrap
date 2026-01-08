@@ -8,7 +8,7 @@ echo '[-] Installing required dependencies to local user folder...'
 rm -f get-pip.py
 wget https://bootstrap.pypa.io/get-pip.py
 python3 get-pip.py --user
-pip3 install --user pyparsing
+pip3 install --user pyparsing setuptools
 echo '[-] Installing acbs (stage 0)...'
 python3 setup.py install --user
 rm -f get-pip.py
@@ -42,6 +42,8 @@ cat << EOF > /etc/acbs/forest.conf
 [default]
 location = ${ABBSDIR}
 EOF
+echo ABSPLITDBG=0 \
+    >> "${ABBSDIR}"/app-devel/acbs/autobuild/defines
 "$HOME/.local/bin/acbs-build" acbs
 cd ..
 
