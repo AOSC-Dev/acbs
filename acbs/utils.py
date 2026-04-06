@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 import re
@@ -7,7 +8,9 @@ import signal
 import subprocess
 import tempfile
 import time
-from typing import Dict, List, Optional, Sequence, Tuple, cast
+
+from pathlib import Path
+from typing import Dict, List, Optional, Sequence, Tuple, Union, cast
 
 from acbs import __version__
 from acbs.ab4cfg import get_arch_override
@@ -20,6 +23,7 @@ from acbs.const import (
     ANSI_RST,
     ANSI_YELLOW,
     AUTOBUILD_CONF_DIR,
+    AUTOBUILD_DIR,
 )
 from acbs.crypto import check_hash_hashlib_inner
 
@@ -118,6 +122,34 @@ def get_arch_name() -> Optional[str]:
     return None
 
 
+def get_archgroups(arch: Union[str, None]=None) -> List[str]:
+    """
+    Get all defined architecture groups for the host machine
+
+    :param arch: When set, fetches all groups containing the specified arch
+                 instead of the host macnine.
+    :returns: List of the archgroups, such as ['mainline', '64bit'].
+
+    """
+    groups = []
+    if not arch:
+        arch = get_arch_name()
+    if not arch:
+        return groups
+
+    archgroup_path = Path(AUTOBUILD_DIR) / 'sets' / 'arch_groups.json'
+    archgroup_data: dict[str, list[str]] = {}
+    try:
+        fd = open(archgroup_path, 'r')
+        archgroup_data.update(json.load(fd))
+    except Exception as e:
+        logging.warning("Unable to read arch group data from Autobuild4: {}".format(e))
+        return groups
+
+    groups.extend([x for x in archgroup_data.keys() if arch in archgroup_data[x]])
+
+    return groups
+
 def full_line_banner(msg: str, char='-') -> str:
     """
     Print a full line banner with customizable texts
@@ -193,7 +225,7 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
         f.write(footer.encode())
         if signal_status or exit_status:
             raise RuntimeError('autobuild4 did not exit successfully.')
-        
+
 def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, package_name: str, build_dir: str):
     env["AB_WRITE_METADATA"] = "1"
     subprocess.check_call(['autobuild', '-p'], env=env)
