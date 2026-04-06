@@ -3,13 +3,13 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import fail_arch_regex, get_arch_name, tarball_pattern
+from acbs.utils import fail_arch_regex, get_arch_name, get_archgroups, tarball_pattern
 
 generate_mode = False
 
@@ -88,12 +88,25 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
     return acbs_source_info
 
 
+def get_var_arch(context: Dict[str, str], varname) -> Union[str, None]:
+    try_names = []
+    # Try to expand VARNAME__ARCH first.
+    try_names.append('{varname}__{arch}'.format(varname=varname, arch=arch.upper()))
+    # Then try expanding VARNAME__ARCHGROUP, e.g. VARNAME__RETRO.
+    try_names.extend(['{varname}__{group}'.format(varname=varname, group=g.upper()) for g in archgroups])
+    # Then try the VARNAME itself.
+    try_names.append(varname)
+    for try_name in try_names:
+        if try_name in context.keys():
+            return context[try_name]
+
+    return None
+
+
 def parse_package_url(var: Dict[str, str], ignore_empty_srcs: bool) -> List[ACBSSourceInfo]:
     acbs_source_info: List[ACBSSourceInfo] = []
-    sources = var.get('SRCS__{arch}'.format(
-        arch=arch.upper())) or var.get('SRCS')
-    checksums = var.get('CHKSUMS__{arch}'.format(
-        arch=arch.upper())) or var.get('CHKSUMS')
+    sources = get_var_arch(var, 'SRCS')
+    checksums = get_var_arch(var, 'CHKSUMS')
     if var.get('DUMMYSRC') in ['y', 'yes', '1']:
         acbs_source_info.append(ACBSSourceInfo('none', '', ''))
         return acbs_source_info
@@ -148,23 +161,19 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
             # source info parser will fail, as there is no SRCS for current
             # arch.
             ignore_empty_srcs = True
-    deps_arch: Optional[str] = var.get('PKGDEP__{arch}'.format(
-        arch=arch.upper()))
+    deps: Optional[str] = get_var_arch(var, 'PKGDEP')
     # determine whether this is an undefined value or an empty string
-    deps: str = (var.get('PKGDEP') or '') if deps_arch is None else deps_arch
-    builddeps_arch: Optional[str] = var.get('BUILDDEP__{arch}'.format(
-        arch=arch.upper()))
-    builddeps = var.get(
-        'BUILDDEP') if builddeps_arch is None else builddeps_arch
-    deps += ' ' + (builddeps or '')  # add builddep
+    all_deps: str = '' if deps is None else deps
+    builddeps: Optional[str] = get_var_arch(var, 'BUILDDEP')
+    all_deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
     acbs_source_info = parse_package_url(spec_var, ignore_empty_srcs)
-    if not deps:
+    if not all_deps:
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=[], location=location, source_uri=acbs_source_info)
     else:
         # filter out dependencies that are prefixed with @AB_ (autobuild special placeholders)
-        deps_iter = filter(lambda d: not d.startswith("@AB_"), deps.split())
+        deps_iter = filter(lambda d: not d.startswith("@AB_"), all_deps.split())
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=list(deps_iter), location=location, source_uri=acbs_source_info)
     result.bin_arch = var.get('ABHOST') or arch
@@ -233,3 +242,5 @@ arch = os.environ.get('CROSS') or os.environ.get(
     'ARCH') or get_arch_name() or ''
 if not arch:
     raise ValueError('Unable to determine architecture name')
+
+archgroups = get_archgroups(arch)
