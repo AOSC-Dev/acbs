@@ -177,14 +177,14 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=list(deps_iter), location=location, source_uri=acbs_source_info)
     result.bin_arch = var.get('ABHOST') or arch
-    release = spec_var.get('REL') or '0'
+    release = get_var_arch(spec_var, 'REL') or '0'
     result.rel = release
-    version = spec_var.get('VER')
+    version = get_var_arch(spec_var, 'VER')
     if fail_arch:
         result.fail_arch = fail_arch_re
     if version:
         result.version = version
-    subdir = spec_var.get('SUBDIR')
+    subdir = get_var_arch(spec_var, 'SUBDIR')
     if subdir:
         result.subdir = subdir
     epoch = spec_var.get('EPOCH')
