@@ -35,8 +35,8 @@ try:
 except ImportError:
     pexpect = None
 
-chksum_pattern = re.compile(r"CHKSUM(?:S)?=['\"].*?['\"]")
-tarball_pattern = re.compile(r'\.(tar\..+|cpio\..+)')
+chksum_pattern = re.compile(r"CHKSUM(?:S)?=['\"].*?['\"]", flags=re.MULTILINE | re.DOTALL)
+tarball_pattern = re.compile(r'\.(tar\..+|cpio\..+)', flags=re.MULTILINE | re.DOTALL)
 SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
                 if v.startswith('SIG') and not v.startswith('SIG_'))
 
@@ -419,9 +419,8 @@ def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
 def write_checksums(spec: str, checksums: str):
     with open(spec, 'rt') as f:
         content = f.read()
-    if re.search(chksum_pattern, content, re.MULTILINE | re.DOTALL):
-        content = re.sub(chksum_pattern, checksums, content,
-                         flags=re.MULTILINE | re.DOTALL)
+    if re.search(chksum_pattern, content):
+        content = re.sub(chksum_pattern, checksums, content)
     else:
         content = content.rstrip() + "\n" + checksums + "\n"
     with open(spec, 'wt') as f:
