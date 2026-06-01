@@ -159,7 +159,7 @@ def install_from_repo_apt(packages: List[str]):
 
 def install_from_repo_oma(packages: List[str]) -> bool:
     logging.debug('Installing %s from oma' % packages)
-    command = ['OMA_NO_BELL=1', 'OMA_NO_PROGRESS=1', 'OMA_NO_CLEAN=1', 'oma', 'install', '-y', '--force-confnew', '--no-progress', '--force-unsafe-io', '--no-bell']
+    command = ['oma', 'install', '-y', '--force-confnew', '--no-progress', '--force-unsafe-io', '--no-bell']
     command.extend(packages)
     try:
         subprocess.check_call(command)
