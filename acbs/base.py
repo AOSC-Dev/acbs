@@ -1,4 +1,3 @@
-import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -38,7 +37,7 @@ class ACBSPackageInfo:
     version: str = ''
     epoch: str = ''
     subdir: Optional[str] = None
-    fail_arch: Optional[re.Pattern] = None  # fail_arch regex
+    fail_arch: Optional[str] = None  # fail_arch expression
     bin_arch: str = ''
     script_location: str = field(init=False)  # script location (autobuild directory)
     exported: Dict[str, str] = field(default_factory=dict)  # extra exported variables from spec
