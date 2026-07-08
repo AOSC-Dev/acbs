@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
-from acbs.utils import fail_arch_regex, get_arch_name, get_archgroups, tarball_pattern
+from acbs.utils import buildable, get_arch_name, get_archgroups, tarball_pattern
 
 generate_mode = False
 
@@ -148,10 +148,8 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
         assert isinstance(spec_var, dict)
     fail_arch = var.get('FAIL_ARCH')
-    fail_arch_re: Optional[re.Pattern] = None
     if fail_arch:
-        fail_arch_re = fail_arch_regex(fail_arch)
-        if fail_arch_re.match(arch):
+        if not buildable(arch, fail_arch):
             logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
                            'Any encountered empty SRCS will be ignored.')
             # Continue parsing but ignore any source error, since we still
@@ -181,7 +179,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     result.rel = release
     version = get_var_arch(spec_var, 'VER')
     if fail_arch:
-        result.fail_arch = fail_arch_re
+        result.fail_arch = fail_arch
     if version:
         result.version = version
     subdir = get_var_arch(spec_var, 'SUBDIR')
@@ -230,7 +228,7 @@ def get_tree_by_name(filename: str, tree_name) -> str:
 
 
 def check_buildability(package: ACBSPackageInfo, required_by: Optional[str]=None) -> bool:
-    if package.fail_arch and package.fail_arch.match(arch):
+    if package.fail_arch and not buildable(arch, package.fail_arch):
         if required_by:
             raise RuntimeError(f'{package.name} is required by `{required_by}` but is not buildable on `{arch}` (FAIL_ARCH).')
         else:
