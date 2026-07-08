@@ -28,6 +28,8 @@ from acbs.const import (
 from acbs.crypto import check_hash_hashlib_inner
 
 build_logging = False
+INCLUDE = 0
+EXCLUDE = 1
 
 try:
     import pexpect
@@ -428,31 +430,39 @@ def write_checksums(spec: str, checksums: str):
     return
 
 
-def fail_arch_regex(expr: str) -> re.Pattern:
-    regex = '^'
-    negated = False
-    sup_bracket = False
+def fail_arch_regex(expr: str) -> Tuple[int, re.Pattern]:
+    regex = '^('
+
     if len(expr) < 3:
         raise ValueError('Pattern too short.')
-    for i, c in enumerate(expr):
-        if i == 0 and c == '!':
-            negated = True
-            if expr[1] != '(':
-                regex += '('
-                sup_bracket = True
-            continue
-        if negated:
-            if c == '(':
-                regex += '(?!'
-                continue
-            elif i == 1 and sup_bracket:
-                regex += '?!'
-        if c == '|' or c == ')':
-            regex += '$'
-        regex += c
-    if sup_bracket:
-        regex += '$)'
-    return re.compile(regex)
+    mode = EXCLUDE
+    # Perform checks
+    if expr[0] == '!':
+        mode = EXCLUDE
+    elif expr[0] == '@':
+        mode = INCLUDE
+    elif re.search('[(|)]', expr) is not None:
+        raise Exception(f'Invalid FAIL_ARCH expression: "{expr}". Refer to bash(1) § Pattern Matching for details.')
+    else:
+        # Disallow build for one specific archgroup/target.
+        return (INCLUDE, re.compile(f'^{expr}$'))
+    regex += '|'.join(expr[1:].strip('()').split('|'))
+    regex += ')$'
+    return (mode, re.compile(regex))
+
+
+# Check if the package is buildable on current architecture.
+def buildable(arch, exp) -> bool:
+    mode, regex = fail_arch_regex(exp)
+    match_list = get_archgroups(arch)
+    match_list.append(arch)
+    for entry in match_list:
+        if regex.match(entry):
+            if mode == INCLUDE:
+                return False
+            if mode == EXCLUDE:
+                return True
+    return True if mode == INCLUDE else False
 
 
 class ACBSLogFormatter(logging.Formatter):
