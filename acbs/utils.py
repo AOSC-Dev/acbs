@@ -437,11 +437,11 @@ def fail_arch_regex(expr: str) -> Tuple[int, re.Pattern]:
         raise ValueError('Pattern too short.')
     mode = EXCLUDE
     # Perform checks
-    if expr[0] == '!':
+    if expr[0] == '!' and expr[1] == '(':
         mode = EXCLUDE
-    elif expr[0] == '@':
+    elif expr[0] == '@' and expr[1] == '(':
         mode = INCLUDE
-    elif re.search('[(|)]', expr) is not None:
+    elif re.search('[^0-9a-z_-]', expr) is not None or expr[1:].strip('()') == expr:
         raise Exception(f'Invalid FAIL_ARCH expression: "{expr}". Refer to bash(1) § Pattern Matching for details.')
     else:
         # Disallow build for one specific archgroup/target.
