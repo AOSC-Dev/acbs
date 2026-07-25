@@ -148,17 +148,19 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
         assert isinstance(spec_var, dict)
     fail_arch = var.get('FAIL_ARCH')
-    if fail_arch:
-        if not buildable(arch, fail_arch):
-            logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
-                           'Any encountered empty SRCS will be ignored.')
-            # Continue parsing but ignore any source error, since we still
-            # need the complete tree.
-            # There are some packages that use different sources for each
-            # (supported) architectures, but for unbuildable packages the
-            # source info parser will fail, as there is no SRCS for current
-            # arch.
-            ignore_empty_srcs = True
+    if not fail_arch:
+        # We decided to make FAIL_ARCH to allow mainline by default.
+        fail_arch = '!(mainline)'
+    if not buildable(arch, fail_arch):
+        logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
+                'Any encountered empty SRCS will be ignored.')
+        # Continue parsing but ignore any source error, since we still
+        # need the complete tree.
+        # There are some packages that use different sources for each
+        # (supported) architectures, but for unbuildable packages the
+        # source info parser will fail, as there is no SRCS for current
+        # arch.
+        ignore_empty_srcs = True
     deps: Optional[str] = get_var_arch(var, 'PKGDEP')
     # determine whether this is an undefined value or an empty string
     all_deps: str = '' if deps is None else deps
