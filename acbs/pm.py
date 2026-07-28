@@ -1,5 +1,6 @@
 import logging
 import re
+import shutil
 import subprocess
 from typing import Dict, List, Optional
 
@@ -135,7 +136,10 @@ def check_if_available(name: str) -> bool:
 def install_from_repo(packages: List[str], force_use_apt=False):
     # FIXME: RISC-V build hosts is unreliable when using oma: random lock-ups
     # during `oma refresh'. Disabling oma to workaround potential lock-ups.
-    if get_arch_name() == "riscv64" or force_use_apt:
+    oma_exists = False
+    if shutil.which('oma') is not None:
+        oma_exists = True
+    if get_arch_name() == "riscv64" or force_use_apt or not oma_exists:
         return install_from_repo_apt(packages)
 
     return install_from_repo_oma(packages) or install_from_repo_apt(packages)
