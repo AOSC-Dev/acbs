@@ -147,11 +147,12 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     with open(spec_location, 'rt') as f:
         spec_var = bashvar.eval_bashvar(f.read(), filename=spec_location)
         assert isinstance(spec_var, dict)
+    bin_arch = var.get('ABHOST') or arch
     fail_arch = var.get('FAIL_ARCH')
     if not fail_arch:
         # We decided to make FAIL_ARCH to allow mainline by default.
         fail_arch = '!(mainline)'
-    if not buildable(arch, fail_arch):
+    if not buildable(arch, fail_arch) and bin_arch != 'noarch':
         logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
                 'Any encountered empty SRCS will be ignored.')
         # Continue parsing but ignore any source error, since we still
@@ -176,11 +177,11 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         deps_iter = filter(lambda d: not d.startswith("@AB_"), all_deps.split())
         result = ACBSPackageInfo(
             name=var['PKGNAME'], deps=list(deps_iter), location=location, source_uri=acbs_source_info)
-    result.bin_arch = var.get('ABHOST') or arch
+    result.bin_arch = bin_arch
     release = get_var_arch(spec_var, 'REL') or '0'
     result.rel = release
     version = get_var_arch(spec_var, 'VER')
-    if fail_arch:
+    if fail_arch and bin_arch != 'noarch':
         result.fail_arch = fail_arch
     if version:
         result.version = version
