@@ -1,4 +1,3 @@
-import http.client
 import logging
 import os
 import shutil
@@ -6,7 +5,9 @@ import subprocess
 import json
 
 from typing import Callable, Dict, List, Optional, Tuple
+from urllib.error import HTTPError
 from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.crypto import check_hash_hashlib, hash_url
@@ -141,15 +142,14 @@ def tarball_processor(package: ACBSPackageInfo, index: int, source_name: str) ->
 
 def pypi_fetch(info: ACBSSourceInfo, source_location: str, name: str) -> Optional[ACBSSourceInfo]:
     # https://warehouse.pypa.io/api-reference/json.html#release
-    api = f"/pypi/{info.url}/{info.revision}/json"
+    api = f"https://pypi.org/pypi/{info.url}/{info.revision}/json"
     logging.info("Querying PyPI API endpoint for source URL...")
-    conn = http.client.HTTPSConnection("pypi.org")
-    conn.request("GET", api)
-    response = conn.getresponse()
-    if response.status != 200:
-        logging.error(f"Got response {response.status}")
-        raise RuntimeError("Failed to query PyPI API endpoint")
-    result = json.load(response)
+    try:
+        with urlopen(api, timeout=20) as response:
+            result = json.load(response)
+    except HTTPError as exc:
+        logging.error(f"Got response {exc.code}")
+        raise RuntimeError("Failed to query PyPI API endpoint") from exc
 
     actual_url = ""
     for r in result["urls"]:
