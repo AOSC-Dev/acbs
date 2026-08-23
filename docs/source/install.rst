@@ -31,7 +31,7 @@ Requirements
 
 Mandatory dependencies:
 
-* Python 3 (>= 3.6): Running the program itself.
+* Python 3 (>= 3.14): Running the program itself.
 * GNU File (libmagic): File type detection.
 * LibArchive (bsdtar): Archive handling.
 * GNU Wget or Aria2: Source downloading.

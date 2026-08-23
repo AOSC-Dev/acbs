@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.2.0", "pybind11>=2.5.0"]
+requires = ["setuptools>=68.2.0", "pybind11>=3.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages]
@@ -18,7 +18,7 @@ authors = [{ name = "liushuyu", email = "liushuyu@aosc.io" }]
 description = "AOSC CI Building System"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.14"
 dependencies = ["pyparsing>=2.4,<4"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -30,13 +30,13 @@ urls = { "Repository" = "https://github.com/AOSC-Dev/acbs" }
 
 [project.optional-dependencies]
 logging = ["pexpect"]
-dev = ["pyright", "ruff", "setuptools", "pybind11>=2.5.0", "pexpect"]
+dev = ["pyright", "ruff", "setuptools", "pybind11>=3.0.0", "pexpect"]
 
 [tool.ruff]
 line-length = 127
-target-version = "py38"
 [tool.ruff.lint.mccabe]
 max-complexity = 5
 
 [tool.pyright]
+pythonVersion = "3.14"
 exclude = ["build", "dist", "venv", ".venv"]

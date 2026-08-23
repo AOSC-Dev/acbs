@@ -24,7 +24,7 @@ Dependencies
 ------------
 
 Mandatory:
-  - Python 3 (>= 3.6): Running the program itself.
+  - Python 3 (>= 3.14): Running the program itself.
   - GNU File (libmagic): File type detection.
   - Util-Linux: File checksum verification.
   - LibArchive (bsdtar): Archive handling.
