@@ -1,16 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import collections
 import logging
 import re
 import subprocess
 import tempfile
 import warnings
+from collections import OrderedDict
 
 import pyparsing as pp
 
-from typing import List, Optional, OrderedDict
+logger = logging.getLogger(__name__)
 
 pp.ParserElement.enablePackrat()
 
@@ -141,16 +139,13 @@ def combine_value(tokens, variables):
                     var = var[:-len(pattern)] + newstring
             elif exptype[0] == '#':
                 pattern = tokens.get('pattern', '')
-                if var.startswith(pattern):
-                    var = var[len(pattern):]
+                var = var.removeprefix(pattern)
             elif exptype[0] == '%':
                 pattern = tokens.get('pattern', '')
-                if var.endswith(pattern):
-                    var = var[:-len(pattern)]
+                var = var.removesuffix(pattern)
             val += var
         else:
-            warnings.warn('variable "%s" is undefined' %
-                          varname, VariableWarning)
+            warnings.warn(f'variable "{varname}" is undefined', VariableWarning)
     else:
         for tok in tokens:
             if isinstance(tok, str):
@@ -174,7 +169,7 @@ def eval_bashvar_literal(source: str):
                 variables[line['varname']] += val
             else:
                 warnings.warn(
-                    'variable "%s" is undefined' % line['varname'], VariableWarning)
+                    f'variable "{line['varname']}" is undefined', VariableWarning)
                 variables[line['varname']] = val
     return variables
 
@@ -185,9 +180,9 @@ def uniq(seq):  # Dave Kirby
     return [x for x in seq if x not in seen and not seen.add(x)]
 
 
-def eval_bashvar_ext(source: str, filename: Optional[str]=None):
+def eval_bashvar_ext(source: str, filename: str | None=None):
     # we don't specify encoding here because the env will do.
-    var: List[str] = []
+    var: list[str] = []
     stdin = []
     for ln in source.splitlines(True):
         match = re_variable.match(ln)
@@ -198,7 +193,7 @@ def eval_bashvar_ext(source: str, filename: Optional[str]=None):
     var = uniq(var)
     for v in var:
         # workaround variables containing newlines
-        stdin.append('echo "${%s//$\'\\n\'/\\\\n}"\n' % v)
+        stdin.append(f'echo "${{{v}//$\'\\n\'/\\\\n}}"\n')
     with tempfile.TemporaryDirectory() as tmpdir:
         outs, errs = subprocess.Popen(
             ('bash', '-r'), cwd=tmpdir, env={},
@@ -213,7 +208,7 @@ def eval_bashvar_ext(source: str, filename: Optional[str]=None):
     return collections.OrderedDict(zip(var, lines))
 
 
-def eval_bashvar(source: str, filename: Optional[str]=None, msg=False):
+def eval_bashvar(source: str, filename: str | None=None, msg=False):
     with warnings.catch_warnings(record=True) as wns:
         try:
             ret = eval_bashvar_literal(source)
@@ -222,10 +217,10 @@ def eval_bashvar(source: str, filename: Optional[str]=None, msg=False):
         msgs = []
         for w in wns:
             if issubclass(w.category, VariableWarning):
-                logging.debug('%s: %s', filename, w.message)
+                logger.debug('%s: %s', filename, w.message)
             elif issubclass(w.category, BashErrorWarning):
                 msgs.append(str(w.message))
-                logging.error('%s: %s', filename, w.message)
+                logger.error('%s: %s', filename, w.message)
         if msg:
             return ret, '\n'.join(msgs) if msgs else None
         else:

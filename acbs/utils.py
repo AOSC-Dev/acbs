@@ -8,13 +8,14 @@ import signal
 import subprocess
 import tempfile
 import time
-
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import cast
 
 from acbs import __version__
 from acbs.ab4cfg import get_arch_override
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
+from acbs.bashvar import ParseException
 from acbs.const import (
     ANSI_BROWN,
     ANSI_GREEN,
@@ -26,6 +27,8 @@ from acbs.const import (
     AUTOBUILD_DIR,
 )
 from acbs.crypto import check_hash_hashlib_inner
+
+logger = logging.getLogger(__name__)
 
 build_logging = False
 INCLUDE = 0
@@ -39,8 +42,8 @@ except ImportError:
 
 chksum_pattern = re.compile(r"CHKSUM(?:S)?=['\"].*?['\"]", flags=re.MULTILINE | re.DOTALL)
 tarball_pattern = re.compile(r'\.(tar\..+|cpio\..+)', flags=re.MULTILINE | re.DOTALL)
-SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
-                if v.startswith('SIG') and not v.startswith('SIG_'))
+SIGNAMES = {k:v for v, k in sorted(signal.__dict__.items(), reverse=True)
+                if v.startswith('SIG') and not v.startswith('SIG_')}
 
 
 def validate_package_name(package_name: str) -> bool:
@@ -55,7 +58,7 @@ def validate_package_name(package_name: str) -> bool:
     return re.match(r'^[a-z0-9][a-z0-9\-+\.]*$', package_name) is not None
 
 
-def guess_extension_name_from_contents(filename: str) -> Optional[str]:
+def guess_extension_name_from_contents(filename: str) -> str | None:
     from acbs import magic
     checker = magic.open(magic.MAGIC_MIME_TYPE)
     result = checker.file(filename)
@@ -96,7 +99,7 @@ def guess_extension_name(filename: str) -> str:
         if not extensions:
             try:
                 return guess_extension_name_from_contents(filename) or ''
-            except Exception:
+            except (OSError, subprocess.CalledProcessError, UnicodeDecodeError):
                 return ''
         else:
             # strip out query parameters
@@ -106,7 +109,7 @@ def guess_extension_name(filename: str) -> str:
     return extension
 
 
-def get_arch_name() -> Optional[str]:
+def get_arch_name() -> str | None:
     """
     Detect architecture of the host machine
 
@@ -115,16 +118,18 @@ def get_arch_name() -> Optional[str]:
     abcfg_path = os.path.join(AUTOBUILD_CONF_DIR, 'ab4cfg.sh')
     try:
         arch_override = get_arch_override(abcfg_path)
-        if arch_override:
-            return arch_override
-        output = subprocess.check_output(['dpkg', '--print-architecture'])
-        return output.decode('utf-8').strip()
-    except Exception:
+    except (OSError, ParseException):
+        arch_override = None
+    if arch_override:
+        return arch_override
+    try:
+        output = subprocess.check_output(['dpkg', '--print-architecture'], text=True)
+        return output.strip()
+    except (OSError, subprocess.CalledProcessError):
         return None
-    return None
 
 
-def get_archgroups(arch: Union[str, None]=None) -> List[str]:
+def get_archgroups(arch: str | None=None) -> list[str]:
     """
     Get all defined architecture groups for the host machine
 
@@ -142,13 +147,17 @@ def get_archgroups(arch: Union[str, None]=None) -> List[str]:
     archgroup_path = Path(AUTOBUILD_DIR) / 'sets' / 'arch_groups.json'
     archgroup_data: dict[str, list[str]] = {}
     try:
-        fd = open(archgroup_path, 'r')
-        archgroup_data.update(json.load(fd))
-    except Exception as e:
-        logging.warning("Unable to read arch group data from Autobuild4: {}".format(e))
+        with open(archgroup_path, 'r') as fp:
+            data = json.load(fp)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        logger.warning(f"Unable to read arch group data from Autobuild4: {exc}")
         return groups
+    if not isinstance(data, dict):
+        logger.warning("Invalid arch group data from Autobuild4: expected a JSON object")
+        return groups
+    archgroup_data.update(data)
 
-    groups.extend([x for x in archgroup_data.keys() if arch in archgroup_data[x]])
+    groups.extend([x for x in archgroup_data if arch in archgroup_data[x]])
 
     return groups
 
@@ -161,10 +170,10 @@ def full_line_banner(msg: str, char='-') -> str:
     """
     bars_count = int((shutil.get_terminal_size().columns - len(msg) - 2) / 2)
     bars = char*bars_count
-    return ' '.join((bars, msg, bars))
+    return f'{bars} {msg} {bars}'
 
 
-def print_package_names(packages: List[ACBSPackageInfo], limit: Optional[int] = None) -> str:
+def print_package_names(packages: list[ACBSPackageInfo], limit: int | None = None) -> str:
     """
     Print out the names of packages
 
@@ -176,8 +185,7 @@ def print_package_names(packages: List[ACBSPackageInfo], limit: Optional[int] = 
     if limit is not None and len(packages) > limit:
         pkgs = packages[:limit]
     printable_packages = [pkg.name for pkg in pkgs]
-    more_messages = ' ... and {} more'.format(
-        len(packages) - limit) if limit and limit < len(packages) else ''
+    more_messages = f' ... and {len(packages) - limit} more' if limit and limit < len(packages) else ''
     return ', '.join(printable_packages) + more_messages
 
 
@@ -185,7 +193,7 @@ def make_build_dir(path: str) -> str:
     return tempfile.mkdtemp(dir=path, prefix='acbs.')
 
 
-def guess_subdir(path: str) -> Optional[str]:
+def guess_subdir(path: str) -> str | None:
     name = None
     count = 0
     for subdir in os.scandir(path):
@@ -203,9 +211,9 @@ def has_stamp(path: str) -> bool:
     return os.path.exists(os.path.join(path, '.acbs-stamp'))
 
 
-def start_build_capture(env: Dict[str, str], build_dir: str):
+def start_build_capture(env: dict[str, str], build_dir: str):
     with tempfile.NamedTemporaryFile(prefix='acbs-build_', suffix='.log', dir=build_dir, delete=False) as f:
-        logging.info(f'Build log: {f.name}')
+        logger.info(f'Build log: {f.name}')
         header = f'!!ACBS Build Log\n!!Build start: {time.ctime()}\n'
         f.write(header.encode())
         assert pexpect
@@ -228,7 +236,7 @@ def start_build_capture(env: Dict[str, str], build_dir: str):
         if signal_status or exit_status:
             raise RuntimeError('autobuild4 did not exit successfully.')
 
-def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, package_name: str, build_dir: str):
+def start_general_autobuild_metadata(env: dict[str, str], script_location: str, package_name: str, build_dir: str):
     env["AB_WRITE_METADATA"] = "1"
     subprocess.check_call(['autobuild', '-p'], env=env)
 
@@ -239,7 +247,7 @@ def start_general_autobuild_metadata(env: Dict[str, str], script_location: str, 
         path = os.path.join(script_location, '..', f'.srcinfo-{package_name}.json')
 
     shutil.copyfile(os.path.join(build_dir, '.srcinfo.json'), path)
-    logging.info(f".srcinfo.json saved to: {path}")
+    logger.info(f".srcinfo.json saved to: {path}")
 
 def generate_metadata(task: ACBSPackageInfo) -> str:
     tree_commit = 'unknown'
@@ -247,7 +255,7 @@ def generate_metadata(task: ACBSPackageInfo) -> str:
         tree_commit = subprocess.check_output(
             ['git', '-c', 'safe.directory=/tree', 'describe', '--always', '--dirty'], cwd=task.script_location).decode('utf-8').strip()
     except subprocess.CalledProcessError as ex:
-        logging.warning(f'Could not determine tree commit: {ex}')
+        logger.warning(f'Could not determine tree commit: {ex}')
     return f'X-AOSC-ACBS-Version: {__version__}\nX-AOSC-Commit: {tree_commit}\n'
 
 
@@ -256,7 +264,7 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
         head_ref = subprocess.check_output(
             ['git', '-c', 'safe.directory=/tree', 'symbolic-ref', 'HEAD'], cwd=task.script_location).decode('utf-8').strip()
         if head_ref == 'refs/heads/stable':
-            logging.info('Not using pre-release version stamp')
+            logger.info('Not using pre-release version stamp')
             return ''
 
         dirty = len(subprocess.check_output(
@@ -268,15 +276,15 @@ def generate_version_stamp(task: ACBSPackageInfo) -> str:
             timestamp = int(subprocess.check_output(
                 ['git', '-c', 'safe.directory=/tree', 'show', '-s', '--format=%ct', 'HEAD'], cwd=task.script_location).decode('utf-8').strip())
         stamp = (
-            datetime.datetime.utcfromtimestamp(timestamp)
+            datetime.datetime.fromtimestamp(timestamp, datetime.UTC)
             .strftime('~pre%Y%m%dT%H%M%SZ')
         )
         if dirty:
             stamp += '~dirty'
-        logging.info(f'Using version stamp: {stamp}')
+        logger.info(f'Using version stamp: {stamp}')
         return stamp
     except subprocess.CalledProcessError as ex:
-        logging.warning(f'Could not determine version stamp: {ex}')
+        logger.warning(f'Could not determine version stamp: {ex}')
         return ''
 
 
@@ -290,7 +298,7 @@ def check_artifact(name: str, build_dir: str):
     for f in os.listdir(build_dir):
         if f.endswith('.deb') and f.startswith(name):
             return
-    logging.error(
+    logger.error(
         f'{ANSI_RED}Autobuild malfunction! Emergency drop!{ANSI_RST}')
     raise RuntimeError(
         'STOP! Autobuild3 malfunction detected! Returned zero status with no artifact.')
@@ -314,8 +322,7 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool, genera
     if stage2 and os.path.exists(os.path.join(build_dir, 'autobuild', 'defines.stage2')):
         defines_file = 'defines.stage2'
     with open(os.path.join(build_dir, 'autobuild', defines_file), 'at') as f:
-        f.write('\nPKGREL=\'{}\'\nPKGVER=\'{}\'\nif [ -f \'{}\' ];then source \'{}\' && abinfo "Injected ACBS definitions";fi\n'.format(
-            task.rel, task.version, acbs_helper, acbs_helper))
+        f.write(f'\nPKGREL=\'{task.rel}\'\nPKGVER=\'{task.version}\'\nif [ -f \'{acbs_helper}\' ];then source \'{acbs_helper}\' && abinfo "Injected ACBS definitions";fi\n')
         if task.epoch:
             f.write(f'PKGEPOCH=\'{task.epoch}\'')
     with open(os.path.join(build_dir, 'autobuild', 'extra-dpkg-control'), 'wt') as f:
@@ -327,7 +334,7 @@ def invoke_autobuild(task: ACBSPackageInfo, build_dir: str, stage2: bool, genera
         else:
             start_general_autobuild_metadata(env_dict, task.script_location, task.name, build_dir)
         return
-    logging.warning(
+    logger.warning(
         'Build logging not available due to pexpect not installed.')
     subprocess.check_call(['autobuild'], env=env_dict)
 
@@ -339,33 +346,28 @@ def human_time(full_seconds: float) -> str:
     """
     if full_seconds < 0:
         return 'Download only'
-    out_str_tmp = '{}'.format(
-        datetime.timedelta(seconds=full_seconds))
+    out_str_tmp = f'{datetime.timedelta(seconds=full_seconds)}'
     out_str = out_str_tmp.replace(
         ':', f'{ANSI_GREEN}:{ANSI_RST}')
     return out_str
 
 
-def format_column(data: Sequence[Tuple[str, ...]]) -> str:
-    output = ''
+def format_column(data: Sequence[tuple[str, ...]]) -> str:
     col_width = max(len(str(word)) for row in data for word in row)
-    for row in data:
-        output = '%s%s\n' % (
-            output, ('\t'.join(str(word).ljust(col_width) for word in row)))
-    return output
+    return '\n'.join('\t'.join(str(word).ljust(col_width) for word in row) for row in data) + '\n'
 
 
 def format_package_name(package: ACBSPackageInfo) -> str:
     return f'{package.name} ({package.bin_arch} @ {package.epoch + ":" if package.epoch else ""}{package.version}-{package.rel})'
 
 
-def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[ACBSPackageInfo], last_build_time: float=0.0):
+def print_build_timings(timings: list[tuple[str, float]], failed_packages: list[ACBSPackageInfo], last_build_time: float=0.0):
     """
     Print the build statistics
 
     :param timings: List of timing data
     """
-    formatted_timings: List[Tuple[str, str]] = []
+    formatted_timings: list[tuple[str, str]] = []
     formatted_failed_packages = [format_package_name(pkg) for pkg in failed_packages]
     banner = '=' * 40
     print(f"\n{banner}")
@@ -383,7 +385,7 @@ def print_build_timings(timings: List[Tuple[str, float]], failed_packages: List[
     if len(failed_packages) > 1:
         print("Package(s) not built due to previous build failure:")
         print('\n'.join(formatted_failed_packages[1:]))
-        print('')
+        print()
 
 
 def is_spec_legacy(spec: str) -> bool:
@@ -392,7 +394,7 @@ def is_spec_legacy(spec: str) -> bool:
     return content.find('SRCS=') < 0
 
 
-def generate_checksums(info: List[ACBSSourceInfo], legacy=False) -> str:
+def generate_checksums(info: list[ACBSSourceInfo], legacy=False) -> str:
     def calculate_checksum(o: ACBSSourceInfo):
         if not o.source_location:
             raise ValueError('source_location is None.')
@@ -427,10 +429,9 @@ def write_checksums(spec: str, checksums: str):
         content = content.rstrip() + "\n" + checksums + "\n"
     with open(spec, 'wt') as f:
         f.write(content)
-    return
 
 
-def fail_arch_regex(expr: str) -> Tuple[int, re.Pattern]:
+def fail_arch_regex(expr: str) -> tuple[int, re.Pattern]:
     regex = '^('
 
     if len(expr) < 3:
@@ -442,7 +443,7 @@ def fail_arch_regex(expr: str) -> Tuple[int, re.Pattern]:
     elif expr[0] == '@' and expr[1] == '(':
         mode = INCLUDE
     elif re.search('[^0-9a-z_-]', expr) is not None or expr[1:].strip('()') == expr:
-        raise Exception(f'Invalid FAIL_ARCH expression: "{expr}". Refer to bash(1) § Pattern Matching for details.')
+        raise ValueError(f'Invalid FAIL_ARCH expression: "{expr}". Refer to bash(1) § Pattern Matching for details.')
     else:
         # Disallow build for one specific archgroup/target.
         return (INCLUDE, re.compile(f'^{expr}$'))
@@ -462,7 +463,7 @@ def buildable(arch, exp) -> bool:
                 return False
             if mode == EXCLUDE:
                 return True
-    return True if mode == INCLUDE else False
+    return mode == INCLUDE
 
 
 class ACBSLogFormatter(logging.Formatter):
@@ -481,7 +482,7 @@ class ACBSLogFormatter(logging.Formatter):
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
             record.msg = f'[{lvl_map[record.levelname]}]: \033[1m{record.msg}\033[0m'
-        return super(ACBSLogFormatter, self).format(record)
+        return super().format(record)
 
 
 class ACBSLogPlainFormatter(logging.Formatter):
@@ -501,4 +502,4 @@ class ACBSLogPlainFormatter(logging.Formatter):
         if record.levelno in (logging.WARNING, logging.ERROR, logging.CRITICAL,
                               logging.INFO, logging.DEBUG):
             record.msg = f'[{lvl_map[record.levelname]}]: {record.msg}'
-        return super(ACBSLogPlainFormatter, self).format(record)
+        return super().format(record)

@@ -4,7 +4,6 @@ import os
 import pickle
 import tarfile
 import time
-from typing import List
 
 from acbs.base import ACBSPackageInfo, ACBSShrinkWrap
 from acbs.const import DPKG_DIR
@@ -35,15 +34,15 @@ def checkpoint_dpkg() -> str:
     return hasher.hexdigest()
 
 
-def checkpoint_text(packages: List[ACBSPackageInfo]) -> str:
+def checkpoint_text(packages: list[ACBSPackageInfo]) -> str:
     return '\n'.join([package.name for package in packages])
 
 
-def checkpoint_to_group(packages: List[ACBSPackageInfo], path: str) -> str:
+def checkpoint_to_group(packages: list[ACBSPackageInfo], path: str) -> str:
     groups = os.path.join(path, 'groups')
     if not os.path.isdir(groups):
         os.makedirs(groups)
-    filename = 'acbs-{}'.format(int(time.time()))
+    filename = f'acbs-{int(time.time())}'
     with open(os.path.join(groups, filename), 'wt') as f:
         f.write(checkpoint_text(packages))
     return filename
@@ -54,7 +53,7 @@ def do_shrink_wrap(data: ACBSShrinkWrap, path: str) -> str:
     for package in data.packages:
         data.sps.append(checkpoint_spec(package))
     data.dpkg_state = checkpoint_dpkg()
-    filename = os.path.join(path, '{}.acbs-ckpt'.format(int(time.time())))
+    filename = os.path.join(path, f'{int(time.time())}.acbs-ckpt')
     with open(filename, 'wb') as f:
         pickle.dump(data, f)
     return filename

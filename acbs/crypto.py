@@ -1,15 +1,13 @@
 import hashlib
-from typing import Optional, Tuple
 
 
-def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> Optional[str]:
+def check_hash_hashlib_inner(chksum_type: str, target_file: str) -> str | None:
     hash_type = chksum_type.lower()
     if hash_type == 'none':
         return None
     if hash_type not in hashlib.algorithms_available:
         raise NotImplementedError(
-            'Unsupported hash type %s! Currently supported: %s' % (
-                hash_type, ' '.join(sorted(hashlib.algorithms_available))))
+            f'Unsupported hash type {hash_type}! Currently supported: {' '.join(sorted(hashlib.algorithms_available))}')
     hash_obj = hashlib.new(hash_type)
     with open(target_file, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
@@ -24,11 +22,10 @@ def hash_url(url: str) -> str:
     return hash_obj.hexdigest()
 
 
-def check_hash_hashlib(chksum_tuple: Tuple[str, str], target_file: str) -> None:
+def check_hash_hashlib(chksum_tuple: tuple[str, str], target_file: str) -> None:
     hash_type, hash_value = chksum_tuple
     hash_type = hash_type.lower()
     hash_value = hash_value.lower()
     target_hash = check_hash_hashlib_inner(hash_type, target_file)
     if hash_value != target_hash:
-        raise RuntimeError('Checksums mismatch of type %s at file %s:\nExpected: %s\nActual:   %s' % (
-            hash_type, target_file, hash_value, target_hash))
+        raise RuntimeError(f'Checksums mismatch of type {hash_type} at file {target_file}:\nExpected: {hash_value}\nActual:   {target_hash}')

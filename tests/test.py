@@ -7,7 +7,7 @@ import acbs.pm
 from acbs.const import TMP_DIR
 from acbs.deps import tarjan_search
 from acbs.parser import get_deps_graph, parse_url_schema
-from acbs.utils import INCLUDE, EXCLUDE, fail_arch_regex, guess_extension_name, make_build_dir
+from acbs.utils import EXCLUDE, INCLUDE, fail_arch_regex, guess_extension_name, make_build_dir
 
 
 def fake_pm(package):
@@ -75,9 +75,9 @@ class TestParser(unittest.TestCase):
 
     def test_fail_arch(self):
         import re
-        self.assertRaises(Exception, fail_arch_regex, "!amd64")
-        self.assertRaises(Exception, fail_arch_regex, "amd64|arm64")
-        self.assertRaises(Exception, fail_arch_regex, "(amd64|arm64)")
+        self.assertRaises(ValueError, fail_arch_regex, "!amd64")
+        self.assertRaises(ValueError, fail_arch_regex, "amd64|arm64")
+        self.assertRaises(ValueError, fail_arch_regex, "(amd64|arm64)")
         self.assertEqual((INCLUDE, re.compile("^amd64$")), fail_arch_regex("amd64"))
         self.assertEqual((INCLUDE, re.compile("^(amd64|arm64)$")), fail_arch_regex("@(amd64|arm64)"))
         self.assertEqual((EXCLUDE, re.compile("^(amd64|arm64)$")), fail_arch_regex("!(amd64|arm64)"))

@@ -2,13 +2,14 @@ import logging
 import re
 import shutil
 import subprocess
-from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from acbs.base import ACBSPackageInfo
 from acbs.utils import get_arch_name
 
-installed_cache: Dict[str, bool] = {}
-available_cache: Dict[str, bool] = {}
+installed_cache: dict[str, bool] = {}
+available_cache: dict[str, bool] = {}
 use_native_bindings: bool = True
 reorder_mode: bool = False
 
@@ -23,7 +24,7 @@ except ImportError:
     apt_check_if_available = None
 
 
-def enable_reorder_mode(enable: Optional[bool]=None) -> bool:
+def enable_reorder_mode(enable: bool | None=None) -> bool:
     global reorder_mode
     if enable is not None:
         reorder_mode = enable
@@ -54,12 +55,12 @@ def escape_package_name(name: str) -> str:
 
 def escape_package_name_install(name: str) -> str:
     escaped = escape_package_name(name)
-    if escaped.endswith('+') or escaped.endswith('-'):
+    if escaped.endswith(('+', '-')):
         return f'{escaped}+'
     return escaped
 
 
-def fix_pm_states(escaped: List[str]):
+def fix_pm_states(escaped: list[str]):
     count = 0
     while count < 3:
         try:
@@ -77,13 +78,13 @@ def fix_pm_states(escaped: List[str]):
 
 
 def check_if_installed(name: str) -> bool:
-    logging.debug('Checking if %s is installed' % name)
+    logger.debug('Checking if %s is installed', name)
     cached = installed_cache.get(name)
     if cached is not None:
         return cached
     if use_native_bindings:
         assert callable(apt_check_if_available)
-        logging.debug('... using libapt-pkg')
+        logger.debug('... using libapt-pkg')
         result = apt_check_if_available(name)
         if result == 0:
             installed_cache[name] = True
@@ -111,19 +112,19 @@ def check_if_installed(name: str) -> bool:
 
 
 def check_if_available(name: str) -> bool:
-    logging.debug('Checking if %s is available' % name)
+    logger.debug('Checking if %s is available', name)
     cached = available_cache.get(name)
     if cached is not None:
         return cached
     if use_native_bindings:
         assert callable(apt_check_if_available)
-        logging.debug('... using libapt-pkg')
+        logger.debug('... using libapt-pkg')
         if apt_check_if_available(name) != 1:
             return False
     try:
         subprocess.check_output(
             ['apt-cache', 'show', escape_package_name(name)], stderr=subprocess.STDOUT)
-        logging.debug('Checking if %s can be installed' % name)
+        logger.debug('Checking if %s can be installed', name)
         subprocess.check_output(
             ['apt-get', 'install', '-s', name], stderr=subprocess.STDOUT, env={'DEBIAN_FRONTEND': 'noninteractive'})
         available_cache[name] = True
@@ -133,7 +134,7 @@ def check_if_available(name: str) -> bool:
         return False
 
 
-def install_from_repo(packages: List[str], force_use_apt=False):
+def install_from_repo(packages: list[str], force_use_apt=False):
     # FIXME: RISC-V build hosts is unreliable when using oma: random lock-ups
     # during `oma refresh'. Disabling oma to workaround potential lock-ups.
     oma_exists = False
@@ -145,8 +146,8 @@ def install_from_repo(packages: List[str], force_use_apt=False):
     return install_from_repo_oma(packages) or install_from_repo_apt(packages)
 
 
-def install_from_repo_apt(packages: List[str]):
-    logging.debug('Installing %s' % packages)
+def install_from_repo_apt(packages: list[str]):
+    logger.debug('Installing %s', packages)
     escaped = []
     for package in packages:
         escaped.append(escape_package_name_install(package))
@@ -155,20 +156,19 @@ def install_from_repo_apt(packages: List[str]):
     try:
         subprocess.check_call(command, env={'DEBIAN_FRONTEND': 'noninteractive'})
     except subprocess.CalledProcessError:
-        logging.warning(
+        logger.warning(
             'Failed to install dependencies, attempting to correct issues...')
         fix_pm_states(escaped)
-    return
 
 
-def install_from_repo_oma(packages: List[str]) -> bool:
-    logging.debug('Installing %s from oma' % packages)
+def install_from_repo_oma(packages: list[str]) -> bool:
+    logger.debug('Installing %s from oma', packages)
     command = ['oma', 'install', '-y', '--force-confnew', '--no-progress', '--force-unsafe-io', '--no-bell', '--no-clean']
     command.extend(packages)
     try:
         subprocess.check_call(command)
     except subprocess.CalledProcessError:
-        logging.warning(
+        logger.warning(
             'Failed to use oma install dependencies, fallbacking to apt...')
         return False
     return True

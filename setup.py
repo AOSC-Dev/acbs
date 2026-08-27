@@ -1,7 +1,7 @@
 from setuptools import Extension, setup
 
 
-class get_pybind_include(object):
+class get_pybind_include:
     """Helper class to determine the pybind11 include path
     The purpose of this class is to postpone importing pybind11
     until it is actually installed, so that the ``get_include()``

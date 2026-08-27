@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
 # acbs documentation build configuration file, created by
 # sphinx-quickstart on Sun Jul 31 18:23:52 2016.
 #
