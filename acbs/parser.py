@@ -3,13 +3,14 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 from acbs import bashvar
 from acbs.base import ACBSPackageInfo, ACBSSourceInfo
 from acbs.pm import filter_dependencies
 from acbs.utils import buildable, get_arch_name, get_archgroups, tarball_pattern
+
+logger = logging.getLogger(__name__)
 
 generate_mode = False
 
@@ -37,7 +38,7 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
             schema = 'git'
         else:
             raise ValueError(
-                'Unable to deduce source type for {}.'.format(url_plain))
+                f'Unable to deduce source type for {url_plain}.')
     elif len(url_split) < 3:
         schema = url_split[0].lower()
         url_plain = url_split[1]
@@ -48,7 +49,7 @@ def parse_url_schema(url: str, checksum: str) -> ACBSSourceInfo:
     acbs_source_info.type = 'tarball' if schema == 'tbl' else schema
     chksum_ = checksum.split('::', 1)
     if len(chksum_) != 2 and checksum != 'SKIP':
-        raise ValueError('Malformed checksum: {}'.format(checksum))
+        raise ValueError(f'Malformed checksum: {checksum}')
     acbs_source_info.chksum = (
         chksum_[0], chksum_[1]) if checksum != 'SKIP' else ('none', '')
     acbs_source_info.url = url_plain
@@ -70,9 +71,7 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
             acbs_source_info.source_name = v.strip()
         elif k == 'use-url-name':
             acbs_source_info.use_url_name = v.strip() == 'true'
-        elif k == 'commit':
-            acbs_source_info.revision = v.strip()
-        elif k == 'version':
+        elif k == 'commit' or k == 'version':
             acbs_source_info.revision = v.strip()
         elif k == 'copy-repo':
             acbs_source_info.copy_repo = v.strip() == 'true'
@@ -88,23 +87,23 @@ def parse_fetch_options(options: str, acbs_source_info: ACBSSourceInfo):
     return acbs_source_info
 
 
-def get_var_arch(context: Dict[str, str], varname) -> Union[str, None]:
+def get_var_arch(context: dict[str, str], varname) -> str | None:
     try_names = []
     # Try to expand VARNAME__ARCH first.
-    try_names.append('{varname}__{arch}'.format(varname=varname, arch=arch.upper()))
+    try_names.append(f'{varname}__{arch.upper()}')
     # Then try expanding VARNAME__ARCHGROUP, e.g. VARNAME__RETRO.
-    try_names.extend(['{varname}__{group}'.format(varname=varname, group=g.upper()) for g in archgroups])
+    try_names.extend([f'{varname}__{g.upper()}' for g in archgroups])
     # Then try the VARNAME itself.
     try_names.append(varname)
     for try_name in try_names:
-        if try_name in context.keys():
+        if try_name in context:
             return context[try_name]
 
     return None
 
 
-def parse_package_url(var: Dict[str, str], ignore_empty_srcs: bool) -> List[ACBSSourceInfo]:
-    acbs_source_info: List[ACBSSourceInfo] = []
+def parse_package_url(var: dict[str, str], ignore_empty_srcs: bool) -> list[ACBSSourceInfo]:
+    acbs_source_info: list[ACBSSourceInfo] = []
     sources = get_var_arch(var, 'SRCS')
     checksums = get_var_arch(var, 'CHKSUMS')
     if var.get('DUMMYSRC') in ['y', 'yes', '1']:
@@ -136,7 +135,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     # Ignore (seemingly) empty srcs on unbuildable archs, if the package
     # uses different sources for each (supported) architectures.
     ignore_empty_srcs: bool = False
-    logging.debug('Parsing {}...'.format(location))
+    logger.debug(f'Parsing {location}...')
     stage2 = ACBSPackageInfo.is_in_stage2(modifiers)
     # Call a helper function to check if there's a stage2 defines automatically
     defines_location = get_defines_file_path(location, stage2)
@@ -153,7 +152,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         # We decided to make FAIL_ARCH to allow mainline by default.
         fail_arch = '!(mainline)'
     if not buildable(arch, fail_arch) and bin_arch != 'noarch':
-        logging.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
+        logger.debug(f'Package {var["PKGNAME"]} is not buildable on current arch: {arch}. '
                 'Any encountered empty SRCS will be ignored.')
         # Continue parsing but ignore any source error, since we still
         # need the complete tree.
@@ -162,10 +161,10 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         # source info parser will fail, as there is no SRCS for current
         # arch.
         ignore_empty_srcs = True
-    deps: Optional[str] = get_var_arch(var, 'PKGDEP')
+    deps: str | None = get_var_arch(var, 'PKGDEP')
     # determine whether this is an undefined value or an empty string
     all_deps: str = '' if deps is None else deps
-    builddeps: Optional[str] = get_var_arch(var, 'BUILDDEP')
+    builddeps: str | None = get_var_arch(var, 'BUILDDEP')
     all_deps += ' ' + (builddeps or '')  # add builddep
     # architecture specific dependencies
     acbs_source_info = parse_package_url(spec_var, ignore_empty_srcs)
@@ -200,7 +199,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
     return filter_dependencies(result)
 
 
-def get_deps_graph(packages: List[ACBSPackageInfo]) -> 'OrderedDict[str, ACBSPackageInfo]':
+def get_deps_graph(packages: list[ACBSPackageInfo]) -> OrderedDict[str, ACBSPackageInfo]:
     'convert flattened list to adjacency list'
     result = {}
     for i in packages:
@@ -211,11 +210,11 @@ def get_deps_graph(packages: List[ACBSPackageInfo]) -> 'OrderedDict[str, ACBSPac
 def get_tree_by_name(filename: str, tree_name) -> str:
     acbs_config = configparser.ConfigParser(
         interpolation=configparser.ExtendedInterpolation())
-    with open(filename, 'rt') as conf_file:
-        try:
+    try:
+        with open(filename, 'rt') as conf_file:
             acbs_config.read_file(conf_file)
-        except Exception as ex:
-            raise Exception('Failed to read configuration file!') from ex
+    except configparser.Error as ex:
+            raise ValueError('Failed to read configuration file!') from ex
     try:
         tree_loc_dict = acbs_config[tree_name]
     except KeyError as ex:
@@ -225,8 +224,10 @@ def get_tree_by_name(filename: str, tree_name) -> str:
     try:
         tree_loc = tree_loc_dict['location']
     except KeyError as ex:
-        raise KeyError(
+        raise ValueError(
             'Malformed configuration file: missing `location` keyword') from ex
+    except configparser.Error as ex:
+        raise ValueError('Malformed configuration file') from ex
     return tree_loc
 
 

@@ -1,12 +1,11 @@
+import fcntl
 import logging
 import logging.handlers
 import os
 import sys
 import time
 import traceback
-import fcntl
 from pathlib import Path
-from typing import List, Tuple
 
 import acbs.fetch
 import acbs.parser
@@ -19,7 +18,7 @@ from acbs.deps import prepare_for_reorder, tarjan_search
 from acbs.fetch import fetch_source, process_source
 from acbs.find import check_package_groups, find_package
 from acbs.parser import check_buildability, get_deps_graph, get_tree_by_name
-from acbs.pm import install_from_repo, enable_reorder_mode
+from acbs.pm import enable_reorder_mode, install_from_repo
 from acbs.utils import (
     ACBSLogFormatter,
     ACBSLogPlainFormatter,
@@ -37,11 +36,12 @@ from acbs.utils import (
     write_checksums,
 )
 
+logger = logging.getLogger(__name__)
 
 CIEL_LOCK_PATH = '/debs/fresh.lock'
 
 def ciel_invalidate_cache():
-    logging.info('Asking ciel to refresh repository...')
+    logger.info('Asking ciel to refresh repository...')
     if os.path.exists(CIEL_LOCK_PATH):
         with open(CIEL_LOCK_PATH, 'r+') as lock_file:
             lock_file_fd = lock_file.fileno()
@@ -52,11 +52,11 @@ def ciel_invalidate_cache():
                 lock_file.write('0')
             fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
     else:
-        logging.warning('Ciel did not create lock file, skipping...')
+        logger.warning('Ciel did not create lock file, skipping...')
 
 
 def ciel_wait_for_refresh():
-    logging.info('Waiting for ciel to refresh repository...')
+    logger.info('Waiting for ciel to refresh repository...')
     if os.path.exists(CIEL_LOCK_PATH):
         with open(CIEL_LOCK_PATH, 'r') as lock_file:
             lock_file_fd = lock_file.fileno()
@@ -78,14 +78,14 @@ def ciel_wait_for_refresh():
             fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
 
             if success:
-                logging.info('Ciel finished refreshing repository...')
+                logger.info('Ciel finished refreshing repository...')
             else:
-                logging.warning('Ciel failed to refresh repository in time...')
+                logger.warning('Ciel failed to refresh repository in time...')
     else:
-        logging.warning('Ciel did not create lock file, skipping...')
+        logger.warning('Ciel did not create lock file, skipping...')
 
 
-class BuildCore(object):
+class BuildCore:
 
     def __init__(self, args) -> None:
         self.debug = args.debug
@@ -134,10 +134,9 @@ class BuildCore(object):
         try:
             for directory in [self.dump_dir, self.tmp_dir, self.conf_dir,
                               self.log_dir]:
-                if not os.path.isdir(directory):
-                    os.makedirs(directory)
-        except Exception:
-            raise IOError('\033[93mFailed to create work directories\033[0m!')
+                os.makedirs(directory, exist_ok=True)
+        except OSError as exc:
+            raise OSError('\033[93mFailed to create work directories\033[0m!') from exc
         self.__install_logger(log_verbosity)
         if self.tree_dir == '':
             # If the user did not specify tree path via -b/--tree-dir, read from config
@@ -147,7 +146,7 @@ class BuildCore(object):
                 if not self.tree_dir:
                     raise ValueError('Tree not found!')
             else:
-                raise Exception('forest.conf not found')
+                raise ValueError('forest.conf not found')
 
     def __install_logger(self, str_verbosity=logging.INFO,
                          file_verbosity=logging.DEBUG):
@@ -167,7 +166,7 @@ class BuildCore(object):
             '%(asctime)s:%(levelname)s:%(message)s'))
         logger.addHandler(log_file_handler)
 
-    def strip_modifiers(self, p: str) -> Tuple[str, str]:
+    def strip_modifiers(self, p: str) -> tuple[str, str]:
         if ':' in p:
             results = p.split(':', 1)
             if len(results) == 2:
@@ -177,19 +176,19 @@ class BuildCore(object):
 
     def build(self) -> None:
         packages = []
-        build_timings: List[Tuple[str, float]] = []
+        build_timings: list[tuple[str, float]] = []
         acbs.fetch.generate_mode = self.generate
         acbs.parser.generate_mode = self.generate
         if self.stage2:
-            logging.info("Life-cycle: currently running in stage2 mode.")
+            logger.info("Life-cycle: currently running in stage2 mode.")
         # begin finding and resolving dependencies
-        logging.info('Searching and resolving dependencies...')
+        logger.info('Searching and resolving dependencies...')
         enable_reorder_mode(self.reorder)
         for n, i in enumerate(self.build_queue):
             i, modifiers = self.strip_modifiers(i)
             if not validate_package_name(i):
                 raise ValueError(f'Invalid package name: `{i}`')
-            logging.debug(f'Finding {i}...')
+            logger.debug(f'Finding {i}...')
             print(f'[{n + 1}/{len(self.build_queue)}] {i:30}\r', end='', flush=True)
             package = find_package(i, self.tree_dir, modifiers, self.tmp_dir)
             if not package:
@@ -197,46 +196,46 @@ class BuildCore(object):
             packages.extend(package)
         self.resolve_deps(packages, self.stage2)
         if not packages:
-            logging.info('Nothing to do after dependency resolution')
+            logger.info('Nothing to do after dependency resolution')
             return
-        logging.info(
+        logger.info(
             f'Dependencies resolved, {len(packages)} packages in the queue')
-        logging.debug(f'Queue: {packages}')
-        logging.info(
+        logger.debug(f'Queue: {packages}')
+        logger.info(
             f'Packages to be built: {print_package_names(packages, 5)}')
         if self.save_list:
             filename = checkpoint_to_group(packages, self.tree_dir)
-            logging.info(
+            logger.info(
                 f'ACBS has saved your build queue to groups/{filename}')
             return
         try:
             self.build_sequential(build_timings, packages)
-        except Exception as ex:
-            logging.exception(ex)
+        except Exception:
+            logger.exception("Build Failed")
             self.save_checkpoint(build_timings, packages)
         print_build_timings(build_timings, [])
 
     def save_checkpoint(self, build_timings, packages):
-        logging.info('ACBS is trying to save your build status...')
+        logger.info('ACBS is trying to save your build status...')
         shrink_wrap = ACBSShrinkWrap(
             self.package_cursor, build_timings, packages, self.no_deps)
         filename = do_shrink_wrap(shrink_wrap, '/tmp')
-        logging.info(f'... saved to {filename}')
+        logger.info(f'... saved to {filename}')
         raise RuntimeError(
             f'Build error.\nUse `acbs-build --resume {filename}` to resume after you sorted out the situation.')
 
     def reorder_deps(self, packages, stage2: bool):
-        logging.info('Re-ordering packages...')
+        logger.info('Re-ordering packages...')
         new_packages = []
         package_names = [p.name for p in packages]
         for pkg in packages:
             # prepare for re-order if necessary
-            logging.debug(f'Prepare for re-ordering: {pkg.name}')
+            logger.debug(f'Prepare for re-ordering: {pkg.name}')
             new_packages.append(prepare_for_reorder(pkg, package_names))
         graph = get_deps_graph(new_packages)
         return tarjan_search(graph, self.tree_dir, stage2)
 
-    def filter_unbuildable(self, packages: List[ACBSPackageInfo]) -> List[ACBSPackageInfo]:
+    def filter_unbuildable(self, packages: list[ACBSPackageInfo]) -> list[ACBSPackageInfo]:
         unbuildable = []
         buildable = []
         for p in packages:
@@ -245,19 +244,19 @@ class BuildCore(object):
             else:
                 buildable.append(p)
         if unbuildable:
-            logging.warning(f'The following packages will be skipped as they are not buildable:\n\t{(" ".join(unbuildable))}')
+            logger.warning(f'The following packages will be skipped as they are not buildable:\n\t{(" ".join(unbuildable))}')
         return buildable
 
     def resolve_deps(self, packages, stage2: bool):
         error = False
         if not self.no_deps:
-            logging.debug('Filtering packages...')
+            logger.debug('Filtering packages...')
             filtered = self.filter_unbuildable(packages)
             packages.clear()
             packages.extend(filtered)
-            logging.debug('Converting queue into adjacency graph...')
+            logger.debug('Converting queue into adjacency graph...')
             graph = get_deps_graph(packages)
-            logging.debug('Running Tarjan search...')
+            logger.debug('Running Tarjan search...')
             resolved = tarjan_search(graph, self.tree_dir, stage2)
             # Recheck after dependencies are loaded: a package whose deps hit
             # FAIL_ARCH is skipped the same way as one that is itself unbuildable.
@@ -273,7 +272,7 @@ class BuildCore(object):
                 resolved = self.reorder_deps(
                     [item for sublist in resolved for item in sublist], self.stage2)
         else:
-            logging.warning('Warning: Dependency resolution disabled!')
+            logger.warning('Warning: Dependency resolution disabled!')
             resolved = [[package] for package in packages]
         # print a newline
         print()
@@ -282,15 +281,14 @@ class BuildCore(object):
         for dep in resolved:
             if len(dep) > 1 or dep[0].name in dep[0].deps:
                 # this is a SCC, aka a loop
-                logging.error('Found a loop in the dependency graph: {}'.format(
-                    print_package_names(dep)))
+                logger.error(f'Found a loop in the dependency graph: {print_package_names(dep)}')
                 error = True
                 if self.reorder:
                     if not self.save_list:
-                        logging.warning(
+                        logger.warning(
                             'You probably want to add -p option to get a list of ordered packages.')
                     else:
-                        logging.info(
+                        logger.info(
                             'ACBS will still save the build queue. Please keep in mind that the build order inside the loop is not guaranteed.')
                         error = False
             if not error:
@@ -303,11 +301,11 @@ class BuildCore(object):
             check_package_groups(packages)
         return resolved
 
-    def build_sequential(self, build_timings, packages: List[ACBSPackageInfo]):
+    def build_sequential(self, build_timings, packages: list[ACBSPackageInfo]):
         # build process
         for idx, task in enumerate(packages):
             self.package_cursor += 1
-            logging.info(
+            logger.info(
                 f'Building {task.name} ({self.package_cursor}/{len(packages)})...')
             source_name = task.name
             if task.base_slug:
@@ -321,7 +319,7 @@ class BuildCore(object):
                     is_legacy = is_spec_legacy(spec_location)
                     checksum = generate_checksums(task.source_uri, is_legacy)
                     write_checksums(spec_location, checksum)
-                    logging.info(f'Updated checksum for {task.name}')
+                    logger.info(f'Updated checksum for {task.name}')
                 build_timings.append((task.name, -1))
                 continue
             if not task.build_location:
@@ -345,7 +343,7 @@ class BuildCore(object):
                         'Could not determine sub-directory, please specify manually.')
                 build_dir = os.path.join(build_dir, subdir)
             if task.installables and not self.generate_pkg_metadata:
-                logging.info('Installing dependencies from repository...')
+                logger.info('Installing dependencies from repository...')
                 install_from_repo(task.installables, self.force_use_apt)
             start = time.monotonic()
             task_name = f'{task.name} ({task.bin_arch} @ {task.epoch + ":" if task.epoch else ""}{task.version}-{task.rel})'
@@ -354,21 +352,20 @@ class BuildCore(object):
                 invoke_autobuild(task, build_dir, scoped_stage2, self.generate_pkg_metadata)
                 if not self.generate_pkg_metadata:
                     check_artifact(task.name, build_dir)
-            except Exception:
+            except Exception as exc:
                 # early printing of build summary before exploding
                 print_build_timings(build_timings, packages[idx:], time.monotonic() - start)
                 raise RuntimeError(
-                    f'Build directory of the failed package: {build_dir}')
+                    f'Build directory of the failed package: {build_dir}') from exc
             if not self.generate_pkg_metadata:
                 build_timings.append((task_name, time.monotonic() - start))
                 ciel_invalidate_cache()
                 ciel_wait_for_refresh()
 
     def acbs_except_hdr(self, type_, value, tb):
-        logging.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
+        logger.debug('Traceback:\n' + ''.join(traceback.format_tb(tb)))
         if self.debug:
             sys.__excepthook__(type_, value, tb)
         else:
             print()
-            logging.fatal('Oops! \033[93m%s\033[0m: \033[93m%s\033[0m' % (
-                str(type_.__name__), str(value)))
+            logging.fatal('Oops! \033[93m%s\033[0m: \033[93m%s\033[0m', str(type_.__name__), str(value))

@@ -1,4 +1,3 @@
-# coding: utf-8
 
 """
 Fake magic bindings
@@ -34,16 +33,14 @@ MAGIC_NO_CHECK_ENCODING = NO_CHECK_ENCODING = 2097152
 MAGIC_NO_CHECK_BUILTIN = NO_CHECK_BUILTIN = 4173824
 
 
-class fakeMagic(object):
+class fakeMagic:
 
     def __init__(self):
         self.flags = 0
         self.cmd_args = []
-        return
 
     def magic_open(self, flags=0) -> None:
         self.flags = flags
-        return
 
     def add_cmds(self) -> None:
         self.cmd_args = ['file', '-b']

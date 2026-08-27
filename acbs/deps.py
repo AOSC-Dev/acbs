@@ -1,24 +1,23 @@
 from collections import OrderedDict, defaultdict, deque
-from typing import Deque, Dict, List
 
 from acbs.find import find_package
 from acbs.parser import ACBSPackageInfo
 
 # package information cache
-pool: Dict[str, ACBSPackageInfo] = {}
+pool: dict[str, ACBSPackageInfo] = {}
 
 
-def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: str, stage2: bool) -> List[List[ACBSPackageInfo]]:
+def tarjan_search(packages: OrderedDict[str, ACBSPackageInfo], search_path: str, stage2: bool) -> list[list[ACBSPackageInfo]]:
     """This function describes a Tarjan's strongly connected components algorithm.
     The resulting list of ACBSPackageInfo are sorted topologically as a byproduct of the algorithm
     """
     # Initialize state trackers
-    lowlink: Dict[str, int] = defaultdict(lambda: -1)
-    index: Dict[str, int] = defaultdict(lambda: -1)
-    stackstate: Dict[str, bool] = defaultdict(bool)
-    stack: Deque[str] = deque()
-    results: List[List[ACBSPackageInfo]] = []
-    packages_list: List[str] = [i for i in packages]
+    lowlink: dict[str, int] = defaultdict(lambda: -1)
+    index: dict[str, int] = defaultdict(lambda: -1)
+    stackstate: dict[str, bool] = defaultdict(bool)
+    stack: deque[str] = deque()
+    results: list[list[ACBSPackageInfo]] = []
+    packages_list: list[str] = [i for i in packages]
     pool.update(packages)
     for i in packages_list:
         if index[i] == -1:  # recurse on each package that is not yet visited
@@ -27,7 +26,7 @@ def tarjan_search(packages: 'OrderedDict[str, ACBSPackageInfo]', search_path: st
     return results
 
 
-def prepare_for_reorder(package: ACBSPackageInfo, packages_list: List[str]) -> ACBSPackageInfo:
+def prepare_for_reorder(package: ACBSPackageInfo, packages_list: list[str]) -> ACBSPackageInfo:
     """This function prepares the package for reordering.
     The idea is to move the installable dependencies which are in the build list to the "uninstallable" list.
     """
@@ -46,7 +45,7 @@ def prepare_for_reorder(package: ACBSPackageInfo, packages_list: List[str]) -> A
     return package
 
 
-def strongly_connected(search_path: str, packages_list: List[str], results: list, packages: 'OrderedDict[str, ACBSPackageInfo]', vert: str, lowlink: Dict[str, int], index: Dict[str, int], stackstate: Dict[str, bool], stack: Deque[str], stage2: bool, depth=0):
+def strongly_connected(search_path: str, packages_list: list[str], results: list, packages: OrderedDict[str, ACBSPackageInfo], vert: str, lowlink: dict[str, int], index: dict[str, int], stackstate: dict[str, bool], stack: deque[str], stage2: bool, depth=0):
     # update depth indices
     index[vert] = depth
     lowlink[vert] = depth
