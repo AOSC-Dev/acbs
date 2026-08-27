@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
 
 from acbs import __version__
 
@@ -8,14 +7,14 @@ from acbs import __version__
 class ACBSSourceInfo:
     type: str
     url: str
-    revision: Optional[str] = None
-    branch: Optional[str] = None
-    depth: Optional[int] = None
-    chksum: Tuple[str, str] = ('', '')
-    source_name: Optional[str] = ''
+    revision: str | None = None
+    branch: str | None = None
+    depth: int | None = None
+    chksum: tuple[str, str] = ('', '')
+    source_name: str | None = ''
     use_url_name: bool = False
     # where the source file/folder is located (on local filesystem)
-    source_location: Optional[str] = None
+    source_location: str | None = None
     enabled: bool = True
     # copy the repository to the build directory
     copy_repo: bool = False
@@ -26,21 +25,21 @@ class ACBSSourceInfo:
 @dataclass
 class ACBSPackageInfo:
     name: str
-    deps: List[str]
+    deps: list[str]
     location: str
-    source_uri: List[ACBSSourceInfo]
+    source_uri: list[ACBSSourceInfo]
     rel: str = '0'
-    installables: List[str] = field(default_factory=list)
+    installables: list[str] = field(default_factory=list)
     build_location: str = ''
     base_slug: str = ''  # group slug (like extra-devel/llvm), if any
     group_seq: int = 0  # group sequence number
     version: str = ''
     epoch: str = ''
-    subdir: Optional[str] = None
-    fail_arch: Optional[str] = None  # fail_arch expression
+    subdir: str | None = None
+    fail_arch: str | None = None  # fail_arch expression
     bin_arch: str = ''
     script_location: str = field(init=False)  # script location (autobuild directory)
-    exported: Dict[str, str] = field(default_factory=dict)  # extra exported variables from spec
+    exported: dict[str, str] = field(default_factory=dict)  # extra exported variables from spec
     modifiers: str = ''  # modifiers to be applied to the source file/folder (only available in autobuild4)
 
     def __post_init__(self):
@@ -54,10 +53,10 @@ class ACBSPackageInfo:
 @dataclass
 class ACBSShrinkWrap:
     cursor: int
-    timings: List[Tuple[str, float]]
-    packages: List[ACBSPackageInfo]
+    timings: list[tuple[str, float]]
+    packages: list[ACBSPackageInfo]
     no_deps: bool
     # spec states
-    sps: List[str] = field(default_factory=list)
+    sps: list[str] = field(default_factory=list)
     dpkg_state: str = ''
     version: str = __version__

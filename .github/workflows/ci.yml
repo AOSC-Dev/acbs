@@ -12,23 +12,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v7
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v7
       with:
-        python-version: "3.8"
-        cache: 'pip' # caching pip dependencies
+        python-version: "3.14"
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d   # v10.0.1
+      with:
+        enable-cache: true
+          
     - name: Install native dependencies
       run: |
         sudo apt-get update && sudo apt-get install -y libapt-pkg-dev
-        sudo snap install --classic astral-uv
     - name: Install dependencies
-      run: |
-        uv venv
-        uv pip install '.[dev]'
+      run: uv sync --locked --extra dev
     - name: Type checking using pyright
-      run: uv run --extra=dev pyright
+      run: uv run --no-sync --extra=dev pyright
     - name: Lint with Ruff
-      run: uv run --extra=dev ruff check --config 'output-format="github"'
+      run: uv run --no-sync --extra=dev ruff check --output-format=github
     - name: Run unittests
-      run: ARCH=amd64 uv run --extra=dev python -m unittest discover ./tests/
+      run: ARCH=amd64 uv run --no-sync --extra=dev python -m unittest discover ./tests/

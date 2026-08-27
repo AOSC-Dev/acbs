@@ -1,13 +1,13 @@
 import logging
 import os
-from typing import Dict, List, Optional
 
 from acbs.const import TMP_DIR
-from acbs.parser import ACBSPackageInfo, ACBSSourceInfo, parse_package, check_buildability
+from acbs.parser import ACBSPackageInfo, ACBSSourceInfo, check_buildability, parse_package
 from acbs.utils import make_build_dir
 
+logger = logging.getLogger(__name__)
 
-def check_package_group(name: str, search_path: str, entry_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> Optional[List[ACBSPackageInfo]]:
+def check_package_group(name: str, search_path: str, entry_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> list[ACBSPackageInfo] | None:
     # is this a package group?
     if os.path.basename(entry_path) == os.path.basename(name) and os.path.isfile(os.path.join(search_path, entry_path, 'spec')):
         stub = ACBSPackageInfo(name, [], '', [ACBSSourceInfo('none', '', '')])
@@ -33,8 +33,7 @@ def check_package_group(name: str, search_path: str, entry_path: str, modifiers:
                     group_seq = int(
                         package_alias.split('-')[0])
                 except (ValueError, IndexError) as ex:
-                    raise ValueError('Invalid package alias: {alias}'.format(
-                        alias=package_alias)) from ex
+                    raise ValueError(f'Invalid package alias: {package_alias}') from ex
                 group_root = os.path.realpath(
                     os.path.join(full_search_path, '..'))
                 group_category = os.path.realpath(
@@ -48,7 +47,7 @@ def check_package_group(name: str, search_path: str, entry_path: str, modifiers:
     return None
 
 
-def filter_unbuildable_packages(packages: List[ACBSPackageInfo], group_name: Optional[str]=None) -> List[ACBSPackageInfo]:
+def filter_unbuildable_packages(packages: list[ACBSPackageInfo], group_name: str | None=None) -> list[ACBSPackageInfo]:
     """Filter out packages that are not buildable."""
     filtered_packages = []
     unbuildable = []
@@ -58,7 +57,7 @@ def filter_unbuildable_packages(packages: List[ACBSPackageInfo], group_name: Opt
         else:
             unbuildable.append(package.name)
     if unbuildable:
-        logging.warning(
+        logger.warning(
             "The following packages %swill be skipped as they are not buildable:\n\t%s",
             f"(in {group_name}) " if group_name else "",
             " ".join(unbuildable),
@@ -66,7 +65,7 @@ def filter_unbuildable_packages(packages: List[ACBSPackageInfo], group_name: Opt
     return filtered_packages
 
 
-def find_package(name: str, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
+def find_package(name: str, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> list[ACBSPackageInfo]:
     if os.path.isfile(os.path.join(search_path, name)):
         with open(os.path.join(search_path, name), 'rt') as f:
             content = f.read()
@@ -88,7 +87,7 @@ def find_package(name: str, search_path: str, modifiers: str, tmp_dir: str = TMP
     return find_package_inner(name, search_path, modifiers=modifiers, tmp_dir=tmp_dir)
 
 
-def find_package_inner(name: str, search_path: str, group=False, modifiers: str='', tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
+def find_package_inner(name: str, search_path: str, group=False, modifiers: str='', tmp_dir: str = TMP_DIR) -> list[ACBSPackageInfo]:
     if os.path.isdir(os.path.join(search_path, name)):
         flat_path = os.path.join(search_path, name, 'autobuild')
         if os.path.isdir(flat_path):
@@ -126,31 +125,30 @@ def find_package_inner(name: str, search_path: str, group=False, modifiers: str=
         return find_package_inner(name, search_path, True, modifiers, tmp_dir)
 
 
-def check_package_groups(packages: List[ACBSPackageInfo]):
+def check_package_groups(packages: list[ACBSPackageInfo]):
     """In AOSC OS build rules, the package group need to be built sequentially together.
     This function will check if the package inside the group will be built sequentially
     """
-    groups_seen: Dict[str, int] = {}
+    groups_seen: dict[str, int] = {}
     for pkg in packages:
         base_slug = pkg.base_slug
         if not base_slug:
             continue
         if base_slug in groups_seen:
             if groups_seen[base_slug] > pkg.group_seq:
-                logging.error('Package {} (in {}) has a different sequential order (#{}) after dependency resolution (should be #{})'.format(
-                    pkg.name, base_slug, pkg.group_seq, groups_seen[base_slug] + 1))
-                logging.error('This might indicate a dependency cycle between the sub-packages (needs bootstrapping?) ...')
-                logging.error('... or maybe the sub-package should be named {:02d}-{}'.format(groups_seen[base_slug] + 1, pkg.name))
-                logging.error('Please check which situation this package is in and fix it.')
+                logger.error(f'Package {pkg.name} (in {base_slug}) has a different sequential order (#{pkg.group_seq}) after dependency resolution (should be #{groups_seen[base_slug] + 1})')
+                logger.error('This might indicate a dependency cycle between the sub-packages (needs bootstrapping?) ...')
+                logger.error(f'... or maybe the sub-package should be named {groups_seen[base_slug] + 1:02d}-{pkg.name}')
+                logger.error('Please check which situation this package is in and fix it.')
                 raise ValueError('Specified sub-package order contradicts with the dependency resolution results')
         else:
             groups_seen[base_slug] = pkg.group_seq
 
 
-def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> List[ACBSPackageInfo]:
+def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: str, tmp_dir: str = TMP_DIR) -> list[ACBSPackageInfo]:
     group_root = os.path.join(search_path, package.base_slug)
     original_base = package.base_slug
-    actionables: List[ACBSPackageInfo] = []
+    actionables: list[ACBSPackageInfo] = []
     for entry in os.scandir(group_root):
         if not entry.is_dir():
             continue
@@ -158,7 +156,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: 
         splitted = name.split('-', 1)
         if len(splitted) != 2:
             raise ValueError(
-                'Malformed sub-package name: {name}'.format(name=entry.name))
+                f'Malformed sub-package name: {entry.name}')
         try:
             sequence = int(splitted[0])
             package = parse_package(entry.path, modifiers)
@@ -168,7 +166,7 @@ def expand_package_group(package: ACBSPackageInfo, search_path: str, modifiers: 
                 actionables.append(package)
         except ValueError as ex:
             raise ValueError(
-                'Malformed sub-package name: {name}'.format(name=entry.name)) from ex
+                f'Malformed sub-package name: {entry.name}') from ex
     # because the directory order is arbitrary, we need to sort them
     actionables = sorted(actionables, key=lambda a: a.group_seq)
     # pre-assign build location for sub-packages
