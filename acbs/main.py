@@ -240,11 +240,13 @@ class BuildCore:
         buildable = []
         for p in packages:
             if not check_buildability(p):
-                unbuildable.append(p.name)
+                unbuildable.append(f'{p.name} (FAIL_ARCH: `{p.fail_arch}`)')
             else:
                 buildable.append(p)
         if unbuildable:
-            logger.warning(f'The following packages will be skipped as they are not buildable:\n\t{(" ".join(unbuildable))}')
+            logger.warning(
+                f'The following packages will be skipped as they are not buildable '
+                f'on `{acbs.parser.arch}`:\n\t{(" ".join(unbuildable))}')
         return buildable
 
     def resolve_deps(self, packages, stage2: bool):

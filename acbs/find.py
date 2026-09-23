@@ -55,7 +55,7 @@ def filter_unbuildable_packages(packages: list[ACBSPackageInfo], group_name: str
         if check_buildability(package):
             filtered_packages.append(package)
         else:
-            unbuildable.append(package.name)
+            unbuildable.append(f'{package.name} (FAIL_ARCH: `{package.fail_arch}`)')
     if unbuildable:
         logger.warning(
             "The following packages %swill be skipped as they are not buildable:\n\t%s",
