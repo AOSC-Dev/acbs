@@ -14,6 +14,18 @@ logger = logging.getLogger(__name__)
 
 generate_mode = False
 
+# A PKGDEP/BUILDDEP entry may pin a version, e.g. "foo<3", "bar_" (exact
+# match) or "baz>=1.1" -- match the package name up to the constraint, since
+# the constraint itself is meaningless to acbs (it only resolves deps by
+# name), and passing it through verbatim makes the dependency name
+# unresolvable.
+dep_version_re = re.compile(r'^[^\s_<>=]+')
+
+
+def strip_dep_version(dep: str) -> str:
+    match = dep_version_re.match(dep)
+    return match.group(0) if match else dep
+
 
 def get_defines_file_path(location: str, stage2: bool) -> str:
     '''
@@ -175,7 +187,7 @@ def parse_package(location: str, modifiers: str) -> ACBSPackageInfo:
         # filter out dependencies that are prefixed with @AB_ (autobuild special placeholders)
         deps_iter = filter(lambda d: not d.startswith("@AB_"), all_deps.split())
         result = ACBSPackageInfo(
-            name=var['PKGNAME'], deps=list(deps_iter), location=location, source_uri=acbs_source_info)
+            name=var['PKGNAME'], deps=[strip_dep_version(d) for d in deps_iter], location=location, source_uri=acbs_source_info)
     result.bin_arch = bin_arch
     release = get_var_arch(spec_var, 'REL') or '0'
     result.rel = release

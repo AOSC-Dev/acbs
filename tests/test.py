@@ -109,6 +109,30 @@ class TestParser(unittest.TestCase):
         self.assertEqual(info.type, 'tarball')
         self.assertEqual(info.source_name, 'test.tar.gz')
 
+    def test_parse_versioned_deps(self):
+        '''Regression test for #13: a version-constrained PKGDEP/BUILDDEP
+        entry (e.g. "foo<3", "bar_" or "baz>=1.1") must have the constraint
+        stripped, since acbs only resolves dependencies by name.'''
+        acbs.parser.arch = 'none'
+        acbs.parser.filter_dependencies = fake_pm
+        package = acbs.parser.parse_package(
+            './tests/fixtures/test-7/autobuild', modifiers='')
+        self.assertEqual(
+            package.deps, ['test-2', 'test-3', 'test-4', 'test-8'])
+
+    def test_strip_dep_version(self):
+        self.assertEqual(acbs.parser.strip_dep_version('foo'), 'foo')
+        self.assertEqual(acbs.parser.strip_dep_version('foo<3'), 'foo')
+        self.assertEqual(acbs.parser.strip_dep_version('foo<=3'), 'foo')
+        self.assertEqual(acbs.parser.strip_dep_version('foo>=1.1'), 'foo')
+        self.assertEqual(acbs.parser.strip_dep_version('foo==1.1'), 'foo')
+        self.assertEqual(acbs.parser.strip_dep_version('foo_'), 'foo')
+        self.assertEqual(acbs.parser.strip_dep_version('foo_1.0'), 'foo')
+        # names containing characters that are not constraint delimiters
+        # must be left untouched
+        self.assertEqual(acbs.parser.strip_dep_version('libxml++'), 'libxml++')
+        self.assertEqual(acbs.parser.strip_dep_version('aosc-aaa+32'), 'aosc-aaa+32')
+
     def test_parse_new_spec(self):
         acbs.parser.arch = 'none'
         acbs.parser.filter_dependencies = fake_pm

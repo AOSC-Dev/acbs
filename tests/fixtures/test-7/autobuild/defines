@@ -1,0 +1,3 @@
+PKGNAME='test-7'
+PKGDEP="test-2<3 test-3_ test-4>=1.1"
+BUILDDEP="test-8==1.0"
