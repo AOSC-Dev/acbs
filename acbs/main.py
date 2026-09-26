@@ -260,14 +260,6 @@ class BuildCore:
             graph = get_deps_graph(packages)
             logger.debug('Running Tarjan search...')
             resolved = tarjan_search(graph, self.tree_dir, stage2)
-            # Recheck after dependencies are loaded: a package whose deps hit
-            # FAIL_ARCH is skipped the same way as one that is itself unbuildable.
-            filtered = self.filter_unbuildable(packages)
-            if len(filtered) != len(packages):
-                packages.clear()
-                packages.extend(filtered)
-                graph = get_deps_graph(packages)
-                resolved = tarjan_search(graph, self.tree_dir, stage2)
             # re-order the packages
             if self.reorder:
                 print()
