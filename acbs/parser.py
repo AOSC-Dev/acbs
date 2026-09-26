@@ -231,10 +231,12 @@ def get_tree_by_name(filename: str, tree_name) -> str:
     return tree_loc
 
 
-def check_buildability(package: ACBSPackageInfo, required_by: Optional[str]=None) -> bool:
+def check_buildability(package: ACBSPackageInfo, required_by: str | None=None) -> bool:
     if package.fail_arch and not buildable(arch, package.fail_arch):
-        if required_by:
-            raise RuntimeError(f'{package.name} is required by `{required_by}` but is not buildable on `{arch}` (FAIL_ARCH).')
+        # `!(mainline)` is the default value
+        # https://github.com/AOSC-Dev/acbs/commit/369c9fe71f657d0d990edf5617db4a3a6635ffb7
+        if required_by and package.fail_arch == '!(mainline)':
+            return True
         else:
             return False
     return True
