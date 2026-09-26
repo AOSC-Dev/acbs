@@ -231,21 +231,14 @@ def get_tree_by_name(filename: str, tree_name) -> str:
     return tree_loc
 
 
-def check_buildability(package: ACBSPackageInfo) -> bool:
-    from acbs.deps import pool
-    seen = set()
-    pending = [package]
-    while pending:
-        pkg = pending.pop()
-        if pkg.name in seen:
-            continue
-        seen.add(pkg.name)
-        if pkg.fail_arch and not buildable(arch, pkg.fail_arch):
+def check_buildability(package: ACBSPackageInfo, required_by: str | None=None) -> bool:
+    if package.fail_arch and not buildable(arch, package.fail_arch):
+        # `!(mainline)` is the default value
+        # https://github.com/AOSC-Dev/acbs/commit/369c9fe71f657d0d990edf5617db4a3a6635ffb7
+        if required_by and package.fail_arch == '!(mainline)':
+            return True
+        else:
             return False
-        for dep in pkg.deps:
-            dep_pkg = pool.get(dep)
-            if dep_pkg is not None:
-                pending.append(dep_pkg)
     return True
 
 
