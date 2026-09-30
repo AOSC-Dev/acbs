@@ -231,9 +231,12 @@ def get_tree_by_name(filename: str, tree_name) -> str:
     return tree_loc
 
 
-def check_buildability(package: ACBSPackageInfo, required_by: Optional[str]=None) -> bool:
+def check_buildability(package: ACBSPackageInfo, required_by: str | None=None,
+                       required_by_noarch: bool=False) -> bool:
     if package.fail_arch and not buildable(arch, package.fail_arch):
         if required_by:
+            if required_by_noarch:
+                return False
             raise RuntimeError(f'{package.name} is required by `{required_by}` but is not buildable on `{arch}` (FAIL_ARCH).')
         else:
             return False
