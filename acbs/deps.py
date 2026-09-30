@@ -72,19 +72,29 @@ def strongly_connected(search_path: str, packages_list: list[str], results: list
         else:
             current_package = package
             pool[vert] = current_package
-    assert current_package is not None
-    # first check if this dependency is buildable
-    # when `required_by` argument is present, it will raise an exception when the dependency is unbuildable.
-    check_buildability(
-        current_package, stack[-2] if len(stack) > 1 else '<unknown>')
+        assert current_package is not None
+        required_by = stack[-2] if len(stack) > 1 else None
+        required_by_package = pool.get(required_by) if required_by is not None else None
+        required_by_noarch = (
+            required_by_package.bin_arch == 'noarch'
+            if required_by_package else False
+        )
+        if not check_buildability(
+                current_package, required_by, required_by_noarch):
+            index[vert] = -1
+            lowlink[vert] = -1
+            stackstate[vert] = False
+            stack.pop()
+            return False
     # search package end
     # Look for adjacent packages (dependencies)
     for p in current_package.deps:
         if index[p] == -1:
             # recurse on unvisited packages
-            strongly_connected(search_path, packages_list, results, packages,
-                               p, lowlink, index, stackstate, stack, stage2, depth)
-            lowlink[vert] = min(lowlink[p], lowlink[vert])
+            included = strongly_connected(search_path, packages_list, results, packages,
+                                          p, lowlink, index, stackstate, stack, stage2, depth)
+            if included:
+                lowlink[vert] = min(lowlink[p], lowlink[vert])
         # adjacent package is in the stack which means it is part of a loop
         elif stackstate[p] is True:
             lowlink[vert] = min(lowlink[p], index[vert])
@@ -100,3 +110,4 @@ def strongly_connected(search_path: str, packages_list: list[str], results: list
             result.append(pool[w])
             stackstate[w] = False
         results.append(result)
+    return True
