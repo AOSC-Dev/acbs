@@ -1,0 +1,6 @@
+PKGNAME='test-7'
+PKGDEP="test-8"
+PKGDEP__ARCH="${PKGDEP}"
+BUILDDEP=""
+BUILDDEP__ARCH=""
+FAIL_ARCH='!(arch)'

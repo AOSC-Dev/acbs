@@ -73,6 +73,29 @@ class TestParser(unittest.TestCase):
         error = check_scc(packages)
         self.assertEqual(error, True)
 
+    def test_fail_arch_dependency_blocks_build(self):
+        # A (test-7) is buildable on `arch` and not noarch, but its dependency
+        # B (test-8) is not buildable -> building A must fail with an error.
+        acbs.parser.arch = 'arch'
+        acbs.parser.filter_dependencies = fake_pm
+        package = acbs.parser.parse_package(
+            './tests/fixtures/test-7/autobuild', modifiers='')
+        with self.assertRaises(RuntimeError) as ctx:
+            tarjan_search(get_deps_graph([package]), './tests', stage2=False)
+        self.assertIn('test-8', str(ctx.exception))
+        self.assertIn('test-7', str(ctx.exception))
+
+    def test_fail_arch_dependency_skipped_for_noarch(self):
+        # A (test-9) is noarch, so its unbuildable dependency B (test-8) is
+        # expected to be skipped silently instead of raising an error.
+        acbs.parser.arch = 'arch'
+        acbs.parser.filter_dependencies = fake_pm
+        package = acbs.parser.parse_package(
+            './tests/fixtures/test-9/autobuild', modifiers='')
+        packages = tarjan_search(get_deps_graph([package]), './tests', stage2=False)
+        resolved = [p.name for group in packages for p in group]
+        self.assertEqual(resolved, ['test-9'])
+
     def test_fail_arch(self):
         import re
         self.assertRaises(ValueError, fail_arch_regex, "!amd64")

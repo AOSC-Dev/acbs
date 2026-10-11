@@ -1,0 +1,6 @@
+PKGNAME='test-9'
+PKGDEP="test-8"
+PKGDEP__ARCH="${PKGDEP}"
+BUILDDEP=""
+BUILDDEP__ARCH=""
+ABHOST='noarch'
